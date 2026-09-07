@@ -1,0 +1,10 @@
+# BUG-REG: SHL/SHR carry — كان لا يحفظ C
+# SHL 128 << 1 → C=1
+load acc, 128
+shl
+jc carry_set
+load acc, 0
+halt
+carry_set:
+load acc, 1
+halt

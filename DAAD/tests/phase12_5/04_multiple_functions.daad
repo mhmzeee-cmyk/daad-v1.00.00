@@ -1,0 +1,22 @@
+# Phase 12.5-F.4: Multiple Function Frame Isolation
+# Each function should have its own frame area.
+# Recursive accumulation test verifies frame isolation.
+
+دالة: add_range(start: رقم, end: رقم) -> رقم :-
+    متغير: sum = 0
+    متغير: i = start
+    # Simple loop: sum += i for i in [start, end]
+    طالما (i <= end) :-
+        sum = sum + i
+        i = i + 1
+    نهاية
+    ارجع(sum)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: r1 = add_range(1, 5)    # 1+2+3+4+5 = 15
+    متغير: r2 = add_range(10, 14)  # 10+11+12+13+14 = 60
+    متغير: total = r1 + r2          # 15+60 = 75
+    اطبع(total)  # Expected: 75
+    ارجع(total)
+نهاية

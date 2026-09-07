@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم المعلم - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/decorations.css?v=4.0">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<noscript>
+  <div style="padding:40px;text-align:center;font-family:sans-serif;background:var(--bg,#fff);color:var(--text,#333);min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <h1 style="margin-bottom:16px">يتطلب JavaScript</h1>
+    <p style="color:var(--text-muted,#666);max-width:400px">يرجى تفعيل JavaScript في المتصفح للتمكن من استخدام هذا التطبيق.</p>
+  </div>
+</noscript>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="القائمة الجانبية"></aside>
+
+    <!-- Main Content -->
+    <main class="main-content" role="main">
+      <div class="page-header">
+        <h1>لوحة تحكم المعلم</h1>
+        <div class="user-info">
+          <span id="userEmail" style="color:var(--text-muted)"></span>
+          <div class="avatar" id="userAvatar"></div>
+        </div>
+      </div>
+
+      <!-- Welcome Banner -->
+      <div class="welcome-banner" id="welcomeBanner" style="display:none">
+        <div class="welcome-banner-content">
+          <div class="welcome-banner-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          </div>
+          <div class="welcome-banner-text">
+            <h2 id="welcomeTitle">مرحباً بك في لوحة التحكم</h2>
+            <p id="welcomeSubtitle">تفضل باستكشاف أدوات إدارة فصولك وطلابك</p>
+          </div>
+          <button class="btn btn-sm btn-secondary" onclick="dismissWelcome()" style="margin-right:auto">✕</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card xp tilt-card shine-effect">
+          <div class="stat-icon icon-spin"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="stat-value count-up" id="totalClassrooms">0</div>
+          <div class="stat-label">الفصول</div>
+        </div>
+        <div class="stat-card level tilt-card shine-effect">
+          <div class="stat-icon icon-spin"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="stat-value count-up" id="totalStudents">0</div>
+          <div class="stat-label">الطلاب</div>
+        </div>
+        <div class="stat-card streak tilt-card shine-effect">
+          <div class="stat-icon icon-spin"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+          <div class="stat-value count-up" id="totalExams">0</div>
+          <div class="stat-label">الامتحانات</div>
+        </div>
+        <div class="stat-card challenges tilt-card shine-effect">
+          <div class="stat-icon icon-spin"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="stat-value" id="avgProgress">0%</div>
+          <div class="stat-label">متوسط التقدم</div>
+        </div>
+      </div>
+
+      <!-- Dhad Editor Card -->
+      <a href="dhad-editor.html" style="display:block;text-decoration:none;margin-top:20px">
+        <div class="card" style="background:linear-gradient(135deg, var(--primary), #059669);border:none;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(16,185,129,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+          <div class="card-body" style="display:flex;align-items:center;gap:16px;padding:20px 24px">
+            <div style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">محرر ض</div>
+              <div style="font-size:13px;color:rgba(255,255,255,0.8)">اكتب وأشغّل أكوادك بلغة ض مباشرة</div>
+            </div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+      </a>
+
+      <!-- Classrooms -->
+      <div class="card">
+        <div class="card-header">
+          <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> فصلي</h3>
+          <button class="btn btn-primary btn-sm" onclick="showCreateClassroom()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> فصل جديد</button>
+        </div>
+        <div class="card-body" id="classroomsList">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Leaderboard -->
+        <div class="card">
+          <div class="card-header">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> أفضل الطلاب</h3>
+          </div>
+          <div class="card-body" id="topStudents">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+        <!-- Recent Exams -->
+        <div class="card">
+          <div class="card-header">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> الامتحانات الأخيرة</h3>
+            <a href="assessments.html" style="font-size:13px">عرض الكل</a>
+          </div>
+          <div class="card-body" id="recentExams">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header">
+          <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> إجراءات سريعة</h3>
+        </div>
+        <div class="card-body">
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a href="dhad-editor.html" class="btn btn-primary btn-sm" style="background:var(--primary);color:#000"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg> محرر ض</a>
+            <a href="classrooms.html" class="btn btn-secondary btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> إدارة الفصول</a>
+            <a href="assessments.html" class="btn btn-success btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> إنشاء امتحان</a>
+            <a href="students.html" class="btn btn-secondary btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> عرض الطلاب</a>
+            <a href="reports.html" class="btn btn-secondary btn-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> التقارير</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Classroom Modal -->
+  <div class="modal-overlay" id="createClassroomModal">
+    <div class="modal">
+      <h2>إنشاء فصل جديد</h2>
+      <form id="createClassroomForm">
+        <div class="form-group">
+          <label>اسم الفصل</label>
+          <input type="text" id="className" placeholder="مثال: الصف الأول - قسم أ" required>
+        </div>
+        <div class="form-group">
+          <label>المادة</label>
+          <input type="text" id="classSubject" placeholder="مثال: البرمجة بلغة ض">
+        </div>
+        <div class="form-group">
+          <label>المستوى</label>
+          <select id="classLevel">
+            <option value="BEGINNER">مبتدئ</option>
+            <option value="INTERMEDIATE">متوسط</option>
+            <option value="ADVANCED">متقدم</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:12px; margin-top:20px">
+          <button type="submit" class="btn btn-primary">إنشاء</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/teacher-dashboard.js"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/watermark.js"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
+</body>
+</html>

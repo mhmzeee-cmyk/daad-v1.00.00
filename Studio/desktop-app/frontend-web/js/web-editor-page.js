@@ -1,0 +1,138 @@
+const api = new DhadAPI();
+let currentChallenge = null;
+let course = null;
+let enrollId = null;
+
+const editor = document.getElementById('codeEditor');
+const preview = document.getElementById('previewFrame');
+const errorPanel = document.getElementById('errorPanel');
+
+// Auto-run on Ctrl+Enter
+editor.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 'Enter') {
+    e.preventDefault();
+    runCode();
+  }
+  // Tab support
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const start = this.selectionStart;
+    const end = this.selectionEnd;
+    this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+    this.selectionStart = this.selectionEnd = start + 2;
+  }
+});
+
+// Update line count
+editor.addEventListener('input', function() {
+  const lines = this.value.split('\n').length;
+  document.getElementById('lineCount').textContent = lines + ' سطر';
+});
+
+function runCode() {
+  const code = editor.value;
+  if (!code.trim()) {
+    showError('اكتب كود HTML أولاً');
+    return;
+  }
+  hideError();
+  const html = generateHTML(code);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  preview.src = url;
+  document.getElementById('statusText').textContent = 'جاري التشغيل...';
+  preview.onload = function() {
+    document.getElementById('statusText').textContent = 'تم التشغيل';
+    URL.revokeObjectURL(url);
+  };
+}
+
+function generateHTML(css) {
+  return '<!DOCTYPE html>\n<html dir="rtl">\n<head>\n<meta charset="UTF-8">\n<style>\n' + css + '\n</style>\n</head>\n<body>\n</body>\n</html>';
+}
+
+function resetCode() {
+  editor.value = '';
+  preview.src = 'about:blank';
+  hideError();
+  document.getElementById('statusText').textContent = 'جاهز';
+}
+
+function showError(msg) {
+  errorPanel.textContent = msg;
+  errorPanel.classList.add('show');
+}
+
+function hideError() {
+  errorPanel.classList.remove('show');
+}
+
+async function submitCode() {
+  if (!currentChallenge) {
+    showError('لم يتم تحديد التحدي');
+    return;
+  }
+  const code = editor.value.trim();
+  if (!code) {
+    showError('اكتب كود HTML أولاً');
+    return;
+  }
+  document.getElementById('statusText').textContent = 'جاري الإرسال...';
+  try {
+    const result = await api.submitChallenge(currentChallenge.id, code, enrollId || undefined);
+    if (result.success) {
+      document.getElementById('statusText').textContent = 'تم الإرسال بنجاح';
+      if (result.passed) {
+        showError('أحسنت! تم الحل بشكل صحيح');
+        errorPanel.style.borderColor = '#10b981';
+        errorPanel.style.color = '#10b981';
+      } else {
+        showError('لم يتطابق الناتج. حاول مرة أخرى');
+        errorPanel.style.borderColor = '#ef4444';
+        errorPanel.style.color = '#fca5a5';
+      }
+    } else {
+      showError(result.message || 'خطأ في الإرسال');
+    }
+  } catch (err) {
+    showError('خطأ في الاتصال: ' + err.message);
+  }
+}
+
+// Load challenge from URL params
+async function loadChallenge() {
+  const params = new URLSearchParams(window.location.search);
+  const challengeId = params.get('challengeId');
+  const courseId = params.get('courseId');
+  const enrollIdParam = params.get('enrollId');
+
+  if (enrollIdParam) enrollId = enrollIdParam;
+
+  if (!challengeId) {
+    showError('لم يتم تحديد التحدي');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/v1/student/challenges/' + challengeId, {
+      headers: { 'Authorization': 'Bearer ' + api.token }
+    });
+    const data = await res.json();
+    if (data.success && data.challenge) {
+      currentChallenge = data.challenge;
+      document.getElementById('challengeInfo').textContent = currentChallenge.title;
+      document.title = currentChallenge.title + ' - ض استوديو';
+      if (currentChallenge.starterCode) {
+        editor.value = currentChallenge.starterCode;
+        runCode();
+      }
+    }
+  } catch (err) {
+    showError('خطأ في تحميل التحدي: ' + err.message);
+  }
+}
+
+// Init
+loadChallenge();
+
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}

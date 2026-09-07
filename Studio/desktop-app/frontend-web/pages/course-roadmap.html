@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدورة - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    .course-header { text-align: center; padding: 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 24px; }
+    .course-header h1 { font-size: 24px; margin-bottom: 8px; }
+    .course-header p { color: var(--text-muted); font-size: 14px; }
+    .progress-section { display: flex; gap: 24px; margin-bottom: 24px; flex-wrap: wrap; }
+    .progress-card { flex: 1; min-width: 150px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; text-align: center; }
+    .progress-value { font-size: 28px; font-weight: 700; color: var(--primary); }
+    .progress-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .tab { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-muted); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+    .tab:hover { border-color: var(--primary); color: var(--text); }
+    .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .tab.locked { opacity: 0.5; cursor: not-allowed; }
+    .tab .tab-count { font-size: 11px; margin-right: 4px; opacity: 0.7; }
+    .tab .tab-check { color: #10b981; margin-right: 4px; }
+
+    .challenge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .challenge-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .challenge-card.active { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
+    .challenge-card.passed { border-color: var(--secondary); }
+    .challenge-tier-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+    .tier-1 { background: rgba(16,185,129,0.1); color: #10b981; }
+    .tier-2 { background: rgba(34,197,94,0.1); color: #22c55e; }
+    .tier-3 { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .tier-4 { background: rgba(239,68,68,0.1); color: #ef4444; }
+    .tier-5 { background: rgba(168,85,247,0.1); color: #a855f7; }
+    .tier-6 { background: rgba(236,72,153,0.1); color: #ec4899; }
+    .tier-7 { background: rgba(244,63,94,0.1); color: #f43f5e; }
+    .diff-BEGINNER { background: rgba(16,185,129,0.1); color: #10b981; }
+    .diff-INTERMEDIATE { background: rgba(34,197,94,0.1); color: #22c55e; }
+    .diff-ADVANCED { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .diff-EXPERT { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    .solution-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-top: 24px;
+    }
+    .solution-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .solution-meta { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .solution-item { font-size: 13px; color: var(--text-muted); }
+    .solution-desc { color: var(--text-secondary); font-size: 14px; line-height: 1.8; margin-bottom: 16px; white-space: pre-line; direction: rtl; text-align: right; }
+
+    .editor-area {
+      width: 100%;
+      min-height: 180px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      direction: rtl;
+      text-align: right;
+      resize: vertical;
+      tab-size: 2;
+    }
+    .editor-area:focus { outline: none; border-color: var(--primary); }
+    .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .output-box, .expected-box {
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: #10b981;
+      font-family: monospace;
+      font-size: 13px;
+      min-height: 40px;
+      white-space: pre-wrap;
+      direction: rtl;
+      text-align: right;
+    }
+    .expected-box { border-color: rgba(16,185,129,0.3); color: var(--text-muted); }
+    .result-bar { display: none; margin-top: 12px; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center; }
+    .result-bar.pass { display: block; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .result-bar.fail { display: block; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .result-bar.error { display: block; background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .result-bar.already-passed { display: block; background: rgba(16,185,129,0.05); color: var(--secondary); border: 1px solid rgba(16,185,129,0.2); }
+    .form-label { font-weight: 600; font-size: 13px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content">
+      <div id="courseContent"></div>
+    </main>
+  </div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/dhad-lexer.js?v=10.1&_=20260723"></script>
+  <script src="../js/dhad-ast.js?v=10.1&_=20260723"></script>
+  <script src="../js/dhad-parser.js?v=10.1&_=20260723"></script>
+  <script src="../js/dhad-codegen.js?v=10.1&_=20260723"></script>
+  <script src="../js/dhad.js?v=10.1&_=20260723"></script>
+  <script src="../js/course-roadmap-page.js"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/watermark.js"></script>
+</body>
+</html>

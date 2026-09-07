@@ -1,0 +1,610 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Production Database Configuration
+// SSL is required for cloud databases (Neon, Supabase, AWS RDS)
+// Include ?sslmode=require in your DATABASE_URL
+// Example: postgresql://user:pass@host/db?sslmode=require
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Difficulty Enum ───────────────────────────────────────────────────────
+
+enum DifficultyTier {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+// ── Challenge Type Enum ─────────────────────────────────────────────────────
+
+enum ChallengeType {
+  BUG_FIX
+  CLIENT_REQUIREMENT
+}
+
+// ── Attendance Status Enum ───────────────────────────────────────────────────
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+// ── School ───────────────────────────────────────────────────────────────────
+
+model School {
+  id            String   @id @default(cuid())
+  name          String
+  code          String? // School code
+  email         String? // School email
+  phone         String? // School phone
+  address       String? // School address
+  description   String? // School description
+  planType      String   @default("SCHOOL") // SCHOOL, DISTRICT, ENTERPRISE
+  totalLicenses Int      @default(0)
+  usedLicenses  Int      @default(0)
+  provisionedAt DateTime @default(now())
+
+  users             User[]
+  courses           Course[]
+  students          Student[]
+  lessons           Lesson[]
+  challenges        Challenge[]
+  attendanceRecords Attendance[]
+  classrooms        Classroom[]
+  securityAlerts    SecurityAlert[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([code])
+}
+
+// ── User ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String  @id @default(cuid())
+  schoolId     String
+  classroomId  String? // Nullable - only for students
+  role         String // STUDENT | TEACHER | ADMIN
+  name         String
+  email        String? // for teachers
+  nationalId   String? // for students
+  passwordHash String? // Nullable for test users
+  isActive     Boolean @default(true)
+  isVerified   Boolean @default(false)
+  isApproved   Boolean @default(false)
+  isOnboarded  Boolean @default(false)
+  tokenVersion Int    @default(0)
+
+  school             School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classroom          Classroom?  @relation("ClassroomStudents", fields: [classroomId], references: [id], onDelete: SetNull)
+  teachingClassrooms Classroom[] @relation("ClassroomTeacher")
+
+  challenges        Challenge[]
+  submissions       Submission[]              @relation("UserSubmissions")
+  loginLogs         LoginLog[]
+  activityLogs      ActivityLog[]
+  attendances       Attendance[]              @relation("UserAttendances")
+  studentProfile    StudentProfile?
+  userAchievements  UserAchievement[]
+  cloudWorkspaces   CloudWorkspace[]
+  assessmentResults StudentAssessmentResult[]
+  projects                  Project[] @relation("UserProjects")
+  invitation                Invitation?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, email])
+  @@unique([schoolId, nationalId])
+  @@index([schoolId])
+  @@index([role])
+  @@index([classroomId])
+}
+
+// ── Course ───────────────────────────────────────────────────────────────────
+
+model Course {
+  id       String @id @default(cuid())
+  schoolId String
+  title    String
+  content  String @default("")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+// ── Student ───────────────────────────────────────────────────────────────────
+
+model Student {
+  id             String   @id @default(cuid())
+  schoolId       String
+  gradeLevel     String? // e.g., "Grade 1", "Grade 2"
+  enrollmentDate DateTime @default(now())
+  status         String   @default("ACTIVE") // ACTIVE, INACTIVE, GRADUATED
+  gpa            Float?   @default(0.0)
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([status])
+}
+
+// ── Lesson ──────────────────────────────────────────────────────────────────
+
+model Lesson {
+  id            String   @id @default(cuid())
+  schoolId      String
+  title         String
+  contentSlug   String   @unique
+  content       String   @default("")
+  order         Int
+  duration      Int? // estimated minutes
+  prerequisites String[] @default([])
+  objectives    String[] @default([])
+  published     Boolean  @default(true)
+  visibility    String   @default("PUBLIC") // PUBLIC, PRIVATE
+
+  school   School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  projects Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([order])
+  @@index([published])
+  @@index([visibility])
+}
+
+// ── Classroom (Cohort) ──────────────────────────────────────────────────────
+
+model Classroom {
+  id          String   @id @default(cuid())
+  schoolId    String
+  teacherId   String
+  name        String // e.g., "Grade 10 - Section A"
+  description String? // Classroom description
+  gradeLevel  String? // e.g., "Grade 10"
+  subject     String? // e.g., "Computer Science"
+  maxStudents Int      @default(40)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  teacher     User         @relation("ClassroomTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  students    User[]       @relation("ClassroomStudents")
+  assessments Assessment[]
+
+  @@unique([schoolId, name])
+  @@index([schoolId])
+  @@index([teacherId])
+  @@index([isActive])
+}
+
+// ── Challenge ────────────────────────────────────────────────────────────────
+
+model Challenge {
+  id             String         @id @default(cuid())
+  authorId       String
+  title          String
+  description    String
+  starterCode    String         @default("")
+  expectedOutput String         @default("")
+  difficulty     DifficultyTier @default(BEGINNER)
+  challengeType  ChallengeType  @default(BUG_FIX)
+  published      Boolean        @default(false)
+  dailyDate      String? // YYYY-MM-DD if this is the daily challenge
+  tier           Int            @default(1) // 1-5 for difficulty tiers
+  estimatedTime  Int? // minutes
+  points         Int            @default(100)
+  isSystem       Boolean        @default(false)
+  popularity     Int            @default(0)
+
+  author            User             @relation(fields: [authorId], references: [id])
+  submissions       Submission[]
+  challengesToTiers ChallengeTier[]
+  cloudWorkspaces   CloudWorkspace[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  School    School?  @relation(fields: [schoolId], references: [id])
+  schoolId  String?
+
+  @@index([authorId])
+  @@index([published])
+  @@index([difficulty])
+  @@index([dailyDate])
+  @@index([tier])
+  @@index([isSystem])
+}
+
+// ── Submission ───────────────────────────────────────────────────────────────
+
+model Submission {
+  id               String  @id @default(cuid())
+  challengeId      String
+  studentId        String
+  code             String
+  language         String  @default("daad")
+  passed           Boolean @default(false)
+  output           String  @default("")
+  executionTime    Int? // milliseconds
+  memoryUsage      Int? // KB
+  syntaxScore      Int? // 0-100
+  performanceScore Int? // 0-100
+  compilationError String? // store error messages
+  timeout          Boolean @default(false)
+  lineCount        Int?
+  functionCount    Int?
+  complexity       Int?
+  suspicious       Boolean @default(false)
+  suspiciousReason String?
+  hmacValid        Boolean @default(true)
+  aiFeedback       String? @db.Text // AI-powered pedagogical hint (Arabic)
+
+  challenge          Challenge           @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  student            User                @relation("UserSubmissions", fields: [studentId], references: [id])
+  studentSubmissions StudentSubmission[]
+
+  createdAt DateTime @default(now())
+
+  @@index([challengeId])
+  @@index([studentId])
+  @@index([passed])
+  @@index([createdAt])
+  @@index([syntaxScore])
+  @@index([suspicious])
+}
+
+// ── Project ──────────────────────────────────────────────────────────────────
+
+model Project {
+  id          String  @id @default(cuid())
+  studentId   String
+  lessonId    String
+  title       String
+  description String
+  code        String  @default("")
+  language    String  @default("daad")
+  status      String  @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, SUBMITTED
+  score       Int? // optional for peer review
+  feedback    String? @default("")
+  fileCount   Int     @default(0)
+  totalSize   Int     @default(0) // bytes
+
+  student User   @relation("UserProjects", fields: [studentId], references: [id])
+  lesson  Lesson @relation(fields: [lessonId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studentId])
+  @@index([lessonId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ── Attendance ─────────────────────────────────────────────────────────────
+
+model Attendance {
+  id         String           @id @default(cuid())
+  studentId  String
+  schoolId   String
+  date       DateTime
+  status     AttendanceStatus @default(PRESENT)
+  notes      String?          @default("")
+  recordedBy String? // teacher/admin who recorded
+
+  student User   @relation("UserAttendances", fields: [studentId], references: [id])
+  school  School @relation(fields: [schoolId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@index([date])
+  @@index([schoolId])
+}
+
+// ── ChallengeTier ───────────────────────────────────────────────────────────
+
+model ChallengeTier {
+  challengeId String
+  tier        DifficultyTier
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@id([challengeId, tier])
+  @@index([tier])
+}
+
+// ── Assessment (High-Stakes Exam) ───────────────────────────────────────────
+
+model Assessment {
+  id           String   @id @default(cuid())
+  classroomId  String
+  title        String
+  description  String   @default("")
+  allowedTime  Int // minutes
+  startTime    DateTime
+  endTime      DateTime
+  totalPoints  Int      @default(100)
+  passingScore Int      @default(60) // percentage
+  isPublished  Boolean  @default(false)
+  lockdownMode Boolean  @default(true) // Enable secure exam mode
+  challengeIds String[] @default([]) // Array of challenge IDs
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  classroom Classroom                 @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  results   StudentAssessmentResult[]
+
+  @@index([classroomId])
+  @@index([startTime])
+  @@index([endTime])
+  @@index([isPublished])
+}
+
+// ── Student Assessment Result ───────────────────────────────────────────────
+
+model StudentAssessmentResult {
+  id                  String    @id @default(cuid())
+  assessmentId        String
+  studentId           String
+  score               Int       @default(0) // 0-100 percentage
+  totalPointsEarned   Int       @default(0)
+  totalPointsPossible Int       @default(0)
+  challengesAttempted Int       @default(0)
+  challengesPassed    Int       @default(0)
+  timeSpent           Int       @default(0) // milliseconds
+  startedAt           DateTime  @default(now())
+  completedAt         DateTime?
+  submissionIds       String[]  @default([]) // Array of submission IDs
+  metadata            Json? // { averageTime, fastestChallenge, ... }
+  status              String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED, TIMED_OUT
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([assessmentId, studentId])
+  @@index([assessmentId])
+  @@index([studentId])
+  @@index([score])
+  @@index([status])
+}
+
+// ── StudentSubmission ───────────────────────────────────────────────────────
+
+model StudentSubmission {
+  id             String @id @default(cuid())
+  submissionId   String
+  score          Int // 0-100
+  completionTime Int // milliseconds
+  tokenCount     Int
+  astNodesCount  Int
+  errorCount     Int
+  warningCount   Int
+  metadata       Json
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([submissionId])
+  @@index([score])
+  @@index([completionTime])
+}
+
+// ── Login Log ───────────────────────────────────────────────────────────────
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  ip        String   @default("")
+  userAgent String   @default("")
+  success   Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ── Student Profile (Gamification Persistence) ─────────────────────────────────
+
+model StudentProfile {
+  id               String   @id @default(cuid())
+  studentId        String   @unique
+  totalXP          Int      @default(0)
+  currentLevel     Int      @default(1)
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  lastActive       DateTime @default(now())
+  lastXPAwarded    DateTime @default(now())
+  lastActivityDate String   @default("") // YYYY-MM-DD
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  student      User              @relation(fields: [studentId], references: [id])
+  achievements UserAchievement[]
+  dailyXP      DailyXP[]
+
+  @@index([totalXP(sort: Desc)])
+  @@index([currentLevel])
+  @@index([currentStreak(sort: Desc)])
+}
+
+// ── Daily XP Tracking ─────────────────────────────────────────────────────────
+
+model DailyXP {
+  id               String @id @default(cuid())
+  studentId        String
+  date             String // YYYY-MM-DD
+  totalXP          Int    @default(0)
+  submissionsCount Int    @default(0)
+
+  studentProfile StudentProfile @relation(fields: [studentId], references: [studentId], onDelete: Cascade)
+
+  @@unique([studentId, date])
+  @@index([date])
+}
+
+// ── Achievement ──────────────────────────────────────────────────────────────
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  icon        String   @default("badge")
+  criteria    Json // { type: "xp_threshold" | "streak" | "challenge_count" | "level_up", value: number }
+  points      Int      @default(100)
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@index([name])
+  @@index([criteria])
+}
+
+// ── User Achievement Mapping ─────────────────────────────────────────────────
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  awardedAt     DateTime @default(now())
+  metadata      Json? // { reason: "...", previousValue: ..., newValue: ... }
+
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement      Achievement     @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  StudentProfile   StudentProfile? @relation(fields: [studentProfileId], references: [id])
+  studentProfileId String?
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+  @@index([awardedAt])
+}
+
+// ── Activity Log ────────────────────────────────────────────────────────────────
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String // "submit_solution", "view_challenge", "create_challenge", "file_upload"
+  details   String   @default("")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ── Cloud Workspace (Code State Persistence) ─────────────────────────────────
+
+model CloudWorkspace {
+  id          String   @id @default(cuid())
+  studentId   String
+  challengeId String
+  savedCode   String   @default("")
+  language    String   @default("daad")
+  lastSavedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  Challenge Challenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([studentId, challengeId])
+  @@index([studentId])
+  @@index([challengeId])
+  @@index([lastSavedAt])
+}
+
+// ── Security Alert Log ────────────────────────────────────────────────────────
+
+model SecurityAlert {
+  id         String    @id @default(cuid())
+  studentId  String
+  schoolId   String
+  alertType  String // "HMAC_FAILURE", "SUSPICIOUS_SUBMISSION", "SUSPICIOUS_TIMING"
+  severity   String    @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  details    Json // { submissionId, reason, expectedValue, actualValue, ... }
+  resolved   Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  School     School    @relation(fields: [schoolId], references: [id])
+
+  @@index([studentId])
+  @@index([schoolId])
+  @@index([alertType])
+  @@index([severity])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+// ── Invitation (OTP-Based Student Onboarding) ──────────────────────────────
+
+model Invitation {
+  id            String   @id @default(cuid())
+  studentEmail  String
+  studentName   String
+  classroomId   String?
+  schoolId      String
+  schoolName    String
+  token         String?  // 6-digit OTP (hashed)
+  tokenExpiry   DateTime? // OTP expiration (10 min)
+  isActivated   Boolean  @default(false)
+  userId        String?  @unique // Links to User record after activation
+  activatedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([schoolId, studentEmail])
+  @@index([studentEmail])
+  @@index([token])
+  @@index([isActivated])
+  @@index([schoolId])
+}
+
+// ── Challenge Verification (HMAC Audit Trail) ────────────────────────────────
+
+model ChallengeVerification {
+  id          String   @id @default(cuid())
+  studentId   String
+  taskId      String
+  timestamp   DateTime
+  signature   String
+  ip          String   @default("")
+  userAgent   String   @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([studentId])
+  @@index([taskId])
+  @@index([createdAt])
+  @@index([studentId, taskId])
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الإنجازات - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1> الإنجازات</h1>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>جميع الإنجازات</h3>
+          <span id="achievementCount" style="color:var(--text-muted);font-size:14px"></span>
+        </div>
+        <div class="card-body">
+          <div class="achievements-grid" id="achievementsGrid">
+            <div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/achievements-page.js"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/watermark.js"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
+</body>
+</html>

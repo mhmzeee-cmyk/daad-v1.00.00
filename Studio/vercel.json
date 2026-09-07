@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "name": "dhad-studio-frontend",
+  "builds": [
+    {
+      "src": "frontend-web/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/frontend-web/$1"
+    }
+  ],
+  "outputDirectory": "frontend-web"
+}

@@ -1,0 +1,23 @@
+{
+  "loadBalancerName": "daad-studio-api-alb",
+  "scheme": "internet-facing",
+  "type": "application",
+  "ipAddressType": "ipv4",
+  "subnets": [
+    "subnet-0123456789abcdef0",
+    "subnet-0123456789abcdef1"
+  ],
+  "securityGroups": [
+    "sg-0123456789abcdef0"
+  ],
+  "tags": [
+    {
+      "Key": "Project",
+      "Value": "DhadStudio"
+    },
+    {
+      "Key": "Environment",
+      "Value": "Production"
+    }
+  ]
+}

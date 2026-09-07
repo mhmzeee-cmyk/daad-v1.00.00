@@ -1,0 +1,165 @@
+# ====================================================
+# Dhad Studio - Docker Compose (Batch 11)
+# ====================================================
+# Usage: docker-compose up -d
+# Features: Express + Redis + PostgreSQL (Supabase)
+# ====================================================
+
+version: '3.8'
+
+services:
+  # ── Node.js API Server ──────────────────────────────────────────────────────
+  daad-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: daad-studio-api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://daad-redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
+      - CLIENT_URL=${CLIENT_URL:-http://localhost:5173}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - AI_PROVIDER=${AI_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434}
+      - WEBHOOK_DISCORD_URL=${WEBHOOK_DISCORD_URL}
+      - WEBHOOK_SLACK_URL=${WEBHOOK_SLACK_URL}
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL}
+    volumes:
+      - daad-logs:/app/logs
+    networks:
+      - daad-network
+    depends_on:
+      daad-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Redis Cache Server ──────────────────────────────────────────────────────
+  daad-redis:
+    image: redis:7-alpine
+    container_name: daad-studio-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+      --save 60 1000
+    volumes:
+      - daad-redis-data:/data
+    networks:
+      - daad-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Ollama (Local AI - Optional) ────────────────────────────────────────────
+  daad-ollama:
+    image: ollama/ollama:latest
+    container_name: daad-studio-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - daad-ollama-data:/root/.ollama
+    networks:
+      - daad-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+    profiles:
+      - ai  # Only starts with: docker-compose --profile ai up
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Nginx Reverse Proxy (Optional) ──────────────────────────────────────────
+  daad-nginx:
+    image: nginx:alpine
+    container_name: daad-studio-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      daad-api:
+        condition: service_healthy
+    networks:
+      - daad-network
+    profiles:
+      - proxy  # Only starts with: docker-compose --profile proxy up
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  daad-logs:
+    driver: local
+  daad-redis-data:
+    driver: local
+  daad-ollama-data:
+    driver: local
+
+networks:
+  daad-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

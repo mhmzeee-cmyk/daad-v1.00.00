@@ -1,0 +1,15 @@
+# ══════════════════════════════════════════════════════════════
+#  T26a: LDRI basic — read from address formed by register pair
+#  Sets s0=0x00, s1=0x40 (address 0x0040)
+#  Stores 42 to address 0x40 using STRI
+#  Loads from address 0x40 using LDRI into s7
+#  Expected: ACC = 42 (from s7 via mov acc, s7)
+# ══════════════════════════════════════════════════════════════
+
+    حمّل s0, 0       # addr_hi = 0x00
+    حمّل s1, 0x40     # addr_lo = 0x40 (address = 0x0040)
+    حمّل s7, 42       # value to store
+    خزن_غيرمباشر s7, s0, s1   # mem[0x0040] = 42
+    اقرأ_غيرمباشر s6, s0, s1  # s6 = mem[0x0040]
+    نقل مح, s6        # ACC = s6
+    توقف

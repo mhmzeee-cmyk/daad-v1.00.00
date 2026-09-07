@@ -1,0 +1,7 @@
+# T10n: .if false — الشرط الخاطئ
+load acc, 10
+load s0, 5
+.if 0
+  add s0     # لن يُنفَّذ لأن الشرط 0
+.endif
+halt

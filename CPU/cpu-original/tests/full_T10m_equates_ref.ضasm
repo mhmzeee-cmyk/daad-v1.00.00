@@ -1,0 +1,8 @@
+# T10m: Combined expressions — تعبيرات مركبة
+myval = 10
+load acc, myval      # مح = 10
+load s0, myval       # س0 = 10
+add s0               # مح = 20
+load s1, myval       # س1 = 10
+add s1               # مح = 30
+halt

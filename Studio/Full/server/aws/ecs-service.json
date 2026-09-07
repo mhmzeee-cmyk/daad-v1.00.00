@@ -1,0 +1,49 @@
+{
+  "serviceName": "daad-studio-api-service",
+  "clusterArn": "arn:aws:ecs:me-south-1:ACCOUNT_ID:cluster/daad-studio-cluster",
+  "taskDefinition": "arn:aws:ecs:me-south-1:ACCOUNT_ID:task-definition/daad-studio-api",
+  "launchType": "FARGATE",
+  "platformVersion": "LATEST",
+  "loadBalancers": [
+    {
+      "targetGroupArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:targetgroup/daad-studio-tg/1234567890",
+      "containerName": "daad-api",
+      "containerPort": 3000
+    }
+  ],
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": [
+        "subnet-0123456789abcdef0",
+        "subnet-0123456789abcdef1"
+      ],
+      "securityGroups": [
+        "sg-0123456789abcdef0"
+      ],
+      "assignPublicIp": "DISABLED"
+    }
+  },
+  "deploymentConfiguration": {
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100,
+    "deploymentCircuitBreaker": {
+      "enable": true,
+      "rollback": true
+    }
+  },
+  "healthCheckGracePeriodSeconds": 60,
+  "schedulingStrategy": "REPLICA",
+  "propagateTags": "SERVICE",
+  "enableECSManagedTags": true,
+  "enableExecuteCommand": true,
+  "tags": [
+    {
+      "key": "Project",
+      "value": "DhadStudio"
+    },
+    {
+      "key": "Environment",
+      "value": "Production"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+# T7a: Data directives — .db .dw .ds
+.db 65, 66, 67       # 'A', 'B', 'C'
+.dw 0x1234            # كلمة 16-bit
+.ds "hi"              # نص null-terminated
+halt

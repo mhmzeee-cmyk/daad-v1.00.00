@@ -1,0 +1,6 @@
+# T10k: Overflow/carry flag — علم الفائض
+load acc, 200
+load s0, 100
+add s0
+# 200 + 100 = 300, carry set, result = 44
+halt

@@ -1,0 +1,17 @@
+# Phase 12.5-F: Recursive factorial
+# Tests: recursion, stack frame per call, return values
+
+دالة: factorial(n: رقم) -> رقم :-
+    إذا (n <= 1) :-
+        ارجع(1)
+    وإلا :-
+        ارجع(n * factorial(n - 1))
+    نهاية
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: result = factorial(5)
+    # 5! = 120
+    اطبع(result)
+    ارجع(result)
+نهاية

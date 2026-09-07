@@ -1,0 +1,13 @@
+const express = require("express");
+const router = express.Router();
+const { getCourses, enrollCourse, getCourseRoadmap } = require("../controllers/courseController");
+const { authenticate, requireStudent } = require("../middlewares/auth");
+const { writeRateLimit } = require("../middlewares/security");
+
+router.use(authenticate);
+
+router.get("/student/courses", requireStudent, getCourses);
+router.post("/student/courses/:courseId/enroll", requireStudent, writeRateLimit, enrollCourse);
+router.get("/student/courses/:courseId/roadmap", requireStudent, getCourseRoadmap);
+
+module.exports = router;

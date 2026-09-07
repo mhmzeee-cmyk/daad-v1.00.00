@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ض استوديو | منصة تعليم البرمجة بالعربية</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --white: #ffffff;
+      --off-white: #f8fafc;
+      --gray-50: #f1f5f9;
+      --gray-100: #e2e8f0;
+      --gray-200: #cbd5e1;
+      --gray-300: #94a3b8;
+      --gray-400: #64748b;
+      --gray-500: #475569;
+      --gray-600: #334155;
+      --gray-700: #1e293b;
+      --gray-800: #0f172a;
+      --green-400: #4ade80;
+      --green-500: #22c55e;
+      --green-600: #16a34a;
+      --green-700: #15803d;
+      --emerald-500: #10b981;
+      --emerald-600: #059669;
+      --indigo-500: #6366f1;
+      --indigo-600: #4f46e5;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: 'Noto Kufi Arabic', 'Segoe UI', Tahoma, sans-serif;
+      background: var(--white);
+      color: var(--gray-700);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ═══ NAVBAR ═══ */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 16px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      transition: all 0.3s;
+    }
+    .navbar.scrolled {
+      box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .nav-logo {
+      width: 52px;
+      height: 52px;
+      background: #10b981;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 900;
+      color: white;
+      box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+      overflow: visible;
+      padding-bottom: 2px;
+    }
+    .nav-title {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .nav-title span {
+      color: var(--emerald-600);
+    }
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .btn {
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--gray-600);
+    }
+    .btn-ghost:hover {
+      background: var(--gray-50);
+      color: var(--gray-800);
+    }
+    .btn-primary {
+      background: #10b981;
+      color: white;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16,185,129,0.45);
+      background: #059669;
+    }
+    .btn-outline {
+      background: transparent;
+      color: #10b981;
+      border: 2px solid #10b981;
+    }
+    .btn-outline:hover {
+      background: #10b981;
+      color: white;
+    }
+    .btn-lg {
+      padding: 16px 36px;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+
+    /* ═══ HERO ═══ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 40px 80px;
+      position: relative;
+      background: linear-gradient(180deg, var(--white) 0%, var(--gray-50) 100%);
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%);
+      top: -200px;
+      left: -200px;
+      border-radius: 50%;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%);
+      bottom: -100px;
+      right: -100px;
+      border-radius: 50%;
+    }
+    .hero-inner {
+      max-width: 900px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--emerald-600);
+      margin-bottom: 28px;
+    }
+    .hero-badge-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--emerald-500);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 8px;
+      color: var(--gray-800);
+    }
+    .hero h1 .highlight {
+      color: #10b981;
+    }
+    .hero-sub {
+      font-size: 22px;
+      color: var(--gray-400);
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .hero-desc {
+      font-size: 17px;
+      color: var(--gray-500);
+      max-width: 650px;
+      margin: 0 auto 40px;
+      line-height: 1.8;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* ═══ FLOATING SHAPES ═══ */
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    .shape-1 {
+      width: 80px; height: 80px;
+      background: rgba(16,185,129,0.1);
+      top: 20%; right: 10%;
+      animation: float 6s ease-in-out infinite;
+    }
+    .shape-2 {
+      width: 120px; height: 120px;
+      background: rgba(99,102,241,0.07);
+      bottom: 20%; left: 8%;
+      animation: float 8s ease-in-out infinite reverse;
+    }
+    .shape-3 {
+      width: 60px; height: 60px;
+      background: rgba(34,197,94,0.1);
+      top: 60%; right: 15%;
+      animation: float 5s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-20px); }
+    }
+
+    /* ═══ SECTION: ABOUT ═══ */
+    .section {
+      padding: 100px 40px;
+    }
+    .section-center {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .section-label {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--emerald-600);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--gray-800);
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+    .section-text {
+      font-size: 17px;
+      color: var(--gray-500);
+      line-height: 1.9;
+      max-width: 800px;
+    }
+    .section-text strong {
+      color: var(--gray-700);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-top: 50px;
+    }
+    .about-visual {
+      background: linear-gradient(135deg, var(--gray-50), var(--white));
+      border: 1px solid var(--gray-100);
+      border-radius: 24px;
+      padding: 48px;
+      text-align: center;
+      position: relative;
+    }
+    .about-visual::before {
+      content: '';
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(16,185,129,0.1), transparent);
+      top: -50px;
+      right: -50px;
+      border-radius: 50%;
+    }
+    .about-letter {
+      font-size: 140px;
+      font-weight: 900;
+      color: #10b981;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      overflow: visible;
+    }
+    .about-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    .about-name-en {
+      font-size: 14px;
+      color: var(--gray-400);
+      direction: ltr;
+      font-weight: 500;
+    }
+    .about-items {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .about-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .about-item-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      border-radius: 12px;
+      background: rgba(16,185,129,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--emerald-600);
+      font-size: 20px;
+    }
+    .about-item h4 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+    .about-item p {
+      font-size: 14px;
+      color: var(--gray-400);
+      line-height: 1.6;
+    }
+
+    /* ═══ SECTION: LANGUAGE ═══ */
+    .lang-section {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .lang-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 50px;
+    }
+    .lang-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: 20px;
+      padding: 36px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .lang-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #10b981;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .lang-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+      border-color: rgba(16,185,129,0.2);
+    }
+    .lang-card:hover::before { opacity: 1; }
+    .lang-card-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .lang-card-icon.green { background: rgba(16,185,129,0.1); color: var(--emerald-600); }
+    .lang-card-icon.blue { background: rgba(99,102,241,0.1); color: var(--indigo-500); }
+    .lang-card-icon.amber { background: rgba(245,158,11,0.1); color: #d97706; }
+    .lang-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 10px;
+    }
+    .lang-card p {
+      font-size: 14px;
+      color: var(--gray-400);
+      line-height: 1.7;
+    }
+    .lang-card code {
+      display: inline-block;
+      margin-top: 12px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-100);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--emerald-600);
+      direction: ltr;
+    }
+
+    /* ═══ SECTION: GOAL ═══ */
+    .goal-section {
+      background: linear-gradient(135deg, var(--gray-800) 0%, #1a1a2e 50%, var(--gray-700) 100%);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .goal-section::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);
+      top: -200px;
+      right: -100px;
+      border-radius: 50%;
+    }
+    .goal-section .section-label {
+      color: var(--green-400);
+    }
+    .goal-section .section-title {
+      color: white;
+    }
+    .goal-section .section-text {
+      color: rgba(255,255,255,0.7);
+    }
+    .goal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 50px;
+    }
+    .goal-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .goal-card:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(16,185,129,0.3);
+      transform: translateY(-2px);
+    }
+    .goal-card-num {
+      width: 40px;
+      height: 40px;
+      background: rgba(16,185,129,0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--green-400);
+      margin-bottom: 16px;
+    }
+    .goal-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .goal-card p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.7;
+    }
+
+    /* ═══ SECTION: STATS ═══ */
+    .stats-section {
+      padding: 80px 40px;
+      background: var(--white);
+    }
+    .stats-grid {
+      max-width: 900px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      text-align: center;
+    }
+    .stat-item {
+      padding: 24px;
+    }
+    .stat-num {
+      font-size: 44px;
+      font-weight: 900;
+      color: #10b981;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: var(--gray-400);
+      font-weight: 500;
+    }
+
+    /* ═══ SECTION: HOW IT WORKS ═══ */
+    .steps-section {
+      background: var(--gray-50);
+      border-top: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      margin-top: 50px;
+    }
+    .step-card {
+      text-align: center;
+      padding: 32px 20px;
+      position: relative;
+    }
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #10b981;
+      color: white;
+      font-size: 22px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 6px 16px rgba(16,185,129,0.3);
+    }
+    .step-card h4 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    .step-card p {
+      font-size: 13px;
+      color: var(--gray-400);
+      line-height: 1.6;
+    }
+
+    /* ═══ CTA ═══ */
+    .cta-section {
+      padding: 100px 40px;
+      text-align: center;
+      background: var(--white);
+    }
+    .cta-box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, var(--gray-50), var(--white));
+      border: 1px solid var(--gray-100);
+      border-radius: 28px;
+      padding: 60px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(16,185,129,0.08), transparent);
+      bottom: -100px;
+      right: -50px;
+      border-radius: 50%;
+    }
+    .cta-box h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--gray-800);
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .cta-box p {
+      font-size: 16px;
+      color: var(--gray-400);
+      margin-bottom: 32px;
+      position: relative;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+    }
+
+    /* ═══ FOOTER ═══ */
+    footer {
+      background: var(--gray-800);
+      color: rgba(255,255,255,0.5);
+      padding: 48px 40px;
+    }
+    .footer-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      color: white;
+      overflow: visible;
+    }
+    .footer-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.8);
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-links a {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover {
+      color: var(--green-400);
+    }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 900px) {
+      .hero h1 { font-size: 42px; }
+      .hero-sub { font-size: 18px; }
+      .section-title { font-size: 30px; }
+      .about-grid { grid-template-columns: 1fr; gap: 40px; }
+      .lang-grid { grid-template-columns: 1fr; }
+      .goal-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid { grid-template-columns: repeat(2, 1fr); }
+      .navbar { padding: 12px 20px; }
+      .section { padding: 60px 20px; }
+    }
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 32px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+  </style>
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+<noscript>
+  <div style="padding:40px;text-align:center;font-family:sans-serif;background:var(--bg,#fff);color:var(--text,#333);min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <h1 style="margin-bottom:16px">يتطلب JavaScript</h1>
+    <p style="color:var(--text-muted,#666);max-width:400px">يرجى تفعيل JavaScript في المتصفح للتمكن من استخدام هذا التطبيق.</p>
+  </div>
+</noscript>
+
+  <!-- Scroll Indicator -->
+  <div class="scroll-indicator" id="scrollIndicator"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="nav-title"><span style="font-size:24px;font-weight:900;color:#10b981">ض</span> <span style="font-weight:800;color:#1e293b">استوديو</span></div>
+    </a>
+    <div class="nav-buttons">
+      <a href="login.html" class="btn btn-ghost">تسجيل الدخول</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero aurora">
+    <div class="shape shape-1 morph"></div>
+    <div class="shape shape-2 morph"></div>
+    <div class="shape shape-3 morph"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        منصة تعليمية عربية 100%
+      </div>
+      <h1>تعلّم البرمجة <span class="highlight">بلسانك العربي</span></h1>
+      <p class="hero-sub">ض استوديو — حيث يلتقي الإبداع العربي بعالم البرمجة</p>
+      <p class="hero-desc">
+        منصة تعليمية متكاملة مصممة خصيصاً للطلاب والمعلمين العرب.
+        تعلّم أساسيات البرمجة وأساليبها باستخدام اللغة العربية،
+        مع تحديات تفاعلية ومسار تعليمي مُنظّم ينقلك من المبتدئ إلى المحترف.
+      </p>
+      <div class="hero-buttons">
+        <a href="login.html" class="btn btn-primary btn-lg">سجّل دخولك</a>
+        <a href="#about" class="btn btn-outline btn-lg">اعرف المزيد</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-num">+150</div>
+        <div class="stat-label">تحدي تفاعلي</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">5</div>
+        <div class="stat-label">مستويات صعود</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">10</div>
+        <div class="stat-label">إنجازات قابلة للكسب</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">AI</div>
+        <div class="stat-label">تغذية راجعة ذكية</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="section" id="about">
+    <div class="section-center">
+      <span class="section-label">ما هو ض استوديو؟</span>
+      <h2 class="section-title">منصة تعليم البرمجة الأولى بالعربية</h2>
+      <p class="section-text">
+        <strong>ض استوديو</strong> هي منصة تعليمية رقمية متكاملة تهدف إلى تعليم البرمجة
+        للطلاب والمعلمين في المدارس العربية. صُمّمت لتكون <strong>بديل عربي حقيقي</strong>
+        للمنصات الأجنبية، حيث يمكن للطالب تعلّم المفاهيم البرمجية بلغته الأم
+        مع بيئة تطوير متكاملة وتجربة تعليمية تفاعلية ممتعة.
+      </p>
+      <div class="about-grid">
+        <div class="about-visual">
+          <div class="about-letter">ض</div>
+          <div class="about-name-en">ض استوديو</div>
+        </div>
+        <div class="about-items">
+          <div class="about-item">
+            <div class="about-item-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            </div>
+            <div>
+              <h4>لغة ض — لغة برمجة عربية</h4>
+              <p>لدينا لغة برمجة عربية خاصة تدعم Keywords عربية بالكامل مثل الطباعة، اذا،طالما، لكل، دالة، فئة وغيرها</p>
+            </div>
+          </div>
+          <div class="about-item">
+            <div class="about-item-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <h4>بيئة آمنة للمتعلمين</h4>
+              <p>الكود يُنفّذ في المتصفح فقط — لا يوجد تنفيذ على الخادم، مما يجعل التجربة آمنة وسريعة</p>
+            </div>
+          </div>
+          <div class="about-item">
+            <div class="about-item-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+              <h4>مُصمّم للمدارس العربية</h4>
+              <p>نظام فصول دراسية يربط المعلم بطلابه، مع تقارير متابعة وتقييمات مخصصة ونظام درجات وإنجازات</p>
+            </div>
+          </div>
+          <div class="about-item">
+            <div class="about-item-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div>
+              <h4>ذكاء اصطناعي للمساعدة</h4>
+              <p>نظام تغذية راجعة ذكي بالذكاء الاصطناعي يحلل أخطاء الطالب ويقدم تلميحاً عربياً دون الكشف عن الحل</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANGUAGE -->
+  <section class="section lang-section" id="language">
+    <div class="section-center">
+      <span class="section-label">لغة البرمجة</span>
+      <h2 class="section-title">تعرّف على لغة "ض"</h2>
+      <p class="section-text">
+        لغة <strong>ض</strong> هي لغة برمجة عربية صُمّمت لتقديم مفاهيم البرمجة بشكل مباشر
+        باستخدام الكلمات العربية. كل كلمة محجوزة في اللغة لها معنى عربي واضح
+        مما يسهّل على الطالب فهم المفاهيم بسرعة.
+      </p>
+      <div class="lang-grid">
+        <div class="lang-card shine-effect interactive-card">
+          <div class="lang-card-icon green">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <h3>طباعة ومتغيرات</h3>
+          <p>استخدم الطباعة للإخراج، الصحيح للأعداد، النص للنصوص، والعشري للأعداد العشرية</p>
+          <code class="gradient-text">طباعة("مرحباً بالعالم!")</code>
+        </div>
+        <div class="lang-card shine-effect interactive-card">
+          <div class="lang-card-icon blue">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/></svg>
+          </div>
+          <h3>شروط وحلقات</h3>
+          <p>اذا وإلا للشروط،طالما للتكرار، ولكل للحلقات — كلها كلمات عربية سهلة</p>
+          <code class="gradient-text">إذا (العمر > 18) { ... }</code>
+        </div>
+        <div class="lang-card shine-effect interactive-card">
+          <div class="lang-card-icon amber">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <h3>دوالي وفئات</h3>
+          <p>دالة لإنشاء الدوال، فئة لتعريف الفئات، وارجع لإرجاع القيم — كل المفاهيم بعربية</p>
+          <code class="gradient-text">دالة greeted(الاسم) { ... }</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GOAL -->
+  <section class="section goal-section" id="goal">
+    <div class="section-center">
+      <span class="section-label">الهدف التعليمي</span>
+      <h2 class="section-title">لماذا نفعل كل هذا؟</h2>
+      <p class="section-text">
+        نؤمن بأن كل طالب عربي يستحق تعلّم البرمجة بلغته الأم.
+        هدفنا هو بناء جيل عربي قادر على الابتكار والتقنية بلغته وثقافته.
+      </p>
+      <div class="goal-grid">
+        <div class="goal-card shine-effect interactive-card">
+          <div class="goal-card-num gradient-text">01</div>
+          <h3>إزالة حاجز اللغة</h3>
+          <p>الكثير من الطلاب العرب يواجهون صعوبة في تعلم البرمجة بسبب اللغة الإنجليزية. لغة ض تزيل هذه الحواجز وتمكّن الطالب من التركيز على المفاهيم.</p>
+        </div>
+        <div class="goal-card shine-effect interactive-card">
+          <div class="goal-card-num gradient-text">02</div>
+          <h3>بناء أساس قوي</h3>
+          <p>المسار التعليمي مُنظّم من 5 مستويات: أساسيات، هيكل تحكم، هياكل بيانات، برمجة كائنية، وبرمجة متقدمة — كل مستوى يبني على سابقه.</p>
+        </div>
+        <div class="goal-card shine-effect interactive-card">
+          <div class="goal-card-num gradient-text">03</div>
+          <h3>تحفيز المستمر</h3>
+          <p>نظام نقاط وإنجازات وتصاعد مستمر يحافظ على حماس الطالب. مع كل تحدي يكتمل، يرتفع مستوى الطالب ويكتسب إنجازات جديدة.</p>
+        </div>
+        <div class="goal-card shine-effect interactive-card">
+          <div class="goal-card-num gradient-text">04</div>
+          <h3>تمكين المعلم</h3>
+          <p>أدوات متقدمة للمعلمين لمتابعة تقدم الطلاب، إنشاء امتحانات، وتقييم الأداء — كل ذلك في لوحة تحكم عربية متكاملة.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section steps-section">
+    <div class="section-center">
+      <div style="text-align:center">
+        <span class="section-label">كيف تبدأ؟</span>
+        <h2 class="section-title">4 خطوات لبداية رحلتك</h2>
+      </div>
+      <div class="steps-grid stagger-list">
+        <div class="step-card interactive-card">
+          <div class="step-num pulse-ring">1</div>
+          <h4>سجّل حسابك</h4>
+          <p>أنشئ حسابك مجاناً واختر فصلك الدراسي</p>
+        </div>
+        <div class="step-card interactive-card">
+          <div class="step-num pulse-ring">2</div>
+          <h4>فعّل حسابك</h4>
+          <p>أدخل كلمة المرور التي أعطاكها معلمك لتفعيل حسابك</p>
+        </div>
+        <div class="step-card interactive-card">
+          <div class="step-num pulse-ring">3</div>
+          <h4>ابدأ التحديات</h4>
+          <p>اتبع المسار التعليمي وحل التحديات التفاعلية</p>
+        </div>
+        <div class="step-card interactive-card">
+          <div class="step-num pulse-ring">4</div>
+          <h4>اكسب وإنجز</h4>
+          <p>اجمع نقاطاً واحصل على إنجازات وتصدر لوحة المتصدرين</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section aurora">
+    <div class="cta-box border-dance">
+      <h2 class="gradient-text">جاهز تبدأ رحلتك في البرمجة؟</h2>
+      <p>انضم لآلاف الطلاب العرب الذين يتعلّمون البرمجة بلغتهم العربية</p>
+      <div class="cta-buttons">
+        <a href="login.html" class="btn btn-primary btn-lg magnetic-btn">سجّل دخولك</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">ض</div>
+        <div class="footer-name">ض استوديو</div>
+      </div>
+      <div class="footer-links">
+        <a href="login.html">تسجيل الدخول</a>
+        <a href="#">شروط الخدمة</a>
+        <a href="#">سياسة الخصوصية</a>
+      </div>
+      <div>ض استوديو &copy; 2026</div>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS -->
+  <script src="js/api.js?v=4.0"></script>
+  <script>
+    // Redirect logged-in users
+    if (api.isLoggedIn()) {
+      var user = api.getUser();
+      if (user) {
+        var navBtns = document.querySelector('.nav-buttons');
+        var dashUrl = (user.role === 'TEACHER' || user.role === 'ADMIN')
+          ? 'pages/teacher-dashboard.html'
+          : 'pages/student-dashboard.html';
+        navBtns.innerHTML =
+          '<a href="' + dashUrl + '" class="btn btn-ghost">لوحة التحكم</a>' +
+          '<a href="#" class="btn btn-primary" onclick="api.logout();location.reload();">خروج</a>';
+      }
+    }
+
+    // Scroll indicator
+    window.addEventListener('scroll', function() {
+      var indicator = document.getElementById('scrollIndicator');
+      var scrollTop = window.scrollY;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      var scrollPercent = (scrollTop / docHeight) * 100;
+      indicator.style.height = scrollPercent + '%';
+    });
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', function() {
+      var nav = document.getElementById('navbar');
+      if (window.scrollY > 20) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+      a.addEventListener('click', function(e) {
+        var target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Ripple effect on buttons
+    document.querySelectorAll('.btn').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        var ripple = document.createElement('span');
+        ripple.className = 'ripple-circle';
+        var rect = this.getBoundingClientRect();
+        var size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size + 'px';
+        ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+        ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+        this.appendChild(ripple);
+        setTimeout(function() { ripple.remove(); }, 600);
+      });
+    });
+
+    // Intersection Observer for scroll animations
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.section').forEach(function(section) {
+      section.style.opacity = '0';
+      section.style.transform = 'translateY(30px)';
+      section.style.transition = 'all 0.6s ease-out';
+      observer.observe(section);
+    });
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      });
+    }
+  </script>
+  <script src="js/watermark.js?v=2.0"></script>
+  <style>.dhad-watermark{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;overflow:hidden;display:flex;flex-wrap:wrap;align-content:flex-start;gap:120px 80px;padding:40px;transform:rotate(-25deg) scale(1.1);opacity:0.012}.dhad-watermark span{display:inline-block;white-space:nowrap;font-size:11px;font-family:'Segoe UI',Tahoma,'Noto Sans Arabic',Arial,sans-serif;color:#ccc;user-select:none;-webkit-user-select:none}</style>
+</body>
+</html>

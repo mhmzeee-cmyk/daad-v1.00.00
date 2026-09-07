@@ -1,0 +1,119 @@
+{
+  "family": "daad-studio-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "daad-api",
+      "image": "ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/daad-studio:latest",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "hostPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/daad-studio-api",
+          "awslogs-region": "me-south-1",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "3000"
+        },
+        {
+          "name": "HOST",
+          "value": "0.0.0.0"
+        },
+        {
+          "name": "REDIS_URL",
+          "value": "redis://daad-studio-redis.abc123.use1.cache.amazonaws.com:6379"
+        },
+        {
+          "name": "JWT_EXPIRES_IN",
+          "value": "7d"
+        },
+        {
+          "name": "CLIENT_URL",
+          "value": "https://d1234567890.cloudfront.net"
+        },
+        {
+          "name": "LOG_LEVEL",
+          "value": "info"
+        },
+        {
+          "name": "AI_PROVIDER",
+          "value": "gemini"
+        },
+        {
+          "name": "GEMINI_MODEL",
+          "value": "gemini-1.5-flash"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:me-south-1:ACCOUNT_ID:secret:daad-studio/db-url"
+        },
+        {
+          "name": "JWT_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:me-south-1:ACCOUNT_ID:secret:daad-studio/jwt-secret"
+        },
+        {
+          "name": "GEMINI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:me-south-1:ACCOUNT_ID:secret:daad-studio/gemini-api-key"
+        },
+        {
+          "name": "WEBHOOK_DISCORD_URL",
+          "valueFrom": "arn:aws:secretsmanager:me-south-1:ACCOUNT_ID:secret:daad-studio/webhook-discord"
+        }
+      ],
+      "ulimits": [
+        {
+          "name": "nofile",
+          "softLimit": 65536,
+          "hardLimit": 65536
+        }
+      ],
+      "readonlyRootFilesystem": false,
+      "user": "node"
+    }
+  ],
+  "placementConstraints": [],
+  "tags": [
+    {
+      "key": "Project",
+      "value": "DhadStudio"
+    },
+    {
+      "key": "Environment",
+      "value": "Production"
+    },
+    {
+      "key": "ManagedBy",
+      "value": "ECS"
+    }
+  ]
+}

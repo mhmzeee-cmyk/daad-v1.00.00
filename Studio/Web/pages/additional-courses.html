@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الدورات الإضافية - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    .course-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .course-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.15); }
+    .course-card.locked { opacity: 0.5; }
+    .course-icon { font-size: 48px; margin-bottom: 12px; }
+    .course-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .course-desc { color: var(--text-muted); font-size: 13px; line-height: 1.8; margin-bottom: 16px; }
+    .course-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .course-badge { padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+    .badge-locked { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-unlocked { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-enrolled { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+    .course-stats { display: flex; gap: 16px; margin-top: 12px; }
+    .course-stat { font-size: 12px; color: var(--text-muted); }
+    .btn-enroll { margin-top: 16px; }
+    .lock-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.3); border-radius: var(--radius);
+    }
+    .lock-text { color: #fff; font-size: 14px; font-weight: 600; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content">
+      <div class="page-header">
+        <h1>الدورات الإضافية</h1>
+        <p style="color:var(--text-muted);margin-top:8px">دورات متقدمة لمن يريد تعمّق في مجالات محددة</p>
+      </div>
+      <div class="grid-3" id="coursesGrid">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/watermark.js"></script>
+  <script src="../js/additional-courses-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+# BUG-REG: ADD ACC — كان يجمع مع S0 بدل ACC
+# 21 + 21 = 42
+load acc, 21
+add acc
+halt

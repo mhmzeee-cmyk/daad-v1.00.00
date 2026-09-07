@@ -1,0 +1,5 @@
+# BUG-REG: MOV ACC <-> S0 — كان لا يعمل
+# النتيجة: مح = 42
+load s0, 42
+mov acc, s0
+halt

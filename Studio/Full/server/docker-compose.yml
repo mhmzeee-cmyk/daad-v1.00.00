@@ -1,0 +1,114 @@
+# ============================================
+# Dhad Studio - Docker Compose
+# Developer: محمد محمود الحموز | Dhad Studio
+# ============================================
+
+version: '3.8'
+
+services:
+  # Node.js Backend
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dhad-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/dhad_studio
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_ACCESS_EXPIRES=3600s
+      - JWT_REFRESH_EXPIRES=7d
+      - HMAC_SECRET=${HMAC_SECRET}
+      - REDIS_URL=redis://redis:6379
+      - PORT=3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - dhad-network
+    volumes:
+      - server-logs:/app/logs
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: dhad-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=dhad_studio
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dhad-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: dhad-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - dhad-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: dhad-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot-conf:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on:
+      - server
+    networks:
+      - dhad-network
+
+  # Certbot for SSL
+  certbot:
+    image: certbot/certbot
+    container_name: dhad-certbot
+    volumes:
+      - certbot-conf:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - dhad-network
+
+volumes:
+  postgres-data:
+  redis-data:
+  server-logs:
+  certbot-conf:
+  certbot-www:
+
+networks:
+  dhad-network:
+    driver: bridge

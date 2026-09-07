@@ -1,0 +1,32 @@
+{
+  "totalRequests": 96595,
+  "success": 82600,
+  "clientErrors": 2537,
+  "serverErrors": 0,
+  "rateLimited": 10069,
+  "lockedOut": 1389,
+  "hackAttempts": 4657,
+  "hacksBlocked": 11458,
+  "submissions": 0,
+  "submissionsPassed": 1553,
+  "submissionsFailed": 31369,
+  "assessmentsCreated": 0,
+  "challengeSubmits": 32922,
+  "profileViews": 9355,
+  "leaderboardViews": 14049,
+  "roadmapViews": 7557,
+  "achievementViews": 4651,
+  "workspaceSaves": 4769,
+  "classroomChecks": 3723,
+  "assessmentViews": 4809,
+  "dashboardViews": 0,
+  "errorCodes": {
+    "200": 82600,
+    "401": 11,
+    "403": 2526,
+    "423": 1389,
+    "429": 10069
+  },
+  "startTime": 1783315797224,
+  "log": []
+}

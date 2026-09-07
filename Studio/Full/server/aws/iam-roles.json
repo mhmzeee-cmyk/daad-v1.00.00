@@ -1,0 +1,125 @@
+{
+  "roles": [
+    {
+      "roleName": "ecsTaskExecutionRole",
+      "assumeRolePolicy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ecs-tasks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "policies": [
+        {
+          "policyName": "ecsTaskExecutionPolicy",
+          "policyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecr:GetAuthorizationToken",
+                  "ecr:BatchCheckLayerAvailability",
+                  "ecr:GetDownloadUrlForLayer",
+                  "ecr:BatchGetImage",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents",
+                  "secretsmanager:GetSecretValue",
+                  "ssm:GetParameters"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "roleName": "ecsTaskRole",
+      "assumeRolePolicy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ecs-tasks.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "policies": [
+        {
+          "policyName": "ecsTaskPolicy",
+          "policyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "secretsmanager:GetSecretValue",
+                  "ssm:GetParameter",
+                  "ssm:GetParameters"
+                ],
+                "Resource": [
+                  "arn:aws:secretsmanager:me-south-1:ACCOUNT_ID:secret:daad-studio/*",
+                  "arn:aws:ssm:me-south-1:ACCOUNT_ID:parameter/daad-studio/*"
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "elasticache:Connect"
+                ],
+                "Resource": [
+                  "arn:aws:elasticache:me-south-1:ACCOUNT_ID:replicationgroup:daad-studio-redis"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "roleName": "codeBuildServiceRole",
+      "assumeRolePolicy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "codebuild.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "policies": [
+        {
+          "policyName": "codeBuildPolicy",
+          "policyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "ecr:*",
+                  "ecs:*",
+                  "logs:*",
+                  "secretsmanager:GetSecretValue",
+                  "ssm:GetParameters"
+                ],
+                "Resource": "*"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

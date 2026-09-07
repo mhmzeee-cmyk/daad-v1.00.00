@@ -1,0 +1,14 @@
+# T15e: Macros — ماكرو
+.macro clear_acc
+load acc, 0
+.endm
+
+clear_acc
+load s0, 10
+load s1, 20
+load s2, 30
+add s0
+add s1
+add s2
+# مح = 10+20+30 = 60
+halt

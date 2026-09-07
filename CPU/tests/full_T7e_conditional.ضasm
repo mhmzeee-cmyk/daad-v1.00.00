@@ -1,0 +1,9 @@
+# T7e: Conditional assembly
+DEBUG = 1
+.if DEBUG
+حمّل مح، 42
+.endif
+.if 0
+حمّل مح، 99     # يجب تخطيه
+.endif
+توقف

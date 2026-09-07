@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حلول الدورات - اللغة العربية</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #6c63ff;
+            --accent2: #00d9ff;
+            --success: #00ff88;
+            --border: #2a2a4a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .course {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .course-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: var(--accent2);
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+        }
+
+        .lesson {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .lesson-title {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            direction: rtl;
+            text-align: right;
+            overflow-x: auto;
+            border: 1px solid #30363d;
+        }
+
+        .code-block .kw { color: #ff7b72; }
+        .code-block .fn { color: #d2a8ff; }
+        .code-block .str { color: #a5d6ff; }
+        .code-block .num { color: #79c0ff; }
+        .code-block .cm { color: #8b949e; }
+        .code-block .op { color: #ff7b72; }
+        .code-block .vr { color: #ffa657; }
+
+        .explanation {
+            background: rgba(108, 99, 255, 0.1);
+            border-right: 4px solid var(--accent);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .output {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+        }
+
+        .output::before {
+            content: "النتيجة: ";
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .tip {
+            background: rgba(0, 217, 255, 0.1);
+            border-right: 4px solid var(--accent2);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .exercise {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .exercise::before {
+            content: "التمرين: ";
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .nav a {
+            display: block;
+            background: var(--bg-card);
+            color: var(--accent2);
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                position: relative;
+                top: 0;
+                left: 0;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 30px;
+            }
+
+            .nav a {
+                margin-bottom: 0;
+            }
+        }
+    </style>
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+    <nav class="nav">
+        <a href="#crypto">التشفير</a>
+        <a href="#cyber">الأمن السيبراني</a>
+        <a href="#web">برمجة الويب</a>
+    </nav>
+
+    <div class="container">
+        <h1>حلول أول درس من كل دورة</h1>
+
+        <!-- دورة التشفير -->
+        <section class="course" id="crypto">
+            <h2 class="course-title">دورة التشفير</h2>
+            
+            <div class="lesson">
+                <h3 class="lesson-title">الدرس الأول: مقدمة في علم التشفير</h3>
+                
+                <div class="explanation">
+                    <p>في هذا الدرس تعلمنا كيف نستخدم دالة <code>الهاش()</code> من مكتبة الأمان لتحويل النص إلى بصمة رقمية لا يمكن عكسها.</p>
+                </div>
+
+                <div class="code-block">
+<span class="cm">// استيراد مكتبة الأمان</span>
+<span class="kw">استورد</span> <span class="str">"الأمان"</span>;
+
+<span class="cm">// تحويل نص إلى بصمة SHA-256</span>
+<span class="kw">نص</span> <span class="vr">النص</span> = <span class="str">"مرحباً بالعالم"</span>;
+<span class="kw">نص</span> <span class="vr">البصمة</span> = <span class="fn">الهاش</span>(<span class="vr">النص</span>);
+
+<span class="fn">طباعة</span>(<span class="str">"النص الأصلي: "</span> + <span class="vr">النص</span>);
+<span class="fn">طباعة</span>(<span class="str">"البصمة: "</span> + <span class="vr">البصمة</span>);
+
+<span class="cm">// مقارنة نصين</span>
+<span class="kw">نص</span> <span class="vr">نص2</span> = <span class="str">"مرحباً بالعالم"</span>;
+<span class="kw">صحيح</span> <span class="vr">مطابق</span> = (<span class="fn">الهاش</span>(<span class="vr">النص</span>) == <span class="fn">الهاش</span>(<span class="vr">نص2</span>));
+<span class="fn">طباعة</span>(<span class="str">"هل هما متساويان؟ "</span> + <span class="vr">مطابق</span>);
+                </div>
+
+                <div class="output">البصمة: 7d793037a0760186574b0282f2f435e7...</div>
+
+                <div class="tip">
+                    <strong>ملاحظة:</strong> الهاش أحادي الاتجاه - لا يمكن استرجاع النص الأصلي من البصمة. هذا يجعله آمناً لتخزين كلمات المرور.
+                </div>
+
+                <div class="exercise">
+                    جرّب تغيير النص وشاهد كيف تتغير البصمة بالكامل حتى لو تغير حرف واحد فقط.
+                </div>
+            </div>
+        </section>
+
+        <!-- دورة الأمن السيبراني -->
+        <section class="course" id="cyber">
+            <h2 class="course-title">دورة الأمن السيبراني</h2>
+            
+            <div class="lesson">
+                <h3 class="lesson-title">الدرس الأول: مقدمة في الأمن السيبراني</h3>
+                
+                <div class="explanation">
+                    <p>في هذا الدرس تعلمنا كيف نجمع المعلومات عن أي موقع ويب باستخدام دوال مكتبة الأدوات.</p>
+                </div>
+
+                <div class="code-block">
+<span class="cm">// استيراد مكتبة الأدوات الأمنية</span>
+<span class="kw">استورد</span> <span class="str">"الأدوات"</span>;
+
+<span class="cm">// جمع معلومات عن موقع</span>
+<span class="kw">نص</span> <span class="vr">المعلومات</span> = <span class="fn">جمع_معلومات</span>(<span class="str">"example.com"</span>);
+<span class="fn">طباعة</span>(<span class="vr">المعلومات</span>);
+
+<span class="cm">// فحص المنافذ المفتوحة</span>
+<span class="kw">نص</span> <span class="vr">المنافذ</span> = <span class="fn">فحص_منافذ</span>(<span class="str">"example.com"</span>, <span class="str">"1-100"</span>);
+<span class="fn">طباعة</span>(<span class="vr">المنافذ</span>);
+
+<span class="cm">// تحليل رؤوس HTTP</span>
+<span class="kw">نص</span> <span class="vr">الرؤوس</span> = <span class="fn">حلل_رؤوس</span>(<span class="str">"https://example.com"</span>);
+<span class="fn">طباعة</span>(<span class="vr">الرؤوس</span>);
+
+<span class="cm">// تقرير أمان شامل</span>
+<span class="kw">نص</span> <span class="vr">التقرير</span> = <span class="fn">تقرير_أمان</span>(<span class="str">"example.com"</span>);
+<span class="fn">طباعة</span>(<span class="vr">التقرير</span>);
+                </div>
+
+                <div class="output">تقرير أمان example.com: تم فحص 100 منفذ - 3 مفتوحة (80, 443, 22)</div>
+
+                <div class="tip">
+                    <strong>ملاحظة:</strong> جمع المعلومات هو الخطوة الأولى في أي اختبار اختراق. كلما حصلت على معلومات أكثر، كان تحليلك أدق.
+                </div>
+
+                <div class="exercise">
+                    جرّب فحص موقعك الخاص وشاهد النتائج. هل توجد منافذ غير متوقعة مفتوحة؟
+                </div>
+            </div>
+        </section>
+
+        <!-- دورة برمجة صفحات الويب -->
+        <section class="course" id="web">
+            <h2 class="course-title">دورة برمجة صفحات الويب</h2>
+            
+            <div class="lesson">
+                <h3 class="lesson-title">الدرس الأول: مقدمة في HTML</h3>
+                
+                <div class="explanation">
+                    <p>في هذا الدرس تعلمنا كيف ننشئ صفحة ويب كاملة باستخدام دوال مكتبة الويب في لغة ض.</p>
+                </div>
+
+                <div class="code-block">
+<span class="cm">// استيراد مكتبة الويب</span>
+<span class="kw">استورد</span> <span class="str">"الويب"</span>;
+
+<span class="cm">// إنشاء صفحة HTML كاملة</span>
+<span class="fn">صفحة_كاملة</span>(<span class="str">"موقعي الأول"</span>, [
+    <span class="fn">ترويسة</span>(<span class="str">"مرحباً بكم في موقعي"</span>, <span class="str">"هذا موقع تعليمي بلغة ض"</span>),
+    
+    <span class="fn">عنوان2</span>(<span class="str">"من نحن"</span>),
+    <span class="fn">فقرة</span>(<span class="str">"نحن طلاب يتعلمون البرمجة بلغة الض"</span>),
+    
+    <span class="fn">عنوان2</span>(<span class="str">"خدماتنا"</span>),
+    <span class="fn">قائمة</span>([
+        <span class="str">"تعلم البرمجة"</span>,
+        <span class="str">"بناء المواقع"</span>,
+        <span class="str">"تطوير التطبيقات"</span>
+    ]),
+    
+    <span class="fn">رابط</span>(<span class="str">"https://example.com"</span>, <span class="str">"زيارة موقعنا"</span>),
+    
+    <span class="fn">تذييل</span>(<span class="str">"© 2024 جميع الحقوق محفوظة"</span>)
+]);
+                </div>
+
+                <div class="output">تم إنشاء صفحة HTML كاملة بعنوان وفقرات وقائمة ورابط وتذييل</div>
+
+                <div class="tip">
+                    <strong>ملاحظة:</strong> دالة <code>صفحة_كاملة()</code> تنشئ لك HTML كامل جاهز للعرض. يمكنك تعديل المحتوى بسهولة.
+                </div>
+
+                <div class="exercise">
+                    جرّب إضافة صورة باستخدام <code>صورة()</code> وعنوان رئيسي باستخدام <code>عنوان1()</code>.
+                </div>
+            </div>
+        </section>
+
+        <!-- ملخص الدوال المستخدمة -->
+        <section class="course">
+            <h2 class="course-title">ملخص الدوال المستخدمة</h2>
+            
+            <div class="lesson">
+                <h3 class="lesson-title">مكتبة الأمان</h3>
+                <div class="code-block">
+<span class="fn">الهاش</span>(نص)           <span class="cm">// بصمة SHA-256</span>
+<span class="fn">الهاش_MD5</span>(نص)       <span class="cm">// بصمة MD5</span>
+<span class="fn">تشفير_قيصر</span>(نص, مزاحة)  <span class="cm">// تشفير شفرة القيصر</span>
+<span class="fn">فك_قيصر</span>(نص, مزاحة)     <span class="cm">// فك تشفير القيصر</span>
+<span class="fn">تشفير_xor</span>(نص, مفتاح)   <span class="cm">// تشفير XOR</span>
+<span class="fn">hmac</span>(رسالة, مفتاح)     <span class="cm">// توقيع HMAC</span>
+<span class="fn">تشفير_AES</span>(نص, مفتاح)   <span class="cm">// تشفير AES</span>
+<span class="fn">فك_AES</span>(مشفر, مفتاح)    <span class="cm">// فك تشفير AES</span>
+<span class="fn">ولّد_مفتاح</span>(طول)       <span class="cm">// توليد مفتاح عشوائي</span>
+<span class="fn">ولّد_ملح</span>(طول)         <span class="cm">// توليد ملح عشوائي</span>
+<span class="fn">تجزئة</span>(كلمة)          <span class="cm">// تجزئة كلمة مرور</span>
+<span class="fn">تحقق_كلمة</span>(كلمة, محفوظ) <span class="cm">// التحقق من كلمة المرور</span>
+<span class="fn">ولّد_مفاتيح_RSA</span>()    <span class="cm">// توليد مفاتيح RSA</span>
+<span class="fn">تشفير_RSA</span>(نص, مفتاح)   <span class="cm">// تشفير RSA</span>
+<span class="fn">فك_RSA</span>(مشفر, مفتاح)    <span class="cm">// فك تشفير RSA</span>
+<span class="fn">فحص_TLS</span>(رابط)         <span class="cm">// فحص TLS</span>
+<span class="fn">فحص_الشهادة</span>(رابط)     <span class="cm">// فحص الشهادة</span>
+                </div>
+            </div>
+
+            <div class="lesson">
+                <h3 class="lesson-title">مكتبة الأدوات</h3>
+                <div class="code-block">
+<span class="fn">جمع_معلومات</span>(هدف)        <span class="cm">// جمع معلومات OSINT</span>
+<span class="fn">فحص_منافذ</span>(هدف, نطاق)    <span class="cm">// فحص المنافذ</span>
+<span class="fn">حلل_رؤوس</span>(رابط)         <span class="cm">// تحليل رؤوس HTTP</span>
+<span class="fn">تقرير_أمان</span>(هدف)        <span class="cm">// تقرير أمان شامل</span>
+<span class="fn">كشف_XSS</span>(إدخال)         <span class="cm">// كشف ثغرة XSS</span>
+<span class="fn">تنقية</span>(إدخال)           <span class="cm">// تنقية كود HTML</span>
+<span class="fn">كشف_SQLi</span>(إدخال)        <span class="cm">// كشف SQL Injection</span>
+<span class="fn">عدّل_SQL</span>(استعلام)      <span class="cm">// تعديل SQL آمن</span>
+<span class="fn">كشف_Command</span>(إدخال)      <span class="cm">// كشف Command Injection</span>
+<span class="fn">كشف_Path</span>(رابط)         <span class="cm">// كشف Path Traversal</span>
+<span class="fn">كشف_CSRF</span>(إدخال)        <span class="cm">// كشف CSRF</span>
+<span class="fn">ولّد_رمز_CSRF</span>()       <span class="cm">// توليد رمز CSRF</span>
+<span class="fn">فحص_كلمة_مرور</span>(كلمة)     <span class="cm">// فحص قوة كلمة المرور</span>
+<span class="fn">قواعد_جدار_النار</span>()     <span class="cm">// عرض قواعد الجدار</span>
+<span class="fn">أضف_قاعدة</span>(قاعدة)       <span class="cm">// إضافة قاعدة</span>
+<span class="fn">احذف_قاعدة</span>(قاعدة)      <span class="cm">// حذف قاعدة</span>
+<span class="fn">كشف_الاختراق</span>(إدخال)     <span class="cm">// كشف محاولات الاختراق</span>
+<span class="fn">محاكاة_VPN</span>()          <span class="cm">// محاكاة VPN</span>
+<span class="fn">فحص_WiFi</span>()            <span class="cm">// فحص WiFi</span>
+<span class="fn">فحص_DNS</span>(نطاق)         <span class="cm">// فحص DNS</span>
+<span class="fn">كشف_DNS_مشبوه</span>(نطاق)    <span class="cm">// كشف DNS مشبوه</span>
+<span class="fn">حلل_بروتوكول</span>(منفذ)     <span class="cm">// تحليل البروتوكول</span>
+<span class="fn">مراقبة_الشبكة</span>(хвм)     <span class="cm">// مراقبة الشبكة</span>
+<span class="fn">التقاط_حزم</span>(عدد)       <span class="cm">// التقاط حزم</span>
+<span class="fn">استخراج_بيانات</span>(مسار)    <span class="cm">// استخراج بيانات</span>
+<span class="fn">استرجاع_محذوفات</span>(مسار)   <span class="cm">// استرجاع محذوفات</span>
+<span class="fn">تحليل_الذاكرة</span>(ملف)      <span class="cm">// تحليل ذاكرة</span>
+<span class="fn">كشف_عمليات_مشبوهة</span>()    <span class="cm">// كشف عمليات مشبوهة</span>
+<span class="fn">تحليل_سجلات</span>(ملف)       <span class="cm">// تحليل سجلات</span>
+<span class="fn">بحث_في_سجلات</span>(ملف, استعلام) <span class="cm">// بحث في سجلات</span>
+<span class="fn">حلل_بريد</span>(رسالة)       <span class="cm">// تحليل بريد</span>
+<span class="fn">فحص_مرفقات</span>(ملف)       <span class="cm">// فحص مرفقات</span>
+<span class="fn">حلل_برمجيات</span>(مسار)      <span class="cm">// تحليل برمجيات خبيثة</span>
+<span class="fn">فحص_بصمة</span>(ملف)         <span class="cm">// فحص بصمة ملف</span>
+<span class="fn">حلل_سجلات_الويب</span>(ملف)   <span class="cm">// تحليل سجلات ويب</span>
+<span class="fn">كشف_web_shell</span>(مسار)     <span class="cm">// كشف web shell</span>
+<span class="fn">تقرير_اختبار</span>(هدف, ثغرات) <span class="cm">// تقرير اختبار اختراق</span>
+<span class="fn">تحقق_أخلاقي</span>(هدف)      <span class="cm">// تحقق أخلاقي</span>
+                </div>
+            </div>
+
+            <div class="lesson">
+                <h3 class="lesson-title">مكتبة الويب</h3>
+                <div class="code-block">
+<span class="fn">صفحة_كاملة</span>(عنوان, عناصر)   <span class="cm">// صفحة HTML كاملة</span>
+<span class="fn">ترويسة</span>(عنوان, وصف)       <span class="cm">// ترويسة الصفحة</span>
+<span class="fn">تذييل</span>(نص)             <span class="cm">// تذييل الصفحة</span>
+<span class="fn">شريط_تنقل</span>(روابط)       <span class="cm">// شريط تنقل</span>
+<span class="fn">شبكة</span>(عناصر)           <span class="cm">// شبكة عناصر</span>
+<span class="fn">عنوان1</span>(نص)            <span class="cm">// عنوان h1</span>
+<span class="fn">عنوان2</span>(نص)            <span class="cm">// عنوان h2</span>
+<span class="fn">عنوان3</span>(نص)            <span class="cm">// عنوان h3</span>
+<span class="fn">فقرة</span>(نص)              <span class="cm">// فقرة نصية</span>
+<span class="fn">نص_عريض</span>(نص)           <span class="cm">// نص بخط عريض</span>
+<span class="fn">نص_مائل</span>(نص)           <span class="cm">// نص مائل</span>
+<span class="fn">كود</span>(نص)               <span class="cm">// نص بتنسيق كود</span>
+<span class="fn">رابط</span>(url, نص)          <span class="cm">// رابط تشعبي</span>
+<span class="fn">صورة</span>(src, alt)         <span class="cm">// صورة</span>
+<span class="fn">قائمة</span>(عناصر)           <span class="cm">// قائمة غير مرتبة</span>
+<span class="fn">قائمة_مرتبة</span>(عناصر)     <span class="cm">// قائمة مرتبة</span>
+<span class="fn">جدول</span>(صفوف)            <span class="cm">// جدول بيانات</span>
+<span class="fn">جدول_عناوين</span>(عناوين, صفوف) <span class="cm">// جدول بعناوين</span>
+<span class="fn">نموذج</span>(method, action, حقول) <span class="cm">// نموذج إدخال</span>
+<span class="fn">حاوية</span>(عناصر)          <span class="cm">// حاوية div</span>
+<span class="fn">بطاقة</span>(عنوان, محتوى)     <span class="cm">// بطاقة</span>
+<span class="fn">تنسيق</span>(css)            <span class="cm">// إضافة CSS</span>
+<span class="fn">كلاس</span>(اسم)             <span class="cm">// إضافة class</span>
+<span class="fn">اعرض</span>(نص)              <span class="cm">// عرض نص</span>
+<span class="fn">تخطيط_مرن</span>(عناصر)       <span class="cm">// Flexbox layout</span>
+<span class="fn">تخطيط_شبكة</span>(أعمدة, عناصر) <span class="cm">// CSS Grid</span>
+<span class="fn">تخطيط_جانبي</span>(محتوى, جانبي) <span class="cm">// Sidebar layout</span>
+<span class="fn">بطاقة_متحركة</span>(عنوان, محتوى, لون) <span class="cm">// بطاقة متحركة</span>
+<span class="fn">عمود_مرن</span>(عنوان, عناصر)   <span class="cm">// عمود flex</span>
+<span class="fn">مركز</span>(محتوى)           <span class="cm">// توسيط</span>
+<span class="fn">فاصل</span>()               <span class="cm">// خط أفقي</span>
+<span class="fn">زر</span>(نص, رابط)          <span class="cm">// زر</span>
+<span class="fn">حقل_إدخال</span>(تسمية, نوع, اسم) <span class="cm">// حقل إدخال</span>
+                </div>
+            </div>
+        </section>
+    </div>
+  <script src="js/watermark.js?v=2.0"></script>
+  <style>.dhad-watermark{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:-1;overflow:hidden;display:flex;flex-wrap:wrap;align-content:flex-start;gap:120px 80px;padding:40px;transform:rotate(-25deg) scale(1.1);opacity:0.012}.dhad-watermark span{display:inline-block;white-space:nowrap;font-size:11px;font-family:'Segoe UI',Tahoma,'Noto Sans Arabic',Arial,sans-serif;color:#ccc;user-select:none;-webkit-user-select:none}</style>
+</body>
+</html>

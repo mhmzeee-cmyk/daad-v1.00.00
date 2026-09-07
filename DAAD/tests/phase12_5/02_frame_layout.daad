@@ -1,0 +1,25 @@
+# Phase 12.5-F.2: Frame Layout Verification
+# Verifies that frame memory at 0xE000+ is used correctly for spilling.
+# 7 local variables force at least one spill to frame memory.
+
+دالة: helper(x: رقم) -> رقم :-
+    متغير: a = x
+    متغير: b = x + 1
+    متغير: c = x + 2
+    متغير: d = x + 3
+    متغير: e = x + 4
+    متغير: f = x + 5
+    متغير: g = x + 6
+    # All 7 live - must spill some to frame
+    a = b + c
+    d = e + f
+    g = a + d
+    ارجع(g)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: result = helper(1)
+    # result = (2+3) + (5+6) = 16
+    اطبع(result)
+    ارجع(result)
+نهاية

@@ -1,0 +1,19 @@
+# T15b: All registers — اختبار كل السجلات
+load s0, 1
+load s1, 2
+load s2, 3
+load s3, 4
+load s4, 5
+load s5, 6
+load s6, 7
+load s7, 8
+# مح = 1+2+3+4+5+6+7+8 = 36
+add s0
+add s1
+add s2
+add s3
+add s4
+add s5
+add s6
+add s7
+halt

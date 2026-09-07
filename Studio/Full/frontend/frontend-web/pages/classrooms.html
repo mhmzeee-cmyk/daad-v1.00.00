@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الفصول الدراسية - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1> الفصول الدراسية</h1>
+        <button class="btn btn-primary btn-sm" onclick="showModal()" id="btnAddClassroom">+ فصل جديد</button>
+      </div>
+
+      <div class="grid-2" id="classroomsGrid">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create Modal -->
+  <div class="modal-overlay" id="createModal">
+    <div class="modal">
+      <h2>إنشاء فصل جديد</h2>
+      <form id="createForm">
+        <div class="form-group">
+          <label>اسم الفصل</label>
+          <input type="text" id="className" placeholder="مثال: الصف الأول" required>
+        </div>
+        <div class="form-group">
+          <label>المادة</label>
+          <input type="text" id="classSubject" placeholder="البرمجة بلغة ض">
+        </div>
+        <div class="form-group">
+          <label>المستوى</label>
+          <select id="classLevel">
+            <option value="BEGINNER">مبتدئ</option>
+            <option value="INTERMEDIATE">متوسط</option>
+            <option value="ADVANCED">متقدم</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button type="submit" class="btn btn-primary">إنشاء</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Classroom Detail Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal" style="max-width:600px">
+      <h2 id="detailTitle"></h2>
+      <div id="detailContent"></div>
+      <div style="margin-top:20px;display:flex;gap:12px">
+        <button class="btn btn-secondary btn-sm" onclick="closeDetailModal()">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/classrooms-page.js"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/watermark.js"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
+</body>
+</html>

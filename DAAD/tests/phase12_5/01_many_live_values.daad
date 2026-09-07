@@ -1,0 +1,20 @@
+# Phase 12.5-F: Many live values (>8 to trigger spilling)
+# Should produce >8 live registers simultaneously
+
+دالة: الرئيسية() -> رقم :-
+    متغير: a = 1
+    متغير: b = 2
+    متغير: c = 3
+    متغير: d = 4
+    متغير: e = 5
+    متغير: f = 6
+    متغير: g = 7
+    متغير: h = 8
+    متغير: i = 9
+    متغير: j = 10
+    # All 10 values live simultaneously in a single expression
+    متغير: result = a + b + c + d + e + f + g + h + i + j
+    # result should be 55
+    اطبع(result)
+    ارجع(result)
+نهاية

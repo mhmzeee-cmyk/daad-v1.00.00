@@ -1,0 +1,2 @@
+MYDATA = 65
+.db MYDATA, 66, 67

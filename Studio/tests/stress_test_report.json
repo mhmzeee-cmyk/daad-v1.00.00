@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-07-06T03:33:28.988Z",
+  "totalBots": 10000,
+  "batchSize": 500,
+  "totalTime": "25.4",
+  "requestsPerSecond": "394",
+  "results": {
+    "success": 0,
+    "rateLimited": 0,
+    "locked": 0,
+    "errors": 136,
+    "serverErrors": 0,
+    "timeouts": 9864
+  },
+  "responseTimes": {
+    "average": "840",
+    "min": 163,
+    "max": 10261,
+    "p95": 10205,
+    "p99": 10255
+  },
+  "statusCodes": {
+    "0": 9864,
+    "400": 125,
+    "401": 11
+  }
+}

@@ -1,0 +1,10 @@
+# BUG-REG: Nested .if — كان يكسر البرمجية
+# النتيجة: 99
+.if 1
+  load acc, 10
+  .if 0
+    load acc, 42
+  .endif
+  load acc, 99
+  halt
+.endif

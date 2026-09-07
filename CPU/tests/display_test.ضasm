@@ -1,0 +1,9 @@
+# Display Test: writes "Hi!" to display via PRINT (output callback)
+# Expected stdout: Hi!
+load acc, 72
+print_ch
+load acc, 105
+print_ch
+load acc, 33
+print_ch
+halt

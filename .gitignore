@@ -1,0 +1,11 @@
+node_modules/
+.npm/
+dist/
+build/
+out/
+coverage/
+.cache/
+*.log
+.env
+.env.*
+!.env.example

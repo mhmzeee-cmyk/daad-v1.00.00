@@ -1,0 +1,135 @@
+// ═══════════════════════════════════════════════════════════════
+// برنامج رسم — بلغة ض
+// رسم أشكال هندسية متنوعة على اللوحة
+// ═══════════════════════════════════════════════════════════════
+
+__dhad.setCanvasSize(900, 650);
+__dhad.background("#1a1a2e");
+
+// ── الرسم التفاعلي ────────────────────────────────────────────
+// مربع الشبكة
+__dhad.setColor("#16213e");
+__dhad.rectangle(50, 50, 800, 550);
+
+// ── ألوان متنوعة ──────────────────────────────────────────────
+// مربعات الألوان
+__dhad.setColor("#e74c3c");
+__dhad.rectangle(600, 20, 30, 30);
+__dhad.setColor("#3498db");
+__dhad.rectangle(640, 20, 30, 30);
+__dhad.setColor("#2ecc71");
+__dhad.rectangle(680, 20, 30, 30);
+__dhad.setColor("#f39c12");
+__dhad.rectangle(720, 20, 30, 30);
+__dhad.setColor("#9b59b6");
+__dhad.rectangle(760, 20, 30, 30);
+__dhad.setColor("#1abc9c");
+__dhad.rectangle(800, 20, 30, 30);
+__dhad.setColor("#e67e22");
+__dhad.rectangle(840, 20, 30, 30);
+
+// ── العنوان ────────────────────────────────────────────────────
+__dhad.setColor("#ecf0f1");
+__dhad.text("برنامج الرسم — بلغة ض", 400, 8, 18);
+
+// ── رسم أشكال هندسية ──────────────────────────────────────────
+// دوائر ملونة
+__dhad.setColor("#e74c3c");
+__dhad.circle(150, 150, 40);
+__dhad.setColor("#3498db");
+__dhad.circle(250, 150, 35);
+__dhad.setColor("#2ecc71");
+__dhad.circle(350, 150, 45);
+__dhad.setColor("#f39c12");
+__dhad.circle(450, 150, 30);
+
+// مستطيلات متنوعة
+__dhad.setColor("#9b59b6");
+__dhad.rectangle(100, 220, 80, 50);
+__dhad.setColor("#1abc9c");
+__dhad.rectangle(200, 230, 100, 40);
+__dhad.setColor("#e67e22");
+__dhad.rectangle(320, 225, 70, 60);
+__dhad.setColor("#34495e");
+__dhad.rectangle(410, 220, 90, 45);
+
+// خطوط متقاطعة
+__dhad.setColor("#ecf0f1");
+__dhad.line(100, 300, 500, 300);
+__dhad.setColor("#bdc3c7");
+__dhad.line(100, 320, 500, 340);
+__dhad.setColor("#95a5a6");
+__dhad.line(100, 340, 500, 310);
+
+// نجوم
+__dhad.setColor("#f1c40f");
+__dhad.circle(150, 400, 20);
+__dhad.setColor("#e74c3c");
+__dhad.circle(250, 410, 15);
+__dhad.setColor("#3498db");
+__dhad.circle(350, 395, 25);
+__dhad.setColor("#2ecc71");
+__dhad.circle(450, 405, 18);
+
+// ── رسم حرفي ──────────────────────────────────────────────────
+// أشكال معقدة
+__dhad.setColor("#e74c3c");
+__dhad.rectangle(600, 100, 50, 50);
+__dhad.setColor("#3498db");
+__dhad.rectangle(660, 100, 50, 50);
+__dhad.setColor("#2ecc71");
+__dhad.rectangle(720, 100, 50, 50);
+__dhad.setColor("#f39c12");
+__dhad.rectangle(780, 100, 50, 50);
+
+// خطوط عمودية
+__dhad.setColor("#9b59b6");
+__dhad.line(625, 150, 625, 250);
+__dhad.setColor("#1abc9c");
+__dhad.line(685, 150, 685, 250);
+__dhad.setColor("#e67e22");
+__dhad.line(745, 150, 745, 250);
+__dhad.setColor("#34495e");
+__dhad.line(805, 150, 805, 250);
+
+// نقوش هندسية
+__dhad.setColor("#ecf0f1");
+__dhad.rectangle(580, 280, 240, 200);
+__dhad.setColor("#1a1a2e");
+__dhad.rectangle(590, 290, 220, 180);
+
+// أنماط داخلية
+__dhad.setColor("#e74c3c");
+__dhad.rectangle(600, 300, 40, 40);
+__dhad.setColor("#3498db");
+__dhad.rectangle(650, 300, 40, 40);
+__dhad.setColor("#2ecc71");
+__dhad.rectangle(700, 300, 40, 40);
+__dhad.setColor("#f39c12");
+__dhad.rectangle(750, 300, 40, 40);
+
+__dhad.setColor("#9b59b6");
+__dhad.rectangle(600, 350, 40, 40);
+__dhad.setColor("#1abc9c");
+__dhad.rectangle(650, 350, 40, 40);
+__dhad.setColor("#e67e22");
+__dhad.rectangle(700, 350, 40, 40);
+__dhad.setColor("#34495e");
+__dhad.rectangle(750, 350, 40, 40);
+
+__dhad.setColor("#ecf0f1");
+__dhad.rectangle(600, 400, 40, 40);
+__dhad.setColor("#bdc3c7");
+__dhad.rectangle(650, 400, 40, 40);
+__dhad.setColor("#95a5a6");
+__dhad.rectangle(700, 400, 40, 40);
+__dhad.setColor("#7f8c8d");
+__dhad.rectangle(750, 400, 40, 40);
+
+// ── نصوص زخرفية ───────────────────────────────────────────────
+__dhad.setColor("#f1c40f");
+__dhad.text("مرحباً بكم في عالم الرسم", 400, 520, 20);
+__dhad.setColor("#ecf0f1");
+__dhad.text("اضغط على الألوان واستكشف الأشكال", 400, 560, 14);
+__dhad.setColor("#bdc3c7");
+__dhad.text("التصميم: بلغة ض | Dhad Language", 400, 600, 12);

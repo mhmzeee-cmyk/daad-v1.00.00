@@ -1,0 +1,22 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "server/Dockerfile",
+    "dockerContext": "server"
+  },
+  "deploy": {
+    "startCommand": "npx prisma migrate deploy && node src/index.js",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  },
+  "variables": {
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "AI_PROVIDER": "gemini",
+    "GEMINI_MODEL": "gemini-1.5-flash",
+    "LOG_LEVEL": "info"
+  }
+}

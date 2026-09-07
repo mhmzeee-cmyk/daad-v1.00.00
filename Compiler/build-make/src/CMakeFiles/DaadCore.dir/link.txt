@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../lib/libDaadCore.a CMakeFiles/DaadCore.dir/Lexer.cpp.o CMakeFiles/DaadCore.dir/Token.cpp.o CMakeFiles/DaadCore.dir/Keywords.cpp.o CMakeFiles/DaadCore.dir/UnicodeUtils.cpp.o CMakeFiles/DaadCore.dir/AST.cpp.o CMakeFiles/DaadCore.dir/Parser.cpp.o CMakeFiles/DaadCore.dir/CodeGen.cpp.o CMakeFiles/DaadCore.dir/Compiler.cpp.o CMakeFiles/DaadCore.dir/Optimizer.cpp.o CMakeFiles/DaadCore.dir/Diagnostics.cpp.o CMakeFiles/DaadCore.dir/SandboxValidator.cpp.o
+/usr/bin/ranlib ../lib/libDaadCore.a

@@ -1,0 +1,40 @@
+# Phase 12.5-F.12: Recursion Depth Verification
+# Tests recursion at depths 2, 4, 8 with frame isolation.
+# 8-bit data width: max factorial that fits = 5! = 120, 6! = 720 > 255
+
+دالة: factorial(n: رقم) -> رقم :-
+    إذا (n <= 1) :-
+        ارجع(1)
+    نهاية
+    متغير: sub = n - 1
+    متغير: result = factorial(sub)
+    result = result * n
+    ارجع(result)
+نهاية
+
+دالة: deepest(x: رقم) -> رقم :-
+    إذا (x <= 1) :-
+        ارجع(1)
+    نهاية
+    متغير: r = deepest(x - 1)
+    r = r + 1
+    ارجع(r)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    # Depth 2: factorial(2) = 2
+    متغير: f2 = factorial(2)
+    # Depth 4: factorial(4) = 24
+    متغير: f4 = factorial(4)
+    # Depth 5: factorial(5) = 120 (max that fits in 8-bit)
+    متغير: f5 = factorial(5)
+    # Depth test: deepest(8) should return 8 (counts depth)
+    متغير: d8 = deepest(8)
+    # Print results
+    اطبع(f2)   # Expected: 2
+    اطبع(f4)   # Expected: 24
+    اطبع(f5)   # Expected: 120
+    اطبع(d8)   # Expected: 8
+    # Return deepest result as ACC
+    ارجع(d8)
+نهاية

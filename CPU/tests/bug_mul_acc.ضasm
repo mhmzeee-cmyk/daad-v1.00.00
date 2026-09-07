@@ -1,0 +1,5 @@
+# BUG-REG: MUL/DIV/MOD/DEC/INC with ACC
+# MUL: 6 * 6 = 36
+load acc, 6
+mul acc
+halt

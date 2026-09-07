@@ -1,0 +1,92 @@
+const express = require("express");
+const router = express.Router();
+const {
+  createAssessment,
+  getAssessmentResults,
+  exportClassroomReport,
+  getClassroomAssessments
+} = require("../controllers/assessmentController");
+const { authenticate, requireTeacherOrAdmin } = require("../middlewares/auth");
+const { writeRateLimit, readRateLimit } = require("../middlewares/security");
+const prisma = require("../utils/prisma");
+
+// ── Assessment Management (Teacher) ──────────────────────────────────────────
+
+router.post("/assessments/create", authenticate, requireTeacherOrAdmin, writeRateLimit, createAssessment);
+router.get("/assessments/:assessmentId/results", authenticate, requireTeacherOrAdmin, readRateLimit, getAssessmentResults);
+router.get("/assessments/classroom/:classId", authenticate, requireTeacherOrAdmin, readRateLimit, getClassroomAssessments);
+router.get("/analytics/classroom/:classId/export", authenticate, requireTeacherOrAdmin, readRateLimit, exportClassroomReport);
+
+// ── Security Alerts (Teacher/Admin) ──────────────────────────────────────────
+
+router.get("/analytics/security-alerts", authenticate, requireTeacherOrAdmin, readRateLimit, async (req, res, next) => {
+  try {
+    const { schoolId, role } = req.user;
+    const { severity, resolved, limit = 50, targetSchoolId } = req.query;
+
+    const where = {};
+    if (role === 'ADMIN' && targetSchoolId) {
+      where.schoolId = targetSchoolId;
+    } else if (role !== 'ADMIN') {
+      where.schoolId = schoolId;
+    }
+    if (severity) where.severity = severity.toUpperCase();
+    if (resolved !== undefined) where.resolved = resolved === 'true';
+
+    const alerts = await prisma.securityAlert.findMany({
+      where,
+      orderBy: [{ severity: 'desc' }, { createdAt: 'desc' }],
+      take: parseInt(limit)
+    });
+
+    const summary = await prisma.securityAlert.groupBy({
+      by: ['severity', 'resolved'],
+      where: { schoolId },
+      _count: true
+    });
+
+    const unresolvedCount = await prisma.securityAlert.count({
+      where: { schoolId, resolved: false }
+    });
+
+    res.json({
+      success: true,
+      alerts,
+      summary: summary.reduce((acc, item) => {
+        const key = `${item.severity}_${item.resolved ? 'resolved' : 'unresolved'}`;
+        acc[key] = item._count;
+        return acc;
+      }, {}),
+      unresolvedCount,
+      total: alerts.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/analytics/security-alerts/:id/resolve", authenticate, requireTeacherOrAdmin, writeRateLimit, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { schoolId } = req.user;
+
+    const alert = await prisma.securityAlert.findUnique({ where: { id } });
+    if (!alert) {
+      return res.status(404).json({ error: "غير موجود", message: "Security alert not found" });
+    }
+    if (alert.schoolId !== schoolId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: "محظور", message: "لا يمكن حل التنبيهات من مدارس أخرى" });
+    }
+
+    const updated = await prisma.securityAlert.update({
+      where: { id },
+      data: { resolved: true, resolvedBy: req.user.id, resolvedAt: new Date() }
+    });
+
+    res.json({ success: true, message: "تم حل التنبيه", alert: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;

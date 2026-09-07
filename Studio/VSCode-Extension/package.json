@@ -1,0 +1,71 @@
+{
+  "name": "daad-language",
+  "displayName": "لغة ض - Daad Language Support",
+  "description": "دعم تلوين القواعد، المقتطفات، وتحويل إلى C++ للغة ض",
+  "version": "1.0.0",
+  "publisher": "DaadStudio",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "daad",
+        "aliases": [
+          "ض",
+          "Daad"
+        ],
+        "extensions": [
+          ".ض"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "daad",
+        "scopeName": "source.daad",
+        "path": "./syntaxes/daad.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "daad",
+        "path": "./snippets/daad.code-snippets"
+      }
+    ],
+    "commands": [
+      {
+        "command": "daad.compileCurrentFile",
+        "title": "ض: تحويل الملف الحالي إلى C++"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "daad.compileCurrentFile",
+        "key": "f9",
+        "when": "editorTextFocus && resourceLangId == daad"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onLanguage:daad"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/node": "^26.5.0"
+  }
+}

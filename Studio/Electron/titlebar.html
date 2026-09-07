@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>كود التجربة</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <div id="titlebar">
+    <div class="titlebar-title">دهـد ستوديو</div>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn" onclick="window.electronAPI?.minimize()">─</button>
+      <button class="titlebar-btn" onclick="window.electronAPI?.maximize()">□</button>
+      <button class="titlebar-btn close" onclick="window.electronAPI?.close()">×</button>
+    </div>
+  </div>
+</body>
+</html>

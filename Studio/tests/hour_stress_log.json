@@ -1,0 +1,30 @@
+{
+  "totalRequests": 156688,
+  "success": 97269,
+  "clientErrors": 58507,
+  "serverErrors": 0,
+  "rateLimited": 267,
+  "lockedOut": 645,
+  "hackAttempts": 5395,
+  "hacksBlocked": 912,
+  "submissions": 30000,
+  "passed": 17,
+  "failed": 350,
+  "tierBlocked": 25200,
+  "seqBlocked": 4433,
+  "assessmentsCreated": 0,
+  "teacherActions": 56017,
+  "studentActions": 30000,
+  "loginsOk": 301,
+  "loginsFailed": 0,
+  "errorCodes": {
+    "200": 97268,
+    "201": 1,
+    "401": 8,
+    "403": 56922,
+    "404": 1577,
+    "423": 645,
+    "429": 267
+  },
+  "startTime": 1783336879757
+}

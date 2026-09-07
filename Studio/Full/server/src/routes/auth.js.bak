@@ -1,0 +1,63 @@
+const express = require("express");
+const router = express.Router();
+const authController = require("../controllers/authController");
+const { authenticate, requireAdmin, requireStudent, requireTeacherOrAdmin } = require("../middlewares/auth");
+const { strictRateLimit, isAccountLocked, isProgressivelyDelayed, recordFailedAttempt, logAudit } = require("../middlewares/strictSecurity");
+
+// Pre-route lockout and progressive delay check (before rate limiter)
+const loginSecurityCheck = async (req, res, next) => {
+  const { username } = req.body || {};
+  if (typeof username !== "string") return next();
+
+  // Check account lockout (highest priority)
+  if (await isAccountLocked(username)) {
+    logAudit("LOGIN_BLOCKED_LOCKED_ACCOUNT", { username, ip: req.ip });
+    return res.status(423).json({
+      error: "الحساب مقفل",
+      message: "الحساب مقفل بسبب محاولات فاشلة متعددة. يرجى المحاولة لاحقاً.",
+    });
+  }
+
+  // Check progressive delay — still increment counter so lockout eventually triggers
+  const { delayed, waitMs } = await isProgressivelyDelayed(username);
+  if (delayed) {
+    await recordFailedAttempt(username); // keep counter moving toward lockout
+    logAudit("LOGIN_PROGRESSIVE_DELAY_APPLIED", { username, ip: req.ip, waitMs });
+    return res.status(429).json({
+      error: "طلبات كثيرة جداً",
+      message: "محاولات كثيرة جداً. يرجى الانتظار " + waitMs + " ثانية.",
+      retryAfter: waitMs,
+    });
+  }
+
+  next();
+};
+
+// ── Public Routes ──────────────────────────────────────────────────────────
+router.post("/login", loginSecurityCheck, strictRateLimit("auth"), authController.login);
+router.post("/refresh", strictRateLimit("public"), authController.refreshToken);
+
+// ── Registration Routes ────────────────────────────────────────────────────
+// Public registration: anyone can register as student
+// Protected registration: teachers/admins can register any role (enforced in controller)
+const registrationHandler = (req, res, next) => {
+  const { role } = req.body || {};
+  // Students can register without authentication
+  if (role === "STUDENT") {
+    return authController.register(req, res, next);
+  }
+  // Teachers/Admins require authentication
+  authenticate(req, res, (err) => {
+    if (err) return;
+    requireTeacherOrAdmin(req, res, (err2) => {
+      if (err2) return;
+      authController.register(req, res, next);
+    });
+  });
+};
+router.post("/register", strictRateLimit("public"), registrationHandler);
+router.put("/change-password", authenticate, strictRateLimit("auth"), authController.changePassword);
+router.post("/reset-password", authenticate, requireAdmin, strictRateLimit("auth"), authController.resetPassword);
+router.post("/logout", authenticate, strictRateLimit("public"), authController.logout);
+
+module.exports = router;

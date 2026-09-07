@@ -1,0 +1,21 @@
+# Phase 12.5-F.10: Nested Function Calls
+# Tests deep call nesting with frame pointer save/restore.
+# Each call saves caller's S7 to hardware stack.
+
+دالة: square(x: رقم) -> رقم :-
+    ارجع(x * x)
+نهاية
+
+دالة: sum_of_squares(a: رقم, b: رقم) -> رقم :-
+    متغير: s1 = square(a)
+    متغير: s2 = square(b)
+    ارجع(s1 + s2)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: r1 = sum_of_squares(3, 4)   # 9+16 = 25
+    متغير: r2 = sum_of_squares(5, 12)  # 25+144 = 169
+    متغير: total = r1 + r2              # 25+169 = 194
+    اطبع(total)  # Expected: 194
+    ارجع(total)
+نهاية

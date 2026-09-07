@@ -1,0 +1,53 @@
+{
+  "scopeName": "source.daad",
+  "name": "Daad",
+  "fileTypes": ["daad", "ض"],
+  "patterns": [
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#strings" },
+    { "include": "#comments" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [{
+        "match": "\\b(اذا|والا|كرر|بينما|ارجع|فئة|هيكل|قالب|طباعة|ثابت|منطقي|حاول|امسك|ارم)\\b",
+        "name": "keyword.control.daad"
+      }]
+    },
+    "types": {
+      "patterns": [{
+        "match": "\\b(صحيح|مزدوج|حرف|فراغ|ذاتي|منطقي)\\b",
+        "name": "storage.type.daad"
+      }]
+    },
+    "strings": {
+      "patterns": [{
+        "begin": "\"",
+        "end": "\"",
+        "name": "string.quoted.double.daad",
+        "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.daad" }]
+      }]
+    },
+    "comments": {
+      "patterns": [{
+        "match": "//.*$",
+        "name": "comment.line.double-slash.daad"
+      }]
+    },
+    "numbers": {
+      "patterns": [{
+        "match": "\\b\\d+(\\.\\d+)?\\b",
+        "name": "constant.numeric.daad"
+      }]
+    },
+    "operators": {
+      "patterns": [{
+        "match": "[=+\\-*/<>!&|]",
+        "name": "keyword.operator.daad"
+      }]
+    }
+  }
+}

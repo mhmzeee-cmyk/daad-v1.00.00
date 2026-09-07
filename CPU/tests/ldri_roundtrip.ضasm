@@ -1,0 +1,28 @@
+# ══════════════════════════════════════════════════════════════
+#  T26d: LDRI round-trip — store then load different values
+#  Store 10 to 0x0050, store 20 to 0x0051
+#  Load both back, add them
+#  Expected: ACC = 30
+# ══════════════════════════════════════════════════════════════
+
+    # Store 10 to address 0x0050
+    حمّل s0, 0x00     # addr_hi = 0x00
+    حمّل s1, 0x50     # addr_lo = 0x50
+    حمّل s7, 10
+    خزن_غيرمباشر s7, s0, s1
+
+    # Store 20 to address 0x0051
+    حمّل s1, 0x51     # addr_lo = 0x51
+    حمّل s7, 20
+    خزن_غيرمباشر s7, s0, s1
+
+    # Load both back
+    حمّل s1, 0x50     # addr_lo = 0x50
+    اقرأ_غيرمباشر s5, s0, s1  # s5 = 10
+    حمّل s1, 0x51     # addr_lo = 0x51
+    اقرأ_غيرمباشر s6, s0, s1  # s6 = 20
+
+    # Add: ACC = s5 + s6 = 30
+    نقل مح, s5
+    جمع s6
+    توقف

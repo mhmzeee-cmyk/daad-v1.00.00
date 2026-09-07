@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الإعدادات - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    .settings-section { margin-bottom: 40px; }
+    .settings-section h2 { font-size: 20px; margin-bottom: 20px; color: var(--primary); }
+    .themes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
+    .theme-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .theme-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .theme-card-active { border-color: var(--primary) !important; box-shadow: 0 0 20px rgba(var(--primary),0.2); }
+    .theme-preview {
+      height: 120px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .preview-bar {
+      height: 16px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+    .preview-body { display: flex; height: calc(100% - 16px); }
+    .preview-sidebar { width: 30%; }
+    .preview-content { flex: 1; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .preview-line { height: 6px; border-radius: 3px; }
+    .line1 { width: 80%; }
+    .line2 { width: 60%; }
+    .line3 { width: 70%; }
+    .theme-info { text-align: center; }
+    .theme-name { font-size: 14px; font-weight: 600; display: block; margin-bottom: 2px; }
+    .theme-desc { font-size: 11px; color: var(--text-muted); display: block; }
+    .theme-check {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 24px;
+      height: 24px;
+      background: var(--primary);
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .theme-card-active .theme-check { opacity: 1; }
+    /* Theme-specific previews */
+    [data-preview="terminal"] { background: #000; }
+    [data-preview="terminal"] .preview-bar { background: #0a0a0a; }
+    [data-preview="terminal"] .preview-sidebar { background: #000; border-left: 1px solid #00ff41; }
+    [data-preview="terminal"] .preview-content { background: #0a0a0a; }
+    [data-preview="terminal"] .preview-line { background: #00ff41; opacity: 0.5; }
+
+    [data-preview="purple"] { background: #0f172a; }
+    [data-preview="purple"] .preview-bar { background: #1e293b; }
+    [data-preview="purple"] .preview-sidebar { background: #1e293b; border-left: 1px solid #475569; }
+    [data-preview="purple"] .preview-content { background: #1e293b; }
+    [data-preview="purple"] .preview-line { background: #818cf8; opacity: 0.5; }
+
+    [data-preview="dark"] { background: #111827; }
+    [data-preview="dark"] .preview-bar { background: #1f2937; }
+    [data-preview="dark"] .preview-sidebar { background: #1f2937; border-left: 1px solid #4b5563; }
+    [data-preview="dark"] .preview-content { background: #1f2937; }
+    [data-preview="dark"] .preview-line { background: #60a5fa; opacity: 0.5; }
+
+    [data-preview="light"] { background: #f8fafc; }
+    [data-preview="light"] .preview-bar { background: #ffffff; border-bottom: 1px solid #e2e8f0; }
+    [data-preview="light"] .preview-sidebar { background: #ffffff; border-left: 1px solid #cbd5e1; }
+    [data-preview="light"] .preview-content { background: #ffffff; }
+    [data-preview="light"] .preview-line { background: #2563eb; opacity: 0.3; }
+
+    [data-preview="ocean"] { background: #0c1222; }
+    [data-preview="ocean"] .preview-bar { background: #0c1222; }
+    [data-preview="ocean"] .preview-sidebar { background: #0c1222; border-left: 1px solid #0ea5e9; }
+    [data-preview="ocean"] .preview-content { background: #162032; }
+    [data-preview="ocean"] .preview-line { background: #38bdf8; opacity: 0.5; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <h1>الإعدادات</h1>
+      </div>
+
+      <div class="settings-section">
+        <h2>المظهر</h2>
+        <div id="themesContainer"></div>
+      </div>
+
+      <div class="settings-section">
+        <h2>معلومات الحساب</h2>
+        <div class="card">
+          <div class="card-body">
+            <div class="form-group">
+              <label>الاسم</label>
+              <input type="text" id="settingsName" readonly>
+            </div>
+            <div class="form-group">
+              <label>البريد الإلكتروني</label>
+              <input type="email" id="settingsEmail" readonly>
+            </div>
+            <div class="form-group">
+              <label>الدور</label>
+              <input type="text" id="settingsRole" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2>تغيير كلمة المرور</h2>
+        <div class="card">
+          <div class="card-body">
+            <div class="form-group">
+              <label>كلمة المرور الحالية</label>
+              <input type="password" id="currentPassword" placeholder="أدخل كلمة المرور الحالية">
+            </div>
+            <div class="form-group">
+              <label>كلمة المرور الجديدة</label>
+              <input type="password" id="newPassword" placeholder="أدخل كلمة المرور الجديدة">
+            </div>
+            <div class="form-group">
+              <label>تأكيد كلمة المرور الجديدة</label>
+              <input type="password" id="confirmPassword" placeholder="أعد إدخال كلمة المرور الجديدة">
+            </div>
+            <button class="btn btn-primary" id="changePasswordBtn" style="margin-top:12px">تغيير كلمة المرور</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="../js/theme-switcher.js?v=3.0"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/settings-page.js"></script>
+  <script src="../js/watermark.js"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
+</body>
+</html>

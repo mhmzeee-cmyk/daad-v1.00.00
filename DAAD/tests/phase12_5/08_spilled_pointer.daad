@@ -1,0 +1,24 @@
+# Phase 12.5-F: Spilled pointer
+# Tests: pointer value spilled and reloaded correctly
+
+دالة: usePointer(x: رقم) -> رقم :-
+    متغير: p: مؤشر_نوع(رقم) = &x
+    # Force register pressure to spill p
+    متغير: a = 1
+    متغير: b = 2
+    متغير: c = 3
+    متغير: d = 4
+    متغير: e = 5
+    متغير: f = 6
+    متغير: g = 7
+    # Now use p (may be spilled)
+    متغير: y = *p
+    ارجع(y)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: result = usePointer(42)
+    # Should print 42
+    اطبع(result)
+    ارجع(result)
+نهاية

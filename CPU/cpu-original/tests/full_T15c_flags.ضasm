@@ -1,0 +1,22 @@
+# T15c: Flag operations — جميع الأعلام
+# اختبار Z, N, C
+load acc, 5
+load s0, 5
+# Z=1 لأن 5-5=0
+sub s0
+load acc, 0
+jz z_was_set
+z_was_set:
+# N: جمع أكبر من 128
+load acc, 200
+load s0, 100
+add s0
+# C=1, N=1 (300 mod 256 = 44, لكن الأعلام)
+load acc, 44
+# C: اختبار الحمل
+load acc, 255
+load s0, 1
+add s0
+# C=1, مح=0
+load acc, 0
+halt

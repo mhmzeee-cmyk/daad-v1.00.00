@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/m_hmoz/Documents/Dhad-Studio-Unified/Compiler/build-make/cmake_install.cmake",
+		"/home/m_hmoz/Documents/Dhad-Studio-Unified/Compiler/build-make/_deps/googletest-build/cmake_install.cmake",
+		"/home/m_hmoz/Documents/Dhad-Studio-Unified/Compiler/build-make/_deps/googletest-build/googlemock/cmake_install.cmake",
+		"/home/m_hmoz/Documents/Dhad-Studio-Unified/Compiler/build-make/_deps/googletest-build/googletest/cmake_install.cmake",
+		"/home/m_hmoz/Documents/Dhad-Studio-Unified/Compiler/build-make/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
