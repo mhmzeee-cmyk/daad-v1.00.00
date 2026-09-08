@@ -1,11 +1,141 @@
+# ====================================================
+# Dhad Studio Unified - Comprehensive .gitignore
+# ====================================================
+
+# ========================
+# Secrets & Environment
+# ========================
+.env
+.env.*
+!.env.example
+
+# ========================
+# Dependencies
+# ========================
 node_modules/
-.npm/
+.pnp
+.pnp.js
+
+# ========================
+# Build Artifacts - Compiler
+# ========================
+Compiler/build/
+Compiler/build-make/
+Compiler/daad-compiler.exe
+Compiler/**/*.o
+Compiler/**/*.a
+Compiler/**/*.so
+
+# ========================
+# Build Artifacts - DAAD
+# ========================
+DAAD/**/*.exe
+DAAD/add.exe
+DAAD/daad.exe
+DAAD/add_test.exe
+DAAD/add_vars.exe
+DAAD/add_vars_test.exe
+
+# ========================
+# Build Artifacts - CPU
+# ========================
+CPU/**/*.o
+CPU/**/*.exe
+CPU/**/*.so
+CPU/desktop/
+CPU/cpu-original/desktop/
+
+# ========================
+# Build Artifacts - Studio
+# ========================
+Studio/Full/server/dist/
+Studio/Full/server/build/
+Studio/desktop-app/server/dist/
+Studio/desktop-app/server/build/
+Studio/desktop-app/prisma_client/
+
+# ========================
+# Compiled Binaries (general)
+# ========================
+*.exe
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+
+# ========================
+# Data files (large)
+# ========================
+*.dat
+
+# ========================
+# Archives
+# ========================
+*.zip
+
+# ========================
+# Databases (SQLite)
+# ========================
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# ========================
+# CMake Build Artifacts
+# ========================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+.cache/
+
+# ========================
+# VS Code / IDE Cache
+# ========================
+.vscode/
+.idea/
+CachedData/
+*.swp
+*.swo
+*~
+
+# ========================
+# Logs
+# ========================
+*.log
+npm-debug.log*
+
+# ========================
+# Runtime / Temp
+# ========================
 dist/
 build/
 out/
 coverage/
-.cache/
-*.log
-.env
-.env.*
-!.env.example
+tmp/
+temp/
+*.tmp
+*.pid
+*.seed
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# Prisma
+# ========================
+**/prisma/*.db
+**/prisma/*.db-journal
+**/prisma/dev.db*
+
+# ========================
+# Binary test data (keep .bin sources, ignore compiled)
+# ========================
+Compiler/build-make/CMakeFiles/
