@@ -144,6 +144,24 @@ static IRType ast_type_to_ir(ASTNode* type_node) {
     return ir_type_i64();
 }
 
+/* نوع الإرجاع المعلن لدالة بالاسم (لتوريث نوع نتيجة الاستدعاء).
+ * يرجع i64 عند عدم العثور (دوال مدمجة/خارجية) — يحافظ على السلوك القديم. */
+static IRType find_function_return_type(IRBuilder* builder, const char* name) {
+    if (!builder || !name || !builder->program_root ||
+        builder->program_root->type != NODE_PROGRAM) {
+        return ir_type_i64();
+    }
+    ASTNodeList* decls = &builder->program_root->as.program.declarations;
+    for (size_t i = 0; i < decls->size; i++) {
+        ASTNode* decl = decls->items[i];
+        if (decl && decl->type == NODE_FUNCTION_DECL &&
+            decl->as.func_decl.name && strcmp(decl->as.func_decl.name, name) == 0) {
+            return ast_type_to_ir(decl->as.func_decl.return_type);
+        }
+    }
+    return ir_type_i64();
+}
+
 IRValue ir_builder_build_expr(IRBuilder* builder, ASTNode* expr) {
     if (!builder || !expr || !builder->current_block) return ir_value_null();
 
@@ -257,7 +275,8 @@ IRValue ir_builder_build_expr(IRBuilder* builder, ASTNode* expr) {
             for (size_t i = 0; i < expr->as.call.args.size && i < 8; i++) {
                 args[arg_count++] = ir_builder_build_expr(builder, expr->as.call.args.items[i]);
             }
-            IRValue result = ir_function_alloc_reg(builder->current_function, ir_type_i64());
+            IRValue result = ir_function_alloc_reg(builder->current_function,
+                find_function_return_type(builder, func_name));
             IRInstruction inst = ir_inst_call(result, func_name, args, arg_count);
             ir_bb_add_instruction(builder->current_block, inst);
             return result;
@@ -739,6 +758,7 @@ static void ir_builder_build_top_level(IRBuilder* builder, ASTNode* root) {
 
 IRModule* ir_builder_build(IRBuilder* builder, ASTNode* root) {
     if (!builder || !root) return NULL;
+    builder->program_root = (root->type == NODE_PROGRAM) ? root : NULL;
 
     if (root->type == NODE_PROGRAM) {
         /* First: build all explicit functions */

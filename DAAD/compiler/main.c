@@ -69,6 +69,13 @@ int main(int argc, char* argv[]) {
     size_t token_count = 0;
     Token* tokens = lexer_tokenize(lexer, &token_count);
 
+    if (lexer_has_errors(lexer)) {
+        fprintf(stderr, "Lexical errors:\n");
+        lexer_print_errors(lexer, stderr);
+        lexer_destroy(lexer); free(source);
+        return 1;
+    }
+
     Parser* parser = parser_create(tokens, (int)token_count, input_path);
     ASTNode* ast = parser_parse(parser);
 
@@ -173,6 +180,71 @@ int main(int argc, char* argv[]) {
         fprintf(out, "  movq %%r8, %%rdx\n  subq %%rsi, %%rdx\n  incq %%rdx\n");
         fprintf(out, "  movq $1, %%rax\n  movq $1, %%rdi\n  syscall\n");
         fprintf(out, "  leave\n  ret\n");
+
+        /* ثوابت المساعد العشري (تُكتب مرة واحدة لكل وحدة) */
+        fprintf(out, "\n.section .rodata\n");
+        fprintf(out, ".Lfp_1e6:\n");
+        fprintf(out, "    .double 1000000.0\n");
+        fprintf(out, ".Lfp_half:\n");
+        fprintf(out, "    .double 0.5\n");
+        fprintf(out, ".section .text\n");
+
+        /* دالة طباعة عدد عشري: rdi = بتات f64 — تطبع بصيغة %.6f ثم سطرًا جديدًا.
+         * العقد: finite مع جزء صحيح يتسع في int64؛ NaN→nan؛ ±Inf→inf/-inf.
+         * تجاوز 2^63 يعطي أرقامًا حتمية غير معرفة (تشبع cvttsd2si) — موثق لا صامت. */
+        fprintf(out, "\n# ── مساعد طباعة العشري: rdi = بتات f64 ──\n");
+        fprintf(out, "__daad_print_float:\n");
+        fprintf(out, "  pushq %%rbp\n  movq %%rsp, %%rbp\n  subq $64, %%rsp\n");
+        fprintf(out, "  movq %%rdi, %%rax\n  movq %%rax, %%xmm0\n");
+        fprintf(out, "  shrq $63, %%rax\n  movq %%rax, %%r10\n");
+        fprintf(out, "  movq %%rdi, %%rcx\n  shrq $52, %%rcx\n  andq $0x7FF, %%rcx\n");
+        fprintf(out, "  cmpq $0x7FF, %%rcx\n  je .Ldpf_special\n");
+        fprintf(out, "  movabs $0x7FFFFFFFFFFFFFFF, %%rcx\n  movq %%rcx, %%xmm1\n  andpd %%xmm1, %%xmm0\n");
+        fprintf(out, "  xorpd %%xmm1, %%xmm1\n  ucomisd %%xmm1, %%xmm0\n  je .Ldpf_zero\n");
+        fprintf(out, "  cvttsd2si %%xmm0, %%rax\n  movq %%rax, %%r11\n");
+        fprintf(out, "  cvtsi2sd %%rax, %%xmm1\n  subsd %%xmm1, %%xmm0\n");
+        fprintf(out, "  movsd .Lfp_1e6(%%rip), %%xmm1\n  mulsd %%xmm1, %%xmm0\n");
+        fprintf(out, "  movsd .Lfp_half(%%rip), %%xmm1\n  addsd %%xmm1, %%xmm0\n");
+        fprintf(out, "  cvttsd2si %%xmm0, %%rcx\n");
+        fprintf(out, "  cmpq $1000000, %%rcx\n  jne .Ldpf_build\n");
+        fprintf(out, "  movq $0, %%rcx\n  incq %%r11\n");
+        fprintf(out, ".Ldpf_zero:\n");
+        fprintf(out, "  movq $0, %%r11\n  movq $0, %%rcx\n");
+        fprintf(out, ".Ldpf_build:\n");
+        fprintf(out, "  leaq 63(%%rsp), %%r8\n  movq %%r8, %%rsi\n  movb $10, (%%rsi)\n");
+        fprintf(out, "  movq $6, %%r9\n  movq $10, %%rdi\n");
+        fprintf(out, ".Ldpf_floop:\n");
+        fprintf(out, "  movq %%rcx, %%rax\n  xorq %%rdx, %%rdx\n  divq %%rdi\n");
+        fprintf(out, "  addq $48, %%rdx\n  decq %%rsi\n  movb %%dl, (%%rsi)\n");
+        fprintf(out, "  movq %%rax, %%rcx\n  decq %%r9\n  jnz .Ldpf_floop\n");
+        fprintf(out, "  decq %%rsi\n  movb $46, (%%rsi)\n");
+        fprintf(out, "  movq %%r11, %%rax\n  testq %%rax, %%rax\n  jnz .Ldpf_iloop\n");
+        fprintf(out, "  decq %%rsi\n  movb $48, (%%rsi)\n  jmp .Ldpf_sign\n");
+        fprintf(out, ".Ldpf_iloop:\n");
+        fprintf(out, "  testq %%rax, %%rax\n  jz .Ldpf_sign\n");
+        fprintf(out, "  xorq %%rdx, %%rdx\n  divq %%rdi\n");
+        fprintf(out, "  addq $48, %%rdx\n  decq %%rsi\n  movb %%dl, (%%rsi)\n");
+        fprintf(out, "  jmp .Ldpf_iloop\n");
+        fprintf(out, ".Ldpf_sign:\n");
+        fprintf(out, "  testq %%r10, %%r10\n  jz .Ldpf_write\n");
+        fprintf(out, "  decq %%rsi\n  movb $45, (%%rsi)\n");
+        fprintf(out, ".Ldpf_write:\n");
+        fprintf(out, "  movq %%r8, %%rdx\n  subq %%rsi, %%rdx\n  incq %%rdx\n");
+        fprintf(out, "  movq $1, %%rax\n  movq $1, %%rdi\n  syscall\n");
+        fprintf(out, "  leave\n  ret\n");
+        fprintf(out, ".Ldpf_special:\n");
+        fprintf(out, "  movabs $0xFFFFFFFFFFFFF, %%rcx\n  testq %%rcx, %%rdi\n  jnz .Ldpf_nan\n");
+        fprintf(out, "  leaq 63(%%rsp), %%r8\n  movq %%r8, %%rsi\n  movb $10, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $102, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $110, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $105, (%%rsi)\n");
+        fprintf(out, "  testq %%r10, %%r10\n  jz .Ldpf_write\n");
+        fprintf(out, "  decq %%rsi\n  movb $45, (%%rsi)\n  jmp .Ldpf_write\n");
+        fprintf(out, ".Ldpf_nan:\n");
+        fprintf(out, "  leaq 63(%%rsp), %%r8\n  movq %%r8, %%rsi\n  movb $10, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $110, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $97, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $110, (%%rsi)\n  jmp .Ldpf_write\n");
 
         fprintf(out, "\n# ── مساعد الإدخال: يقرأ عددًا من stdin → rax ──\n");
         fprintf(out, "__daad_read_int:\n");

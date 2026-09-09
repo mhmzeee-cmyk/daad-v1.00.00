@@ -66,30 +66,52 @@ dcase "fib13"      'دالة: ليفي(ن: رقم) -> رقم :-\n    إذا(ن <
 printf 'دالة: الرئيسية() -> رقم :-\n    ارجع(غير_معرف + 1)\nنهاية\n' > "$TMP/neg.daad"
 if "$DAAD" "$TMP/neg.daad" -o "$TMP/neg.s" 2>&1 | grep -q "S001"; then pass "daad:invalid-S001"; else fail "daad:invalid-S001" "no S001 diagnostic"; fi
 
-# ---------- 3. DAAD float (bit-exact, needs python3) ----------
-echo "-- [3] DAAD float"
-if command -v python3 >/dev/null 2>&1; then
-  fcase() { # name, body-lines, python-expr-for-expected-bits
-    printf "دالة: الرئيسية() -> رقم :-\n    %b\n    ارجع(0)\nنهاية\n" "$1" > "$TMP/f.daad"
-    "$DAAD" "$TMP/f.daad" -o "$TMP/f.s" 2>/dev/null || { fail "float:$2" "compile"; return; }
-    gcc -nostartfiles "$TMP/f.s" -o "$TMP/f.exe" 2>/dev/null || { fail "float:$2" "link"; return; }
-    got=$("$TMP/f.exe" 2>&1 | head -n 1 | tr -d '[:space:]')
-    expect=$(python3 -c "import struct; print(struct.unpack('<q', struct.pack('<d', $3))[0])")
-    [ "$got" = "$expect" ] && pass "float:$2" || fail "float:$2" "got=$got expect=$expect"
-  }
-  fcase 'متغير: س: رقم_عشري = 1.5\n    اطبع(س)'                       "lit1.5"    "1.5"
-  fcase 'متغير: س: رقم_عشري = 3.14159\n    اطبع(س)'                   "litpi"     "3.14159"
-  fcase 'متغير: س: رقم_عشري = 1.5 + 2.75\n    اطبع(س)'                "add"       "1.5+2.75"
-  fcase 'متغير: س: رقم_عشري = 2.5 * 3.0\n    اطبع(س)'                 "mul"       "2.5*3.0"
-  fcase 'متغير: س: رقم_عشري = 7.5 / 2.5\n    اطبع(س)'                 "div"       "7.5/2.5"
-  fcase 'متغير: س: رقم_عشري = 5.5\n    متغير: ص: رقم_عشري = 2.5\n    متغير: م: رقم_عشري = س + ص\n    اطبع(م)' "vars" "5.5+2.5"
-  printf 'دالة: ضعف(س: رقم_عشري) -> رقم_عشري :-\n    ارجع(س * 2.5)\nنهاية\nدالة: الرئيسية() -> رقم :-\n    متغير: ن: رقم_عشري = ضعف(5.5)\n    اطبع(ن)\n    ارجع(0)\nنهاية\n' > "$TMP/fn.daad"
-  "$DAAD" "$TMP/fn.daad" -o "$TMP/fn.s" 2>/dev/null && gcc -nostartfiles "$TMP/fn.s" -o "$TMP/fn.exe" 2>/dev/null && got=$("$TMP/fn.exe" | head -n 1 | tr -d '[:space:]') && expect=$(python3 -c "import struct; print(struct.unpack('<q', struct.pack('<d', 5.5*2.5))[0])") && { [ "$got" = "$expect" ] && pass "float:funarg" || fail "float:funarg" "got=$got expect=$expect"; } || fail "float:funarg" "build"
-  printf 'دالة: مجموع(ن: رقم_عشري) -> رقم_عشري :-\n    إذا(ن <= 1.0) :-\n        ارجع(1.0)\n    نهاية\n    ارجع(ن + مجموع(ن - 1.0))\nنهاية\nدالة: الرئيسية() -> رقم :-\n    متغير: م: رقم_عشري = مجموع(5.0)\n    اطبع(م)\n    ارجع(0)\nنهاية\n' > "$TMP/fr.daad"
-  "$DAAD" "$TMP/fr.daad" -o "$TMP/fr.s" 2>/dev/null && gcc -nostartfiles "$TMP/fr.s" -o "$TMP/fr.exe" 2>/dev/null && got=$("$TMP/fr.exe" | head -n 1 | tr -d '[:space:]') && expect=$(python3 -c "import struct; print(struct.unpack('<q', struct.pack('<d', 15.0))[0])") && { [ "$got" = "$expect" ] && pass "float:recfloat" || fail "float:recfloat" "got=$got expect=$expect"; } || fail "float:recfloat" "build"
-else
-  echo "  (python3 missing — float section skipped)"
-fi
+# ---------- 3. DAAD float pretty-print (%.6f contract) ----------
+echo "-- [3] DAAD float pretty"
+fpcase() { # name, body-lines, expected-decimal-line
+  printf "دالة: الرئيسية() -> رقم :-\n    %b\n    ارجع(0)\nنهاية\n" "$1" > "$TMP/f.daad"
+  "$DAAD" "$TMP/f.daad" -o "$TMP/f.s" 2>/dev/null || { fail "float:$2" "compile"; return; }
+  gcc -nostartfiles "$TMP/f.s" -o "$TMP/f.exe" 2>/dev/null || { fail "float:$2" "link"; return; }
+  got=$("$TMP/f.exe" 2>&1 | head -n 1 | tr -d '[:space:]')
+  [ "$got" = "$3" ] && pass "float:$2" || fail "float:$2" "got='$got' expect='$3'"
+}
+fpcase 'متغير: س: رقم_عشري = 0.0\n    اطبع(س)'                             "zero"     "0.000000"
+fpcase 'متغير: س: رقم_عشري = 1.0\n    اطبع(س)'                             "one"      "1.000000"
+fpcase 'متغير: س: رقم_عشري = 0.0 - 1.0\n    اطبع(س)'                       "negone"   "-1.000000"
+fpcase 'متغير: س: رقم_عشري = 3.14\n    اطبع(س)'                            "pi"       "3.140000"
+fpcase 'متغير: س: رقم_عشري = 13.75\n    اطبع(س)'                           "frac"     "13.750000"
+fpcase 'متغير: س: رقم_عشري = 5.5 + 2.5\n    اطبع(س)'                       "addexpr"  "8.000000"
+fpcase 'اطبع(2.5)'                                                          "lit"      "2.500000"
+printf 'دالة: ضعف(س: رقم_عشري) -> رقم_عشري :-\n    ارجع(س * 2.0)\nنهاية\nدالة: الرئيسية() -> رقم :-\n    اطبع(ضعف(5.5))\n    ارجع(0)\nنهاية\n' > "$TMP/fn.daad"
+"$DAAD" "$TMP/fn.daad" -o "$TMP/fn.s" 2>/dev/null && gcc -nostartfiles "$TMP/fn.s" -o "$TMP/fn.exe" 2>/dev/null && got=$("$TMP/fn.exe" | head -n 1 | tr -d '[:space:]') && { [ "$got" = "11.000000" ] && pass "float:funret" || fail "float:funret" "got='$got'"; } || fail "float:funret" "build"
+printf 'دالة: مجموع(ن: رقم_عشري) -> رقم_عشري :-\n    إذا(ن <= 1.0) :-\n        ارجع(1.0)\n    نهاية\n    ارجع(ن + مجموع(ن - 1.0))\nنهاية\nدالة: الرئيسية() -> رقم :-\n    متغير: م: رقم_عشري = مجموع(5.0)\n    اطبع(م)\n    ارجع(0)\nنهاية\n' > "$TMP/fr.daad"
+"$DAAD" "$TMP/fr.daad" -o "$TMP/fr.s" 2>/dev/null && gcc -nostartfiles "$TMP/fr.s" -o "$TMP/fr.exe" 2>/dev/null && got=$("$TMP/fr.exe" | head -n 1 | tr -d '[:space:]') && { [ "$got" = "15.000000" ] && pass "float:recfloat" || fail "float:recfloat" "got='$got'"; } || fail "float:recfloat" "build"
+
+# ---------- 3b. Integer print literals + boundaries ----------
+echo "-- [3b] Integer print + boundaries"
+pcase() { # name, body-lines, expected-line
+  printf "دالة: الرئيسية() -> رقم :-\n    %b\n    ارجع(0)\nنهاية\n" "$1" > "$TMP/p.daad"
+  "$DAAD" "$TMP/p.daad" -o "$TMP/p.s" 2>/dev/null || { fail "int:$2" "compile"; return; }
+  gcc -nostartfiles "$TMP/p.s" -o "$TMP/p.exe" 2>/dev/null || { fail "int:$2" "link"; return; }
+  got=$("$TMP/p.exe" 2>&1 | head -n 1 | tr -d '[:space:]')
+  [ "$got" = "$3" ] && pass "int:$2" || fail "int:$2" "got='$got' expect='$3'"
+}
+pcase 'اطبع(0)'                        "plit0"      "0"
+pcase 'اطبع(1)'                        "plit1"      "1"
+pcase 'اطبع(42)'                       "plit42"     "42"
+pcase 'متغير: س: رقم = 0 - 1\n    اطبع(س)' "neg1"   "-1"
+pcase 'اطبع(123456)'                   "plit123456" "123456"
+pcase 'متغير: س: رقم = 42\n    اطبع(س)' "var42"     "42"
+pcase 'متغير: س: رقم = 2147483647\n    اطبع(س)' "max32" "2147483647"
+pcase 'متغير: س: رقم = 0 - 2147483648\n    اطبع(س)' "min32" "-2147483648"
+pcase 'متغير: س: رقم = 2147483648\n    اطبع(س)' "plus32" "2147483648"
+pcase 'متغير: س: رقم = 0 - 2147483649\n    اطبع(س)' "minus32" "-2147483649"
+pcase 'متغير: س: رقم = 5000000000\n    اطبع(س)' "big5e9" "5000000000"
+pcase 'متغير: س: رقم = 9223372036854775807\n    اطبع(س)' "max64" "9223372036854775807"
+pcase 'متغير: س: رقم = 5000000000 + 1\n    اطبع(س)' "bigadd" "5000000001"
+# overflow must be an Arabic diagnostic, never silent
+printf 'دالة: الرئيسية() -> رقم :-\n    متغير: س: رقم = 99999999999999999999\n    اطبع(س)\n    ارجع(0)\nنهاية\n' > "$TMP/neg.daad"
+if "$DAAD" "$TMP/neg.daad" -o "$TMP/neg.s" 2>&1 | grep -q "L011"; then pass "int:overflow-L011"; else fail "int:overflow-L011" "no L011 diagnostic"; fi
 
 # ---------- 4. DAAD→DHAD→CPU ----------
 echo "-- [4] DAAD-DHAD-CPU"

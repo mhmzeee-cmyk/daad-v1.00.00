@@ -49,6 +49,7 @@ typedef struct {
     SemanticContext* ctx;
     IRStructFields struct_fields[64];
     int struct_field_count;
+    ASTNode* program_root;
 } IRBuilder;
 
 IRBuilder* ir_builder_create(const char* module_name, SemanticContext* ctx);
