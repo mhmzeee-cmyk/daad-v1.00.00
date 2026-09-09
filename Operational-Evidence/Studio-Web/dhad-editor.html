@@ -980,34 +980,6 @@
       .top-bar-left { display: none; }
       .editor-area { min-width: 0; }
     }
-    /* ===== Watermark (see js/watermark.js) — faint diagonal veil, never interactive ===== */
-    .dhad-watermark {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-      display: flex;
-      flex-wrap: wrap;
-      align-content: flex-start;
-      gap: 120px 80px;
-      padding: 40px;
-      transform: rotate(-25deg) scale(1.1);
-      opacity: 0.05;
-    }
-    .dhad-watermark span {
-      display: inline-block;
-      white-space: nowrap;
-      font-size: 11px;
-      font-family: 'Segoe UI', Tahoma, 'Noto Sans Arabic', 'Arial', sans-serif;
-      color: #94a3b8;
-      user-select: none;
-      -webkit-user-select: none;
-      letter-spacing: 0.5px;
-    }
   </style>
   <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <script>try{var u=JSON.parse(localStorage.getItem('dhad_user')||'{}');var r=u.role||'';var l=document.getElementById('logoLink');if(l){l.href=r==='TEACHER'||r==='ADMIN'?'teacher-dashboard.html':'student-dashboard.html';}}catch(e){}</script>

@@ -1,0 +1,10 @@
+BUILD: cmake -B /tmp/opencode/daad-build -S DAAD && cmake --build => EXIT 0, 11/11 ctest PASS
+hello.daad -> EXIT 42 REAL-PASS (gcc -nostartfiles required; plain gcc fails with duplicate _start - documented)
+calc.daad -> EXIT 60 REAL-PASS
+branch -> EXIT 1 REAL-PASS
+loop sum1..10 -> EXIT 55 REAL-PASS
+multifunc 20+22 -> EXIT 42 REAL-PASS
+div 10/2 -> EXIT 5 REAL-PASS
+mul 6*7 -> EXIT 42 REAL-PASS
+invalid (undefined var) -> EXIT 1 with S001 Arabic error REAL-PASS (negative test)
+factorial recursive -> SEGFAULT EXIT 139 REAL-FAIL (reg save slots overlap locals -16..-72, see fact_recursive_FAIL.s)

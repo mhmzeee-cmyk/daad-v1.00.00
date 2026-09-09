@@ -1,0 +1,2 @@
+Program received signal SIGSEGV, Segmentation fault.
+=> 0x55555555501f <مضروب+31>:	mov    %rcx,(%rax)

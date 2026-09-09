@@ -1,0 +1,3 @@
+BUILD: cmake -B /tmp/opencode/compiler-build -S Compiler -DDAAD_BUILD_TESTS=OFF && cmake --build => EXIT 0 (warnings only)
+RUN: 6 programs .ض->.cpp->g++->EXE all EXIT 0, outputs verified correct
+ERROR: invalid syntax correctly rejected EXIT 1 with Arabic diagnostic

@@ -591,30 +591,27 @@ int dhad_cpu_step(DhadCPU *cpu) {
             break;
         }
 
-        /* ── LDRI: dst = mem[(hi<<8)|lo] ── */
+        /* ── LDRI: dst = mem[(hi<<8)|lo] — 4 بايت حسب المواصفة ── */
         case 0xF1: {
             uint8_t operands = fetch(cpu);
-            consumed = 3;
-            uint8_t dst = (operands >> 4) & 0x0F;
-            uint8_t src = operands & 0x0F;
-            uint8_t lo = fetch(cpu);
+            uint8_t loreg = fetch(cpu) & 0x0F;
             consumed = 4;
-            /* Need high byte too — but ISA encoding may differ */
-            /* For now: just use lo as address */
-            uint8_t v = cpu->memory[lo];
-            cpu_set_reg(cpu, dst, v);
+            uint8_t dst = (operands >> 4) & 0x0F;
+            uint8_t hi = operands & 0x0F;
+            uint16_t addr = ((uint16_t)cpu_get_reg(cpu, hi) << 8) | cpu_get_reg(cpu, loreg);
+            cpu_set_reg(cpu, dst, cpu->memory[addr]);
             break;
         }
 
-        /* ── STRI: mem[(hi<<8)|lo] = src ── */
+        /* ── STRI: mem[(hi<<8)|lo] = src — 4 بايت حسب المواصفة ── */
         case 0xF2: {
             uint8_t operands = fetch(cpu);
-            consumed = 3;
-            uint8_t src = (operands >> 4) & 0x0F;
-            uint8_t lo = fetch(cpu);
+            uint8_t loreg = fetch(cpu) & 0x0F;
             consumed = 4;
-            uint8_t v = cpu_get_reg(cpu, src);
-            cpu->memory[lo] = v;
+            uint8_t src = (operands >> 4) & 0x0F;
+            uint8_t hi = operands & 0x0F;
+            uint16_t addr = ((uint16_t)cpu_get_reg(cpu, hi) << 8) | cpu_get_reg(cpu, loreg);
+            cpu->memory[addr] = cpu_get_reg(cpu, src);
             break;
         }
 

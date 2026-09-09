@@ -495,6 +495,36 @@ static int asm_parse_line(DhadAsm *a, const char *line) {
         }
         return 0;
     }
+    /* اقرأ غير مباشر: LDRI dst, hi, lo → F0 F1 ((dst<<4)|hi) lo (4 بايت حسب المواصفة) */
+    if (strcmp(buf, "اقرأ_غيرمباشر") == 0 || strcmp(buf, "ldri") == 0) {
+        int dst = 0, hi = 0, lo = 0;
+        char tok2[64], tok3[64], tok4[64];
+        p = asm_read_token(p, tok2, sizeof(tok2));
+        p = asm_read_token(p, tok3, sizeof(tok3));
+        p = asm_read_token(p, tok4, sizeof(tok4));
+        if (asm_is_reg(tok2, &dst) && asm_is_reg(tok3, &hi) && asm_is_reg(tok4, &lo)) {
+            asm_emit(a, 0xF0);
+            asm_emit(a, 0xF1);
+            asm_emit(a, (uint8_t)(((dst & 0x0F) << 4) | (hi & 0x0F)));
+            asm_emit(a, (uint8_t)(lo & 0x0F));
+        }
+        return 0;
+    }
+    /* خزن غير مباشر: STRI src, hi, lo → F0 F2 ((src<<4)|hi) lo (4 بايت حسب المواصفة) */
+    if (strcmp(buf, "خزن_غيرمباشر") == 0 || strcmp(buf, "stri") == 0) {
+        int src = 0, hi = 0, lo = 0;
+        char tok2[64], tok3[64], tok4[64];
+        p = asm_read_token(p, tok2, sizeof(tok2));
+        p = asm_read_token(p, tok3, sizeof(tok3));
+        p = asm_read_token(p, tok4, sizeof(tok4));
+        if (asm_is_reg(tok2, &src) && asm_is_reg(tok3, &hi) && asm_is_reg(tok4, &lo)) {
+            asm_emit(a, 0xF0);
+            asm_emit(a, 0xF2);
+            asm_emit(a, (uint8_t)(((src & 0x0F) << 4) | (hi & 0x0F)));
+            asm_emit(a, (uint8_t)(lo & 0x0F));
+        }
+        return 0;
+    }
     if (strcmp(buf, "نقص") == 0 || strcmp(buf, "dec") == 0) {
         int r = 0;
         char tok2[64];

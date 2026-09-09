@@ -23,6 +23,23 @@ static char   g_str_labels[DAAD_MAX_STRINGS][64];
 static size_t g_str_lengths[DAAD_MAX_STRINGS];
 static int    g_str_count = 0;
 
+/* ── جدول الثوابت العشرية للوحدة: يُجمع أثناء إصدار x86 ويُكتب في .rodata ──
+ * التسميات `.LCf<idx>` فريدة على مستوى الوحدة ومرتبطة بالقيمة (إزالة تكرار)،
+ * فلا تتصادم عبر الدوال (خلاف `.LC_<result.id>` القديمة التي تكررت بنفس الرقم
+ * لقيم مختلفة في دوال مختلفة). تُصفَّر مع بداية كل وحدة x86. */
+#define DAAD_MAX_FLOATS 256
+static double g_flt_vals[DAAD_MAX_FLOATS];
+static int    g_flt_count = 0;
+
+static int float_const_id(double v) {
+    for (int i = 0; i < g_flt_count; i++) {
+        if (g_flt_vals[i] == v) return i;
+    }
+    if (g_flt_count >= DAAD_MAX_FLOATS) return 0;
+    g_flt_vals[g_flt_count] = v;
+    return g_flt_count++;
+}
+
 static int string_length_of(const char* label) {
     for (int i = 0; i < g_str_count; i++)
         if (strcmp(g_str_labels[i], label) == 0) return (int)g_str_lengths[i];
@@ -438,7 +455,7 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
             if (inst->result.kind == IR_VALUE_REGISTER && inst->operand_count > 0) {
                 if (result_is_float(inst)) {
                     if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT) {
-                        fprintf(out, "  movsd .LC_%d(%%rip), %%xmm0\n", inst->result.id);
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[0].as.float_val));
                         STORE_FLOAT(inst->result.id);
                     } else if (inst->operands[0].kind == IR_VALUE_REGISTER) {
                         LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
@@ -459,7 +476,7 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 if (result_is_float(inst)) {
                     LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
-                        fprintf(out, "  movsd .LC_%d(%%rip), %%xmm1\n", inst->result.id);
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  addsd %%xmm1, %%xmm0\n");
                     } else if (inst->operands[1].kind == IR_VALUE_REGISTER) {
                         LOAD_FLOAT_TO(inst->operands[1].id, "%xmm1");
@@ -484,7 +501,7 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 if (result_is_float(inst)) {
                     LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
-                        fprintf(out, "  movsd .LC_%d(%%rip), %%xmm1\n", inst->result.id);
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  subsd %%xmm1, %%xmm0\n");
                     } else if (inst->operands[1].kind == IR_VALUE_REGISTER) {
                         LOAD_FLOAT_TO(inst->operands[1].id, "%xmm1");
@@ -508,7 +525,7 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 if (result_is_float(inst)) {
                     LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
-                        fprintf(out, "  movsd .LC_%d(%%rip), %%xmm1\n", inst->result.id);
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  mulsd %%xmm1, %%xmm0\n");
                     } else if (inst->operands[1].kind == IR_VALUE_REGISTER) {
                         LOAD_FLOAT_TO(inst->operands[1].id, "%xmm1");
@@ -532,7 +549,7 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 if (result_is_float(inst)) {
                     LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
-                        fprintf(out, "  movsd .LC_%d(%%rip), %%xmm1\n", inst->result.id);
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  divsd %%xmm1, %%xmm0\n");
                     } else if (inst->operands[1].kind == IR_VALUE_REGISTER) {
                         LOAD_FLOAT_TO(inst->operands[1].id, "%xmm1");
@@ -646,7 +663,7 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 if (result_is_float(inst)) {
                     LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
-                        fprintf(out, "  movsd .LC_%d(%%rip), %%xmm1\n", inst->result.id);
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  ucomisd %%xmm1, %%xmm0\n");
                     } else if (inst->operands[1].kind == IR_VALUE_REGISTER) {
                         LOAD_FLOAT_TO(inst->operands[1].id, "%xmm1");
@@ -731,6 +748,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 if (inst->operands[0].kind == IR_VALUE_REGISTER && inst->operands[1].kind == IR_VALUE_CONSTANT_INT) {
                     LOAD_TO(inst->operands[0].id, "%rax");
                     fprintf(out, "  movq $%lld, (%%rax)\n", inst->operands[1].as.int_val);
+                } else if (inst->operands[0].kind == IR_VALUE_REGISTER && inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
+                    LOAD_TO(inst->operands[0].id, "%rax");
+                    fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[1].as.float_val));
+                    fprintf(out, "  movsd %%xmm0, (%%rax)\n");
                 } else if (inst->operands[0].kind == IR_VALUE_REGISTER && inst->operands[1].kind == IR_VALUE_REGISTER) {
                     LOAD_TO(inst->operands[0].id, "%rax");
                     LOAD_TO(inst->operands[1].id, "%rcx");
@@ -764,6 +785,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                 LOAD_TO(inst->operands[0].id, "%rax");
                 if (inst->operands[1].kind == IR_VALUE_CONSTANT_INT)
                     fprintf(out, "  movq $%lld, (%%rax)\n", inst->operands[1].as.int_val);
+                else if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
+                    fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[1].as.float_val));
+                    fprintf(out, "  movsd %%xmm0, (%%rax)\n");
+                }
                 else if (inst->operands[1].kind == IR_VALUE_REGISTER) {
                     LOAD_TO(inst->operands[1].id, "%rcx");
                     fprintf(out, "  movq %%rcx, (%%rax)\n");
@@ -931,34 +956,72 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                     if (inst->result.kind == IR_VALUE_REGISTER)
                         STORE(inst->result.id);
                 } else {
-                    for (int i = 0; i < ctx->reg_alloc->interval_count; i++) {
-                        LiveInterval* iv = &ctx->reg_alloc->intervals[i];
-                        if (iv->phys_reg != REG_NONE && !iv->is_spilled &&
-                            reg_alloc_is_caller_saved(ctx->reg_alloc, iv->phys_reg)) {
-                            fprintf(out, "  movq %s, %d(%%rbp)\n",
-                                    reg_alloc_phys_name(iv->phys_reg), -(iv->ir_reg * 8));
+                    /* Caller-saved regs live across the call must be preserved in a
+                     * DEDICATED stack area below %rsp — never in IR local homes
+                     * (-(ir_reg*8)), which hold live values and would be clobbered
+                     * (caused infinite recursion: factorial passed n=5 forever).
+                     * Same predicate as before, only the mechanism changed. */
+                    int save_count = 0;
+                    if (ctx->reg_alloc) {
+                        for (int i = 0; i < ctx->reg_alloc->interval_count; i++) {
+                            LiveInterval* iv = &ctx->reg_alloc->intervals[i];
+                            if (iv->phys_reg != REG_NONE && !iv->is_spilled &&
+                                reg_alloc_is_caller_saved(ctx->reg_alloc, iv->phys_reg) &&
+                                iv->phys_reg < REG_XMM0) {
+                                save_count++;
+                            }
                         }
                     }
-                    
+                    int save_size = save_count * 8;
+                    if (save_size % 16 != 0) save_size += 8; /* keep 16B ABI alignment */
+                    if (save_size > 0)
+                        fprintf(out, "  subq $%d, %%rsp\n", save_size);
+                    if (ctx->reg_alloc) {
+                        int save_idx = 0;
+                        for (int i = 0; i < ctx->reg_alloc->interval_count; i++) {
+                            LiveInterval* iv = &ctx->reg_alloc->intervals[i];
+                            if (iv->phys_reg != REG_NONE && !iv->is_spilled &&
+                                reg_alloc_is_caller_saved(ctx->reg_alloc, iv->phys_reg) &&
+                                iv->phys_reg < REG_XMM0) {
+                                fprintf(out, "  movq %s, %d(%%rsp)\n",
+                                        reg_alloc_phys_name(iv->phys_reg), save_idx * 8);
+                                save_idx++;
+                            }
+                        }
+                    }
+
                     static const char* arg_regs[] = {"%rdi", "%rsi", "%rdx", "%rcx", "%r8", "%r9"};
                     for (int a = 1; a < inst->operand_count && a <= 6; a++) {
                         if (inst->operands[a].kind == IR_VALUE_CONSTANT_INT)
                             fprintf(out, "  movq $%lld, %s\n", inst->operands[a].as.int_val, arg_regs[a - 1]);
+                        else if (inst->operands[a].kind == IR_VALUE_CONSTANT_FLOAT) {
+                            /* ثابت عشري يُمرر كبتات في سجل صحيح (نفس ABI: f64 bits) */
+                            unsigned long long bits = 0;
+                            memcpy(&bits, &inst->operands[a].as.float_val, sizeof(bits));
+                            fprintf(out, "  movabs $0x%llx, %s\n", bits, arg_regs[a - 1]);
+                        }
                         else if (inst->operands[a].kind == IR_VALUE_REGISTER)
                             fprintf(out, "  movq %d(%%rbp), %s\n", SLOT(inst->operands[a].id), arg_regs[a - 1]);
                     }
                     fprintf(out, "  callq %s\n", func_name);
                     if (inst->result.kind == IR_VALUE_REGISTER)
                         STORE(inst->result.id);
-                        
-                    for (int i = 0; i < ctx->reg_alloc->interval_count; i++) {
-                        LiveInterval* iv = &ctx->reg_alloc->intervals[i];
-                        if (iv->phys_reg != REG_NONE && !iv->is_spilled &&
-                            reg_alloc_is_caller_saved(ctx->reg_alloc, iv->phys_reg)) {
-                            fprintf(out, "  movq %d(%%rbp), %s\n",
-                                    -(iv->ir_reg * 8), reg_alloc_phys_name(iv->phys_reg));
+
+                    if (ctx->reg_alloc) {
+                        int save_idx = 0;
+                        for (int i = 0; i < ctx->reg_alloc->interval_count; i++) {
+                            LiveInterval* iv = &ctx->reg_alloc->intervals[i];
+                            if (iv->phys_reg != REG_NONE && !iv->is_spilled &&
+                                reg_alloc_is_caller_saved(ctx->reg_alloc, iv->phys_reg) &&
+                                iv->phys_reg < REG_XMM0) {
+                                fprintf(out, "  movq %d(%%rsp), %s\n",
+                                        save_idx * 8, reg_alloc_phys_name(iv->phys_reg));
+                                save_idx++;
+                            }
                         }
                     }
+                    if (save_size > 0)
+                        fprintf(out, "  addq $%d, %%rsp\n", save_size);
                 }
             }
             break;
@@ -966,6 +1029,12 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
             if (inst->operand_count > 0) {
                 if (inst->operands[0].kind == IR_VALUE_CONSTANT_INT)
                     fprintf(out, "  movq $%lld, %%rax\n", inst->operands[0].as.int_val);
+                else if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT) {
+                    /* ثابت عشري يُرجع كبتات في rax (نفس ABI: f64 bits) */
+                    unsigned long long bits = 0;
+                    memcpy(&bits, &inst->operands[0].as.float_val, sizeof(bits));
+                    fprintf(out, "  movabs $0x%llx, %%rax\n", bits);
+                }
                 else if (inst->operands[0].kind == IR_VALUE_REGISTER) {
                     LOAD_TO(inst->operands[0].id, "%rax");
                 }
@@ -1108,6 +1177,7 @@ int backend_emit_module(IRModule* module, BackendTarget target, FILE* out) {
         return 0;
     }
     fprintf(out, "# Generated by DAAD Compiler\n");
+    g_flt_count = 0;
 
     if (target == BACKEND_DHAD) {
         /* DHAD backend: emit functions only.
@@ -1140,6 +1210,18 @@ int backend_emit_module(IRModule* module, BackendTarget target, FILE* out) {
     for (int i = 0; i < module->function_count; i++) {
         total += b->emit_function(module->functions[i], out);
         fprintf(out, "\n");
+    }
+
+    /* ثوابت عشرية جُمعت أثناء الإصدار: تُكتب في .rodata ثم نعود إلى .text
+     * (المتصل main.c يُلحق helpers و_start بعده فيلزم أن يكون المقطع .text).
+     * تُكتب فقط عند وجودها — فلا يتغير أي بايت لبرامج الصحيح. */
+    if (g_flt_count > 0) {
+        fprintf(out, ".section .rodata\n");
+        for (int i = 0; i < g_flt_count; i++) {
+            fprintf(out, ".LCf%d:\n", i);
+            fprintf(out, "    .double %.17g\n", g_flt_vals[i]);
+        }
+        fprintf(out, ".section .text\n");
     }
 
     backend_destroy(b);

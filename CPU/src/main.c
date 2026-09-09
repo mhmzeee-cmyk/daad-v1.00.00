@@ -437,8 +437,10 @@ static void cpu_step(CPU *c) {
             break;
         }
 
-        /* ── قارن (CMP) — مح - سج (الأعلام فقط) ── */
-        case 0xE0: {
+        /* ── قارن (CMP) — مح - سج (الأعلام فقط)
+           0xE0 + 0xE4-0xE7 (0xE1-0xE3 محجوزة لـ EI/DI/RETI — يتجنبها الـ backend) ── */
+        case 0xE0:
+        case 0xE4: case 0xE5: case 0xE6: case 0xE7: {
             uint8_t v = cpu_get_reg(c, ext & 0x0F);
             uint16_t r = (uint16_t)c->acc - (uint16_t)v;
             c->flags = 0;
@@ -465,6 +467,28 @@ static void cpu_step(CPU *c) {
             c->pc = ret_addr;
             c->flags = ret_flags;
             c->int_enabled = true;
+            break;
+        }
+
+        /* ── LDRI: dst = mem[(hi<<8)|lo] — 4 بايت حسب المواصفة ── */
+        case 0xF1: {
+            uint8_t operands = fetch(c);
+            uint8_t loreg = fetch(c) & 0x0F;
+            uint8_t dst = (operands >> 4) & 0x0F;
+            uint8_t hi = operands & 0x0F;
+            uint16_t addr = ((uint16_t)cpu_get_reg(c, hi) << 8) | cpu_get_reg(c, loreg);
+            cpu_set_reg(c, dst, c->memory[addr]);
+            break;
+        }
+
+        /* ── STRI: mem[(hi<<8)|lo] = src — 4 بايت حسب المواصفة ── */
+        case 0xF2: {
+            uint8_t operands = fetch(c);
+            uint8_t loreg = fetch(c) & 0x0F;
+            uint8_t src = (operands >> 4) & 0x0F;
+            uint8_t hi = operands & 0x0F;
+            uint16_t addr = ((uint16_t)cpu_get_reg(c, hi) << 8) | cpu_get_reg(c, loreg);
+            c->memory[addr] = cpu_get_reg(c, src);
             break;
         }
 
@@ -1080,6 +1104,36 @@ static int parse_line(Asm *a, const char *line) {
             emit(a, 0xF0);
             emit(a, 0xD0);
             emit(a, (uint8_t)(((dst & 0x0F) << 4) | (src & 0x0F)));
+        }
+        return 0;
+    }
+    /* اقرأ غير مباشر: LDRI dst, hi, lo → F0 F1 ((dst<<4)|hi) lo (4 بايت حسب المواصفة) */
+    if (strcmp(buf, "اقرأ_غيرمباشر") == 0 || strcmp(buf, "ldri") == 0) {
+        int dst = 0, hi = 0, lo = 0;
+        char tok2[64], tok3[64], tok4[64];
+        p = read_token(p, tok2, sizeof(tok2));
+        p = read_token(p, tok3, sizeof(tok3));
+        p = read_token(p, tok4, sizeof(tok4));
+        if (is_reg(tok2, &dst) && is_reg(tok3, &hi) && is_reg(tok4, &lo)) {
+            emit(a, 0xF0);
+            emit(a, 0xF1);
+            emit(a, (uint8_t)(((dst & 0x0F) << 4) | (hi & 0x0F)));
+            emit(a, (uint8_t)(lo & 0x0F));
+        }
+        return 0;
+    }
+    /* خزن غير مباشر: STRI src, hi, lo → F0 F2 ((src<<4)|hi) lo (4 بايت حسب المواصفة) */
+    if (strcmp(buf, "خزن_غيرمباشر") == 0 || strcmp(buf, "stri") == 0) {
+        int src = 0, hi = 0, lo = 0;
+        char tok2[64], tok3[64], tok4[64];
+        p = read_token(p, tok2, sizeof(tok2));
+        p = read_token(p, tok3, sizeof(tok3));
+        p = read_token(p, tok4, sizeof(tok4));
+        if (is_reg(tok2, &src) && is_reg(tok3, &hi) && is_reg(tok4, &lo)) {
+            emit(a, 0xF0);
+            emit(a, 0xF2);
+            emit(a, (uint8_t)(((src & 0x0F) << 4) | (hi & 0x0F)));
+            emit(a, (uint8_t)(lo & 0x0F));
         }
         return 0;
     }
