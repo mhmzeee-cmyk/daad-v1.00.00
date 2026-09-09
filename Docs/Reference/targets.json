@@ -50,7 +50,7 @@
       "toolchain": "x86_64-w64-mingw32-g++",
       "note": "Static link: only KERNEL32+msvcrt. See Demo/build-windows.sh",
       "proof": "generated",
-      "proof_detail": "PE32+ structure+imports machine-verified; boot on real Windows pending"
+      "proof_detail": "PE32+ structure+imports machine-verified; real MSI built+wixl-verified (tables+extract, 7/7 files byte-identical); boot+install on real Windows 7 pending"
     },
     {
       "id": "dhad-cpu",
