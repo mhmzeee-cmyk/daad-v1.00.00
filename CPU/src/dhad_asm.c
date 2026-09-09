@@ -441,7 +441,17 @@ static int asm_parse_line(DhadAsm *a, const char *line) {
         int r = 0;
         char tok2[64];
         p = asm_read_token(p, tok2, sizeof(tok2));
-        if (asm_is_reg(tok2, &r)) { asm_emit(a, 0xF0); asm_emit(a, 0xE0 | (r & 0x0F)); }
+        /* س1-س3 محجوزة للمقاطعات (E1-E3) — رفض صريح بدل ترميز متباين.
+         * استخدم س0 أو س4-س7 (انظر ISA_COMPATIBILITY.md). */
+        if (asm_is_reg(tok2, &r)) {
+            if (r >= 1 && r <= 3) {
+                a->error_count++;
+                snprintf(a->last_error, sizeof(a->last_error), "خطأ %d: قارن مع س%d غير مدعوم (0x%X محجوز للمقاطعات) — استخدم س0 أو س4-س7", a->line, r, 0xE0 | r);
+            } else {
+                asm_emit(a, 0xF0);
+                asm_emit(a, 0xE0 | (r & 0x0F));
+            }
+        }
         return 0;
     }
     if (strcmp(buf, "فعّل_مقاطعات") == 0 || strcmp(buf, "ei") == 0) {

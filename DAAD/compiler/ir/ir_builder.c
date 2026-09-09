@@ -240,12 +240,18 @@ IRValue ir_builder_build_expr(IRBuilder* builder, ASTNode* expr) {
             return result;
         }
         case NODE_UNARY_EXPRESSION: {
-            IRValue operand = ir_builder_build_expr(builder, expr->as.unary.operand);
             /* Phase 12.5: &expr (address-of) and *expr (dereference) */
             if (expr->as.unary.op == UNARY_ADDRESS_OF) {
-                /* &var: operand is already an address (alloca), return it directly */
+                /* &var: the variable entry IS the alloca (address) — return it
+                 * directly WITHOUT the LOAD that identifier codegen would add. */
+                if (expr->as.unary.operand && expr->as.unary.operand->type == NODE_IDENTIFIER) {
+                    IRValue addr = ir_builder_lookup_var(builder, expr->as.unary.operand->as.identifier.name);
+                    if (addr.kind != IR_VALUE_NULL) return addr;
+                }
+                IRValue operand = ir_builder_build_expr(builder, expr->as.unary.operand);
                 return operand;
             }
+            IRValue operand = ir_builder_build_expr(builder, expr->as.unary.operand);
             if (expr->as.unary.op == UNARY_DEREF) {
                 /* *ptr: dereference via LOAD */
                 IRValue result = ir_function_alloc_reg(builder->current_function, operand.type);

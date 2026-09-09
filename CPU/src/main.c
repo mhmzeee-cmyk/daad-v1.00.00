@@ -1047,7 +1047,16 @@ static int parse_line(Asm *a, const char *line) {
         int r = 0;
         char tok2[64];
         p = read_token(p, tok2, sizeof(tok2));
-        if (is_reg(tok2, &r)) { emit(a, 0xF0); emit(a, 0xE0 | (r & 0x0F)); }
+        /* س1-س3 محجوزة للمقاطعات (E1-E3) في هذا الثنائي — رفض صريح بدل ترميز متباين.
+         * استخدم س0 أو س4-س7 (انظر ISA_COMPATIBILITY.md). */
+        if (is_reg(tok2, &r)) {
+            if (r >= 1 && r <= 3) {
+                a->error_count++;
+                fprintf(stderr, "خطأ %d: قارن مع س%d غير مدعوم (0x%X محجوز للمقاطعات) — استخدم س0 أو س4-س7\n", a->line, r, 0xE0 | r);
+            } else {
+                emit(a, 0xF0); emit(a, 0xE0 | (r & 0x0F));
+            }
+        }
         return 0;
     }
     if (strcmp(buf, "فعّل_مقاطعات") == 0 || strcmp(buf, "ei") == 0) {

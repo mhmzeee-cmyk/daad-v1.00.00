@@ -113,6 +113,7 @@ run_test "tests/full_T4d_not.ضasm"       "240" "متوقف" "T4d: NOT ~0x0F=240
 run_test "tests/full_T4e_shl.ضasm"       "10"  "متوقف" "T4e: SHL 5<<1=10"
 run_test "tests/full_T4f_shr.ضasm"       "10"  "متوقف" "T4f: SHR 20>>1=10"
 run_test "tests/full_T4g_cmp.ضasm"       "42"  "متوقف" "T4g: CMP مقارنة"
+run_test "tests/cmp_s4.ضasm"              "42"  "متوقف" "T4h: CMP s4 (ترميز E4)"
 echo ""
 
 # ═══════════════════════════════════════
@@ -312,6 +313,17 @@ run_test "tests/bug_mul_acc.ضasm"     "36" "متوقف" "BUG: MUL ACC (6*6)"
 run_test "tests/bug_xor_acc.ضasm"     "0"  "متوقف" "BUG: XOR ACC (0xFF^0xFF)"
 run_test "tests/bug_nested_if.ضasm"   "99" "متوقف" "BUG: Nested .if"
 run_test "tests/bug_shl_carry.ضasm"   "1"  "متوقف" "BUG: SHL carry"
+echo ""
+
+# ═══════════════════════════════════════
+#  T17: العنونة غير المباشرة LDRI/STRI (مواصفة 4 بايت، عنوان 16-بت)
+# ═══════════════════════════════════════
+echo -e "${CYAN}── T17: العنونة غير المباشرة ──${NC}"
+run_test "tests/ldri_basic.ضasm"      "42" "متوقف" "T17a: LDRI basic 0x0040"
+run_test "tests/ldri_boundary.ضasm"   "77" "متوقف" "T17b: LDRI boundary 0x00FF"
+run_test "tests/ldri_high_addr.ضasm"  "99" "متوقف" "T17c: LDRI high 0x0100"
+run_test "tests/ldri_multireg.ضasm"   "55" "متوقف" "T17d: LDRI multireg"
+run_test "tests/ldri_roundtrip.ضasm"  "30" "متوقف" "T17e: LDRI roundtrip"
 echo ""
 
 # ═══════════════════════════════════════

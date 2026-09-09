@@ -488,7 +488,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
         case IR_OP_ADD:
             if (inst->result.kind == IR_VALUE_REGISTER && inst->operand_count >= 2) {
                 if (result_is_float(inst)) {
-                    LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
+                    if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT)
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[0].as.float_val));
+                    else
+                        LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
                         fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  addsd %%xmm1, %%xmm0\n");
@@ -519,7 +522,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
         case IR_OP_SUB:
             if (inst->result.kind == IR_VALUE_REGISTER && inst->operand_count >= 2) {
                 if (result_is_float(inst)) {
-                    LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
+                    if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT)
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[0].as.float_val));
+                    else
+                        LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
                         fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  subsd %%xmm1, %%xmm0\n");
@@ -549,7 +555,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
         case IR_OP_MUL:
             if (inst->result.kind == IR_VALUE_REGISTER && inst->operand_count >= 2) {
                 if (result_is_float(inst)) {
-                    LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
+                    if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT)
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[0].as.float_val));
+                    else
+                        LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
                         fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  mulsd %%xmm1, %%xmm0\n");
@@ -579,7 +588,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
         case IR_OP_DIV:
             if (inst->result.kind == IR_VALUE_REGISTER && inst->operand_count >= 2) {
                 if (result_is_float(inst)) {
-                    LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
+                    if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT)
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[0].as.float_val));
+                    else
+                        LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
                         fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  divsd %%xmm1, %%xmm0\n");
@@ -723,7 +735,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
         case IR_OP_CMP:
             if (inst->operand_count >= 2) {
                 if (result_is_float(inst)) {
-                    LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
+                    if (inst->operands[0].kind == IR_VALUE_CONSTANT_FLOAT)
+                        fprintf(out, "  movsd .LCf%d(%%rip), %%xmm0\n", float_const_id(inst->operands[0].as.float_val));
+                    else
+                        LOAD_FLOAT_TO(inst->operands[0].id, "%xmm0");
                     if (inst->operands[1].kind == IR_VALUE_CONSTANT_FLOAT) {
                         fprintf(out, "  movsd .LCf%d(%%rip), %%xmm1\n", float_const_id(inst->operands[1].as.float_val));
                         fprintf(out, "  ucomisd %%xmm1, %%xmm0\n");
@@ -746,7 +761,19 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                         fprintf(out, "  cmpq %%rcx, %%rax\n");
                     }
                 }
-                switch (inst->compare_op) {
+                /* بعد ucomisd تُقرأ الأعلام بشروط غير موقعة (CF/ZF) لا الموقعة —
+                 * setl بعد ucomisd خطأ دائم (SF=0)؛ أما cmpq الصحيح فيبقى موقعًا. */
+                if (result_is_float(inst)) {
+                    switch (inst->compare_op) {
+                        case IR_CMP_EQ: fprintf(out, "  sete %%al\n"); break;
+                        case IR_CMP_NE: fprintf(out, "  setne %%al\n"); break;
+                        case IR_CMP_GT: fprintf(out, "  seta %%al\n"); break;
+                        case IR_CMP_LT: fprintf(out, "  setb %%al\n"); break;
+                        case IR_CMP_GE: fprintf(out, "  setae %%al\n"); break;
+                        case IR_CMP_LE: fprintf(out, "  setbe %%al\n"); break;
+                        default: fprintf(out, "  sete %%al\n"); break;
+                    }
+                } else switch (inst->compare_op) {
                     case IR_CMP_EQ: fprintf(out, "  sete %%al\n"); break;
                     case IR_CMP_NE: fprintf(out, "  setne %%al\n"); break;
                     case IR_CMP_GT: fprintf(out, "  setg %%al\n"); break;
@@ -913,6 +940,10 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                         fprintf(out, "  movq $1, %%rax\n");
                         fprintf(out, "  movq $1, %%rdi\n");
                         fprintf(out, "  syscall\n");
+                        /* سطر جديد خاص بالطباعة (النصوص نفسها نظيفة الآن لتعمل كمسارات/أنماط) */
+                        fprintf(out, "  subq $8, %%rsp\n  movb $10, (%%rsp)\n");
+                        fprintf(out, "  movq $1, %%rax\n  movq $1, %%rdi\n  movq %%rsp, %%rsi\n  movq $1, %%rdx\n  syscall\n");
+                        fprintf(out, "  addq $8, %%rsp\n");
                         fprintf(out, "  popq %%r11\n  popq %%r10\n  popq %%r9\n"
                                      "  popq %%r8\n  popq %%rdi\n  popq %%rsi\n"
                                      "  popq %%rcx\n  popq %%rax\n");
@@ -980,30 +1011,52 @@ static int emit_x86_instruction(IRInstruction* inst, FILE* out, BackendContext* 
                     if (inst->result.kind == IR_VALUE_REGISTER)
                         STORE(inst->result.id);
                 } else if (strcmp(func_name, "اقرأ_ملف") == 0) {
-                    fprintf(out, "  # fread\n");
-                    if (inst->operand_count > 1) {
-                        if (inst->operands[1].kind == IR_VALUE_REGISTER)
-                            LOAD_TO(inst->operands[1].id, "%rdi");
-                    }
+                    /* العقد الموثق: اقرأ_ملف(الملف، البايفر، الحجم) → fread(buf,1,size,f) */
+                    fprintf(out, "  # fread(buf, 1, size, f)\n");
                     if (inst->operand_count > 2) {
                         if (inst->operands[2].kind == IR_VALUE_REGISTER)
-                            LOAD_TO(inst->operands[2].id, "%rsi");
+                            LOAD_TO(inst->operands[2].id, "%rdi");
                     }
-                    fprintf(out, "  movq $1, %%rdx\n");
+                    fprintf(out, "  movq $1, %%rsi\n");
+                    if (inst->operand_count > 3) {
+                        if (inst->operands[3].kind == IR_VALUE_CONSTANT_INT)
+                            fprintf(out, "  movq $%lld, %%rdx\n", inst->operands[3].as.int_val);
+                        else if (inst->operands[3].kind == IR_VALUE_REGISTER)
+                            LOAD_TO(inst->operands[3].id, "%rdx");
+                        else
+                            fprintf(out, "  movq $0, %%rdx\n");
+                    } else {
+                        fprintf(out, "  movq $0, %%rdx\n");
+                    }
+                    if (inst->operand_count > 1) {
+                        if (inst->operands[1].kind == IR_VALUE_REGISTER)
+                            LOAD_TO(inst->operands[1].id, "%rcx");
+                    }
                     fprintf(out, "  callq fread\n");
                     if (inst->result.kind == IR_VALUE_REGISTER)
                         STORE(inst->result.id);
                 } else if (strcmp(func_name, "اكتب_ملف") == 0) {
-                    fprintf(out, "  # fwrite\n");
-                    if (inst->operand_count > 1) {
-                        if (inst->operands[1].kind == IR_VALUE_REGISTER)
-                            LOAD_TO(inst->operands[1].id, "%rdi");
-                    }
+                    /* اكتب_ملف(الملف، البايفر، الحجم) → fwrite(buf,1,size,f) */
+                    fprintf(out, "  # fwrite(buf, 1, size, f)\n");
                     if (inst->operand_count > 2) {
                         if (inst->operands[2].kind == IR_VALUE_REGISTER)
-                            LOAD_TO(inst->operands[2].id, "%rsi");
+                            LOAD_TO(inst->operands[2].id, "%rdi");
                     }
-                    fprintf(out, "  movq $1, %%rdx\n");
+                    fprintf(out, "  movq $1, %%rsi\n");
+                    if (inst->operand_count > 3) {
+                        if (inst->operands[3].kind == IR_VALUE_CONSTANT_INT)
+                            fprintf(out, "  movq $%lld, %%rdx\n", inst->operands[3].as.int_val);
+                        else if (inst->operands[3].kind == IR_VALUE_REGISTER)
+                            LOAD_TO(inst->operands[3].id, "%rdx");
+                        else
+                            fprintf(out, "  movq $0, %%rdx\n");
+                    } else {
+                        fprintf(out, "  movq $0, %%rdx\n");
+                    }
+                    if (inst->operand_count > 1) {
+                        if (inst->operands[1].kind == IR_VALUE_REGISTER)
+                            LOAD_TO(inst->operands[1].id, "%rcx");
+                    }
                     fprintf(out, "  callq fwrite\n");
                     if (inst->result.kind == IR_VALUE_REGISTER)
                         STORE(inst->result.id);
@@ -1290,9 +1343,9 @@ int backend_emit_module(IRModule* module, BackendTarget target, FILE* out) {
         fprintf(out, ".section .rodata\n");
         for (int i = 0; i < module->string_count && i < DAAD_MAX_STRINGS; i++) {
             snprintf(g_str_labels[g_str_count], 64, "%s", module->strings[i].label);
-            g_str_lengths[g_str_count] = strlen(module->strings[i].str) + 1;
+            g_str_lengths[g_str_count] = strlen(module->strings[i].str);
             g_str_count++;
-            fprintf(out, "%s: .asciz \"%s\\n\"\n",
+            fprintf(out, "%s: .asciz \"%s\"\n",
                     module->strings[i].label, module->strings[i].str);
         }
         fprintf(out, "\n.section .text\n\n");

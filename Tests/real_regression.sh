@@ -121,8 +121,22 @@ echo "$out" | grep -q "15" && ! echo "$out" | grep -q "خطأ" && pass "dhad:loo
 "$DAAD" "$ROOT/DAAD/factorial.daad" --target=dhad -o "$TMP/fact.ضasm" 2>/dev/null
 "$CPU" "$TMP/fact.ضasm" 2>&1 | grep -q "120" && pass "dhad:fact120" || fail "dhad:fact120" "no 120"
 
-# ---------- 5. CPU suite ----------
-echo "-- [5] CPU suite"
+# ---------- 5. Unified driver (./dhad targets|build|run) ----------
+echo "-- [5] dhad driver"
+"$ROOT/dhad" targets 2>/dev/null | grep -q "linux-x64" && pass "dhad:targets" || fail "dhad:targets" "list"
+"$ROOT/dhad" build "$ROOT/Examples/01_hello.ض" --target=linux-x64-cpp -o "$TMP/dh.out" >/dev/null 2>&1 && "$TMP/dh.out" 2>&1 | grep -q "مرحبا" && pass "dhad:build-linux-cpp" || fail "dhad:build-linux-cpp" "build/run"
+if command -v x86_64-w64-mingw32-g++ >/dev/null 2>&1; then
+  "$ROOT/dhad" build "$ROOT/Examples/01_hello.ض" --target=windows-x64 -o "$TMP/dh.exe" >/dev/null 2>&1 && file "$TMP/dh.exe" 2>/dev/null | grep -q "PE32" && pass "dhad:build-windows" || fail "dhad:build-windows" "PE"
+else
+  echo "  (mingw missing — dhad:build-windows skipped)"
+fi
+"$ROOT/dhad" build "$ROOT/DAAD/factorial.daad" --target=linux-x64 -o "$TMP/dh_fact.out" >/dev/null 2>&1 && "$TMP/dh_fact.out" >/dev/null 2>&1; [ "$?" = "120" ] && pass "dhad:build-linux-daad" || fail "dhad:build-linux-daad" "fact120"
+"$ROOT/dhad" run "$ROOT/Demo/loop5.daad" --target=dhad-cpu 2>/dev/null | grep -q "15" && pass "dhad:run-dhad" || fail "dhad:run-dhad" "loop15"
+"$ROOT/dhad" build "$ROOT/Examples/01_hello.ض" --target=macos-arm64 >/dev/null 2>&1; [ "$?" = "3" ] && pass "dhad:neg-mac" || fail "dhad:neg-mac" "exit!=3"
+"$ROOT/dhad" build "$ROOT/DAAD/factorial.daad" --target=windows-x64 >/dev/null 2>&1; [ "$?" = "3" ] && pass "dhad:neg-dialect" || fail "dhad:neg-dialect" "exit!=3"
+
+# ---------- 6. CPU suite ----------
+echo "-- [6] CPU suite"
 cpulog=$(cd "$ROOT/CPU" && bash ./run_tests.sh 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g')
 cpass=$(echo "$cpulog" | grep -E "ناجح:" | grep -o "[0-9]*" | head -n 1)
 cfail=$(echo "$cpulog" | grep -E "فاشل:" | grep -o "[0-9]*" | head -n 1)

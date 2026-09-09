@@ -3,6 +3,8 @@
 > A target is **Available** only if its row is proven by real execution in this repo.
 > Anything else is **Experimental** (partial proof) or **Not Implemented**.
 > Studio MUST NOT offer a target marked otherwise. See `PHASE_D_REPORT.md`.
+> `proof` refines Available: `runtime` (booted+executed here) vs `generated`
+> (artifact structurally verified; boot pending). Machine-readable: `targets.json`.
 
 ## Frontend → neutral form
 - **Track A** (`Compiler/`, `.ض` sources): emits standard **C++20**. Platform is chosen by the
@@ -12,11 +14,12 @@
 
 ## Registry
 
-| Target | Frontend | Backend / toolchain | Output | Status |
-|---|---|---|---|---|
-| `linux-x64` | Track B | `BACKEND_X86` + `gcc -nostartfiles` | ELF executable | **Available** |
-| `windows-x64` | Track A | C++20 + MinGW-w64 (`x86_64-w64-mingw32-g++`) or MSVC | PE32+ `.exe` | **Available** |
-| `dhad-cpu` | Track B | `BACKEND_DHAD` + `dhad_asm` + `dhad_cpu` | `.ضasm` / `.bin` | **Available** (educational) |
+| Target | Frontend | Backend / toolchain | Output | Status | Proof |
+|---|---|---|---|---|---|
+| `linux-x64` | Track B (`.daad`) | `BACKEND_X86` + `gcc -nostartfiles` | ELF executable | **Available** | runtime |
+| `linux-x64-cpp` | Track A (`.ض`) | C++20 + `g++` | ELF executable | **Available** | runtime |
+| `windows-x64` | Track A (`.ض`) | C++20 + MinGW-w64 (`x86_64-w64-mingw32-g++`) or MSVC | PE32+ `.exe` | **Available** | generated (boot pending) |
+| `dhad-cpu` | Track B (`.daad`) | `BACKEND_DHAD` + `dhad_asm` + `dhad_cpu` | `.ضasm` / `.bin` | **Available** | runtime (educational) |
 | `macos-x64`, `macos-arm64` | Track A | Apple clang (Mach-O) | `.app`/Mach-O | **Not Implemented** |
 | `android-arm64` | Track A / `BACKEND_ARM` | NDK / backend scaffold (`emit_function = NULL`) | APK/AAB | **Not Implemented** |
 | `ios-arm64` | Track A | Xcode + signing | `.app` | **Not Implemented** |
