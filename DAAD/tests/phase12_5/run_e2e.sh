@@ -2,9 +2,17 @@
 # Phase 12.5-F.2: Real E2E Execution Test Harness
 # Pipeline: DAAD (.daad) → Compiler → DHAD Assembly (.s) → Assembler+Emulator → Output
 
-DAAD_COMPILER="/home/m_hmoz/Documents/مشروع ض/DAAD/build/daad"
-DHAD_CPU="/home/m_hmoz/Documents/cpu/dhad_cpu"
-TEST_DIR="/home/m_hmoz/Documents/مشروع ض/DAAD/tests/phase12_5"
+# Original absolute paths (preserved for reference):
+# DAAD_COMPILER="/home/m_hmoz/Documents/مشروع ض/DAAD/build/daad"
+# DHAD_CPU="/home/m_hmoz/Documents/cpu/dhad_cpu"
+# TEST_DIR="/home/m_hmoz/Documents/مشروع ض/DAAD/tests/phase12_5"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+DAAD_COMPILER="$REPO_ROOT/DAAD/build/daad"
+DHAD_CPU="$REPO_ROOT/CPU/dhad_cpu"
+TEST_DIR="$SCRIPT_DIR"
 TMP_DIR="/tmp/phase_f_e2e"
 RESULT_FILE="$TMP_DIR/results.txt"
 
