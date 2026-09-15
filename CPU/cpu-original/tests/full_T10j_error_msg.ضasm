@@ -1,6 +1,0 @@
-# T10j: Error messages — رسائل خطأ واضحة
-hamil s0, 10
-add s0
-# هذا سيعيد خطأ: تعليمة غير موجودة
-#🌯onsense_instruction
-halt

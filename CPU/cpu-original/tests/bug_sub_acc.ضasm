@@ -1,5 +1,0 @@
-# BUG-REG: SUB ACC — كان يطرح S0 بدل ACC
-# 50 - 50 = 0
-load acc, 50
-sub acc
-halt

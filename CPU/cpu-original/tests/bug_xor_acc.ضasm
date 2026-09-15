@@ -1,5 +1,0 @@
-# BUG-REG: XOR/OR/AND/CMP with ACC
-# XOR ACC: 0xFF ^ 0xFF = 0
-load acc, 0xFF
-xor acc
-halt

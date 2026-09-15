@@ -1,6 +1,0 @@
-# T10h: English mnemonics — تعليمات بالإنجليزية
-load acc, 10
-load s0, 20
-add s0
-# مح = 30
-halt

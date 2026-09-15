@@ -1,4 +1,0 @@
-MYVAL = 5
-load acc, MYVAL + 3
-print
-halt

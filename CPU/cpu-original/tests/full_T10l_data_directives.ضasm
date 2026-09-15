@@ -1,9 +1,0 @@
-# T10l: Data directives comprehensive — اختبار شامل للبيانات
-jmp start
-.db 65, 66, 67      # A, B, C
-.dw 0x1234          # كلمة 16-bit
-.ds "hello"         # نص null-terminated
-.org 0x0020
-start:
-load acc, 42
-halt

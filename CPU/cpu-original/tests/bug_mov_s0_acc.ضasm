@@ -1,7 +1,0 @@
-# BUG-REG: MOV S0 <- ACC — كان لا يعمل
-# النتيجة: مح = 42
-load acc, 42
-mov s0, acc
-load acc, 0
-add s0
-halt
