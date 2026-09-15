@@ -1,10 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const prisma = new PrismaClient();
 
 async function createTestAccounts() {
-  const password = 'Test1234!';
+  // C3: Generate random password — never hardcoded
+  const password = process.env.SEED_PASSWORD || crypto.randomBytes(16).toString('hex');
   const hash = await bcrypt.hash(password, 12);
 
   // Get or create school
@@ -113,15 +115,15 @@ async function createTestAccounts() {
   }
 
   console.log('\n=== Test Accounts ===');
-  console.log('Password for all accounts: Test1234!');
+  console.log('Password for all accounts:', password);
   console.log('\nTeachers:');
-  console.log('  Email: ahmad@daad.academy  | Password: Test1234!');
-  console.log('  Email: teacher@daad.academy | Password: Test1234!');
+  console.log('  Email: ahmad@daad.academy  | Password:', password);
+  console.log('  Email: teacher@daad.academy | Password:', password);
   console.log('\nStudents:');
-  console.log('  Email: sara@test.com      | Password: Test1234!');
-  console.log('  Email: mohammed@test.com  | Password: Test1234!');
-  console.log('  Email: fatima@test.com    | Password: Test1234!');
-  console.log('  Email: ali@test.com       | Password: Test1234!');
+  console.log('  Email: sara@test.com      | Password:', password);
+  console.log('  Email: mohammed@test.com  | Password:', password);
+  console.log('  Email: fatima@test.com    | Password:', password);
+  console.log('  Email: ali@test.com       | Password:', password);
 
   await prisma.$disconnect();
 }

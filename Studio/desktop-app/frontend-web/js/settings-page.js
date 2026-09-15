@@ -21,19 +21,19 @@
       var confirmPw = document.getElementById('confirmPassword').value.trim();
 
       if (!currentPw || !newPw || !confirmPw) {
-        Toast.show('يرجى ملء جميع الحقول', 'error');
+        toast.error('يرجى ملء جميع الحقول');
         return;
       }
       if (newPw.length < 8) {
-        Toast.show('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل', 'error');
+        toast.error('كلمة المرور الجديدة يجب أن تكون 8 أحرف على الأقل');
         return;
       }
       if (newPw !== confirmPw) {
-        Toast.show('كلمتا المرور غير متطابقتين', 'error');
+        toast.error('كلمتا المرور غير متطابقتين');
         return;
       }
       if (newPw === currentPw) {
-        Toast.show('كلمة المرور الجديدة يجب أن تختلف عن الحالية', 'error');
+        toast.error('كلمة المرور الجديدة يجب أن تختلف عن الحالية');
         return;
       }
 
@@ -42,15 +42,15 @@
 
       api.changePassword(currentPw, newPw).then(function(data) {
         if (data.success) {
-          Toast.show('تم تغيير كلمة المرور بنجاح', 'success');
+          toast.success('تم تغيير كلمة المرور بنجاح');
           document.getElementById('currentPassword').value = '';
           document.getElementById('newPassword').value = '';
           document.getElementById('confirmPassword').value = '';
         } else {
-          Toast.show(data.message || 'فشل تغيير كلمة المرور', 'error');
+          toast.error(data.message || 'فشل تغيير كلمة المرور');
         }
       }).catch(function() {
-        Toast.show('خطأ في الاتصال بالخادم', 'error');
+        toast.error('خطأ في الاتصال بالخادم');
       }).finally(function() {
         btn.disabled = false;
         btn.textContent = 'تغيير كلمة المرور';

@@ -20,6 +20,16 @@ using ExprList = std::vector<std::unique_ptr<ExprAST>>;
 using ParamList = std::vector<std::pair<std::string, std::string>>;
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Access Level Enum
+// ═══════════════════════════════════════════════════════════════════════════════
+
+enum class AccessLevel {
+    Public,
+    Private,
+    Protected
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Visitor Base Classes
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -365,6 +375,7 @@ public:
     std::string name;
     ParamList params;
     StmtList body;
+    bool isAbstract = false;  // مجرّد دالة → generates `virtual ... = 0;`
     FunctionDeclAST() = default;
     FunctionDeclAST(std::string rt, std::string n, ParamList p, StmtList b)
         : returnType(std::move(rt)), name(std::move(n)), params(std::move(p)), body(std::move(b)) {}
@@ -376,6 +387,9 @@ public:
     std::string name;
     ParamList members;
     std::vector<std::unique_ptr<FunctionDeclAST>> methods;
+    bool isAbstract = false;  // مجرّد صنف → generates abstract class
+    std::vector<AccessLevel> memberAccess;  // Access level for each member
+    std::vector<AccessLevel> methodAccess;  // Access level for each method
     explicit ClassDeclAST(std::string n) : name(std::move(n)) {}
     ClassDeclAST(std::string n, ParamList m, std::vector<std::unique_ptr<FunctionDeclAST>> meth)
         : name(std::move(n)), members(std::move(m)), methods(std::move(meth)) {}

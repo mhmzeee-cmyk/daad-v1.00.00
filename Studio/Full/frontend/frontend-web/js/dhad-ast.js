@@ -296,12 +296,13 @@ var DhadAST = (function () {
   }
   EnumDeclAST.prototype = Object.create(StmtAST.prototype);
 
-  function TryCatchStmtAST(tryBody, catchVar, catchBody, line, col) {
+  function TryCatchStmtAST(tryBody, catchVar, catchBody, finallyBody, line, col) {
     StmtAST.call(this, line, col);
     this.type = 'TryCatchStmt';
     this.tryBody = tryBody;
     this.catchVar = catchVar;
     this.catchBody = catchBody;
+    this.finallyBody = finallyBody || null;
   }
   TryCatchStmtAST.prototype = Object.create(StmtAST.prototype);
 

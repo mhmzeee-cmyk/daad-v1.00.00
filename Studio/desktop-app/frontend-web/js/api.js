@@ -80,9 +80,15 @@ class ApiClient {
   }
 
   setUser(user) {
-    localStorage.setItem('dhad_user', JSON.stringify(user));
-    if (user && user.role) {
-      localStorage.setItem('dhad_role', user.role);
+    // Strip sensitive fields — only keep what the UI needs
+    const safe = user ? {
+      name: user.name,
+      role: user.role,
+      displayName: user.displayName,
+    } : null;
+    localStorage.setItem('dhad_user', JSON.stringify(safe));
+    if (safe && safe.role) {
+      localStorage.setItem('dhad_role', safe.role);
     }
   }
 

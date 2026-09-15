@@ -60,6 +60,32 @@ var DhadParser = (function () {
     return type && type.indexOf('KW_') === 0;
   };
 
+  // ── P3: Context-specific class names (after صنف/يرث/جديد only) ──────────────
+  var CLASS_NAME_TOKENS = [TT.IDENTIFIER, TT.KW_CIRCLE, TT.KW_RECTANGLE, TT.KW_LINE, TT.KW_IMAGE, TT.KW_TEMPLATE];
+
+  Parser.prototype.isClassName = function () {
+    var t = this.peek();
+    if (!t) return false;
+    return CLASS_NAME_TOKENS.indexOf(t.type) !== -1;
+  };
+
+  Parser.prototype.expectClassName = function () {
+    var t = this.peek();
+    if (!t) {
+      this.errors.push({ message: 'متوقع اسم صنف', line: 0, col: 0 });
+      return { type: 'IDENTIFIER', value: '__error', line: 0, col: 0 };
+    }
+    if (CLASS_NAME_TOKENS.indexOf(t.type) !== -1) {
+      return this.advance();
+    }
+    this.errors.push({
+      message: 'متوقع اسم صنف — حصل على: "' + t.value + '"',
+      line: t.line,
+      col: t.col
+    });
+    return { type: 'IDENTIFIER', value: '__error', line: t.line, col: t.col };
+  };
+
   // Accept IDENTIFIER or any keyword as a variable name
   Parser.prototype.isName = function () {
     var t = this.peek();
@@ -152,6 +178,8 @@ var DhadParser = (function () {
       case TT.KW_ENUM:     return this.parseEnum();
       case TT.KW_NAMESPACE:return this.parseNamespace();
       case TT.KW_TEMPLATE: return this.parseTemplate();
+      case TT.KW_ABSTRACT: return this.parseAbstract();
+      case TT.KW_INTERFACE: return this.parseInterface();
 
       // Error handling
       case TT.KW_TRY:      return this.parseTryCatch();
@@ -577,13 +605,13 @@ var DhadParser = (function () {
   // ── Class Declaration ───────────────────────────────────────────────────────
   Parser.prototype.parseClass = function () {
     var classTok = this.advance(); // صنف
-    var nameTok = this.expect(TT.IDENTIFIER);
+    var nameTok = this.expectClassName();
 
     // Check for inheritance: صنف اسم يرث اسم2
     var parent = null;
     if (this.check(TT.KW_INHERIT)) {
       this.advance(); // يرث
-      parent = this.expect(TT.IDENTIFIER).value;
+      parent = this.expectClassName().value;
     }
 
     this.expect(TT.LBRACE);
@@ -600,8 +628,23 @@ var DhadParser = (function () {
 
       if (this.check(TT.KW_STATIC)) { this.advance(); isStatic = true; }
 
+      // P1: دالة جديد(...) → constructor
+      if (this.check(TT.KW_FUNCTION) && this.peek(1) && this.peek(1).type === TT.KW_NEW) {
+        this.advance(); // دالة
+        this.advance(); // جديد
+        var ctor = this.parseConstructor(nameTok.value);
+        ctor.access = access;
+        body.push(ctor);
+      }
+      // P5: دالة ClassName(...) → constructor
+      else if (this.check(TT.KW_FUNCTION) && this.peek(1) && this.peek(1).type === TT.IDENTIFIER && this.peek(1).value === nameTok.value) {
+        this.advance(); // دالة
+        var ctor = this.parseConstructor(nameTok.value);
+        ctor.access = access;
+        body.push(ctor);
+      }
       // Constructor: same name as class followed by (
-      if (this.check(TT.IDENTIFIER) && this.peek().value === nameTok.value && this.peek(1) && this.peek(1).type === TT.LPAREN) {
+      else if (this.check(TT.IDENTIFIER) && this.peek().value === nameTok.value && this.peek(1) && this.peek(1).type === TT.LPAREN) {
         var ctor = this.parseConstructor(nameTok.value);
         ctor.access = access;
         body.push(ctor);
@@ -625,7 +668,18 @@ var DhadParser = (function () {
       } else {
         var stmt = this.parseStatement();
         if (stmt) {
-          if (stmt.type === 'VarDecl') { stmt.access = access; stmt.isStatic = isStatic; }
+          if (stmt.type === 'VarDecl') {
+            // P6d: Reject طول/حجم as field names
+            if (stmt.name === 'طول' || stmt.name === 'حجم') {
+              this.errors.push({
+                message: 'لا يمكن استخدام "طول" أو "حجم" كاسم حقل — استخدم اسماً آخر',
+                line: stmt.line,
+                col: stmt.col
+              });
+            }
+            stmt.access = access;
+            stmt.isStatic = isStatic;
+          }
           if (stmt.type === 'FunctionDecl') { stmt.access = access; stmt.isStatic = isStatic; }
           body.push(stmt);
         }
@@ -716,6 +770,100 @@ var DhadParser = (function () {
     return new AST.TemplateDeclAST(nameTok.value, params, body, tmplTok.line, tmplTok.col);
   };
 
+  // ── P4: Abstract Declaration ────────────────────────────────────────────────
+  Parser.prototype.parseAbstract = function () {
+    var absTok = this.advance(); // مجرد
+    if (this.check(TT.KW_CLASS)) {
+      var cls = this.parseClass();
+      cls.isAbstract = true;
+      return cls;
+    }
+    if (this.check(TT.KW_FUNCTION)) {
+      // مجرد دالة name(); → abstract function declaration (no body)
+      this.advance(); // دالة
+      var nameTok = this.peek();
+      if (nameTok && (nameTok.type === TT.IDENTIFIER || this.isKeyword(nameTok.type))) {
+        this.advance();
+        this.expect(TT.LPAREN);
+        var params = [];
+        if (!this.check(TT.RPAREN)) {
+          do {
+            if (this.isTypeKeyword() || this.check(TT.IDENTIFIER)) {
+              var paramType = this.advance().value;
+              if (this.check(TT.LBRACKET)) {
+                this.advance();
+                if (this.check(TT.RBRACKET)) { this.advance(); paramType += '[]'; }
+              }
+              var paramName = this.expectName();
+              var defaultValue = null;
+              if (this.match(TT.ASSIGN)) {
+                defaultValue = this.parseExpression();
+              }
+              params.push({ type: paramType, name: paramName.value, defaultValue: defaultValue });
+            }
+          } while (this.match(TT.COMMA));
+        }
+        this.expect(TT.RPAREN);
+        this.match(TT.SEMICOLON);
+        return new AST.FunctionDeclAST('void', nameTok.value, params, [], absTok.line, absTok.col);
+      }
+    }
+    this.errors.push({
+      message: 'متوقع صنف أو دالة بعد مجرد',
+      line: absTok.line,
+      col: absTok.col
+    });
+    return null;
+  };
+
+  // ── P4: Interface Declaration ───────────────────────────────────────────────
+  Parser.prototype.parseInterface = function () {
+    var ifTok = this.advance(); // واجهة
+    var nameTok = this.expectClassName();
+    this.expect(TT.LBRACE);
+
+    var body = [];
+    while (!this.check(TT.RBRACE) && !this.check(TT.EOF)) {
+      var access = 'public';
+      if (this.check(TT.KW_PUBLIC)) { this.advance(); access = 'public'; }
+      else if (this.check(TT.KW_PRIVATE)) { this.advance(); access = 'private'; }
+      else if (this.check(TT.KW_PROTECTED)) { this.advance(); access = 'protected'; }
+
+      if (this.check(TT.KW_FUNCTION)) {
+        this.advance(); // دالة
+        var fnName = this.expectName();
+        this.expect(TT.LPAREN);
+        var params = [];
+        if (!this.check(TT.RPAREN)) {
+          do {
+            if (this.isTypeKeyword() || this.check(TT.IDENTIFIER)) {
+              var paramType = this.advance().value;
+              if (this.check(TT.LBRACKET)) {
+                this.advance();
+                if (this.check(TT.RBRACKET)) { this.advance(); paramType += '[]'; }
+              }
+              var paramName = this.expectName();
+              params.push({ type: paramType, name: paramName.value, defaultValue: null });
+            }
+          } while (this.match(TT.COMMA));
+        }
+        this.expect(TT.RPAREN);
+        this.match(TT.SEMICOLON);
+        var fn = new AST.FunctionDeclAST('void', fnName.value, params, [], fnName.line, fnName.col);
+        fn.access = access;
+        body.push(fn);
+      } else {
+        this.errors.push({ message: 'متوقع دالة في الواجهة', line: this.peek().line, col: this.peek().col });
+        this.advance();
+      }
+    }
+
+    this.expect(TT.RBRACE);
+    var node = new AST.ClassDeclAST(nameTok.value, body, ifTok.line, ifTok.col);
+    node.isInterface = true;
+    return node;
+  };
+
   // ── Try-Catch Statement ─────────────────────────────────────────────────────
   Parser.prototype.parseTryCatch = function () {
     var tryTok = this.advance(); // حاول
@@ -740,9 +888,13 @@ var DhadParser = (function () {
       catchBody = this.parseBlock().body || [];
     }
 
-    this.check(TT.KW_FINALLY) && this.advance() && this.parseBlock();
+    var finallyBody = null;
+    if (this.check(TT.KW_FINALLY)) {
+      this.advance();
+      finallyBody = this.parseBlock().body || [];
+    }
 
-    return new AST.TryCatchStmtAST(tryBody, catchVar, catchBody, tryTok.line, tryTok.col);
+    return new AST.TryCatchStmtAST(tryBody, catchVar, catchBody, finallyBody, tryTok.line, tryTok.col);
   };
 
   // ── Throw Statement ─────────────────────────────────────────────────────────
@@ -756,7 +908,16 @@ var DhadParser = (function () {
   // ── New Expression ──────────────────────────────────────────────────────────
   Parser.prototype.parseNewExpr = function () {
     var newTok = this.advance(); // جديد
-    var typeName = this.expect(TT.IDENTIFIER).value;
+    // P2/P3: Accept class name (IDENTIFIER or 5 context keywords)
+    if (!this.isClassName()) {
+      this.errors.push({
+        message: 'متوقع: اسم صنف بعد صنف/يرث/جديد (مثال: جديد مستطيل())',
+        line: newTok.line,
+        col: newTok.col
+      });
+      return new AST.NewExprAST('__error', [], newTok.line, newTok.col);
+    }
+    var typeName = this.expectClassName().value;
 
     var args = [];
     if (this.match(TT.LPAREN)) {
@@ -1115,6 +1276,9 @@ var DhadParser = (function () {
         this.expect(TT.RBRACKET);
         if (expr.type === 'VariableExpr') {
           expr = new AST.ArraySubscriptExprAST(expr.name, index, t.line, t.col);
+        } else if (expr.type === 'MemberAccessExpr') {
+          // obj.field[i] — keep the member access as the array reference
+          expr = new AST.ArraySubscriptExprAST(expr, index, t.line, t.col);
         }
         continue;
       }
@@ -1184,7 +1348,16 @@ var DhadParser = (function () {
     // new ClassName(args)
     if (t.type === TT.KW_NEW) {
       this.advance();
-      var typeName = this.expect(TT.IDENTIFIER).value;
+      // P2/P3: Accept class name (IDENTIFIER or 5 context keywords)
+      if (!this.isClassName()) {
+        this.errors.push({
+          message: 'متوقع: اسم صنف بعد صنف/يرث/جديد (مثال: جديد مستطيل())',
+          line: t.line,
+          col: t.col
+        });
+        return new AST.NewExprAST('__error', [], t.line, t.col);
+      }
+      var typeName = this.expectClassName().value;
       var args = [];
       if (this.match(TT.LPAREN)) {
         if (!this.check(TT.RPAREN)) {

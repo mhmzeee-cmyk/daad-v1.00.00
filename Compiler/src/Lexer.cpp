@@ -4,6 +4,144 @@
 
 namespace daad {
 
+// ═══ Mapping: KeywordType → TokenType (TOKEN_KW_*) ═════════════════════════════
+static TokenType keywordTypeToTokenType(KeywordType kt) {
+    switch (kt) {
+        // 1. Data Types & Fundamentals
+        case KeywordType::KwInt:       return TokenType::TOKEN_KW_INT;
+        case KeywordType::KwDouble:    return TokenType::TOKEN_KW_DOUBLE;
+        case KeywordType::KwBool:      return TokenType::TOKEN_KW_BOOL;
+        case KeywordType::KwChar:      return TokenType::TOKEN_KW_CHAR;
+        case KeywordType::KwString:    return TokenType::TOKEN_KW_STRING;
+        case KeywordType::KwConst:     return TokenType::TOKEN_KW_CONST;
+        case KeywordType::KwVoid:      return TokenType::TOKEN_KW_VOID;
+        case KeywordType::KwAuto:      return TokenType::TOKEN_KW_AUTO;
+
+        // 2. Literals & Typedef
+        case KeywordType::KwTrue:      return TokenType::TOKEN_KW_TRUE;
+        case KeywordType::KwFalse:     return TokenType::TOKEN_KW_FALSE;
+        case KeywordType::KwNullptr:   return TokenType::TOKEN_KW_NULLPTR;
+        case KeywordType::KwTypedef:   return TokenType::TOKEN_KW_TYPEDEF;
+
+        // 3. Control Flow
+        case KeywordType::KwIf:        return TokenType::TOKEN_KW_IF;
+        case KeywordType::KwElse:      return TokenType::TOKEN_KW_ELSE;
+        case KeywordType::KwWhile:     return TokenType::TOKEN_KW_WHILE;
+        case KeywordType::KwDo:        return TokenType::TOKEN_KW_DO;
+        case KeywordType::KwFor:       return TokenType::TOKEN_KW_FOR;
+        case KeywordType::KwIn:        return TokenType::TOKEN_KW_IN;
+        case KeywordType::KwSwitch:    return TokenType::TOKEN_KW_SWITCH;
+        case KeywordType::KwCase:      return TokenType::TOKEN_KW_CASE;
+        case KeywordType::KwDefault:   return TokenType::TOKEN_KW_DEFAULT;
+        case KeywordType::KwBreak:     return TokenType::TOKEN_KW_BREAK;
+        case KeywordType::KwContinue:  return TokenType::TOKEN_KW_CONTINUE;
+        case KeywordType::KwGoto:      return TokenType::TOKEN_KW_GOTO;
+        case KeywordType::KwReturn:    return TokenType::TOKEN_KW_RETURN;
+
+        // 4. OOP & Scoping
+        case KeywordType::KwClass:     return TokenType::TOKEN_KW_CLASS;
+        case KeywordType::KwStruct:    return TokenType::TOKEN_KW_STRUCT;
+        case KeywordType::KwEnum:      return TokenType::TOKEN_KW_ENUM;
+        case KeywordType::KwInterface: return TokenType::TOKEN_KW_INTERFACE;
+        case KeywordType::KwNamespace: return TokenType::TOKEN_KW_NAMESPACE;
+
+        // 5. Access & Inheritance
+        case KeywordType::KwPublic:    return TokenType::TOKEN_KW_PUBLIC;
+        case KeywordType::KwPrivate:   return TokenType::TOKEN_KW_PRIVATE;
+        case KeywordType::KwProtected: return TokenType::TOKEN_KW_PROTECTED;
+        case KeywordType::KwInherit:   return TokenType::TOKEN_KW_INHERIT;
+        case KeywordType::KwSelf:      return TokenType::TOKEN_KW_SELF;
+        case KeywordType::KwBase:      return TokenType::TOKEN_KW_BASE;
+        case KeywordType::KwAbstract:  return TokenType::TOKEN_KW_ABSTRACT;
+
+        // 6. Functions & Memory
+        case KeywordType::KwFunction:  return TokenType::TOKEN_KW_FUNCTION;
+        case KeywordType::KwNew:       return TokenType::TOKEN_KW_NEW;
+        case KeywordType::KwDelete:    return TokenType::TOKEN_KW_DELETE;
+        case KeywordType::KwPointer:   return TokenType::TOKEN_KW_POINTER;
+        case KeywordType::KwReference: return TokenType::TOKEN_KW_REFERENCE;
+        case KeywordType::KwStatic:    return TokenType::TOKEN_KW_STATIC;
+        case KeywordType::KwInline:    return TokenType::TOKEN_KW_INLINE;
+        case KeywordType::KwExtern:    return TokenType::TOKEN_KW_EXTERN;
+        case KeywordType::KwTemplate:  return TokenType::TOKEN_KW_TEMPLATE;
+
+        // 7. Exception Handling
+        case KeywordType::KwTry:       return TokenType::TOKEN_KW_TRY;
+        case KeywordType::KwCatch:     return TokenType::TOKEN_KW_CATCH;
+        case KeywordType::KwFinally:   return TokenType::TOKEN_KW_FINALLY;
+        case KeywordType::KwThrow:     return TokenType::TOKEN_KW_THROW;
+        case KeywordType::KwAssert:    return TokenType::TOKEN_KW_ASSERT;
+        case KeywordType::KwException: return TokenType::TOKEN_KW_EXCEPTION;
+        case KeywordType::KwTypeOf:    return TokenType::TOKEN_KW_TYPEOF;
+        case KeywordType::KwSizeOf:    return TokenType::TOKEN_KW_SIZEOF;
+        case KeywordType::KwIncrement: return TokenType::TOKEN_KW_INCREMENT;
+        case KeywordType::KwDecrement: return TokenType::TOKEN_KW_DECREMENT;
+
+        // 8. Advanced Systems
+        case KeywordType::KwSync:        return TokenType::TOKEN_KW_SYNC;
+        case KeywordType::KwAwait:       return TokenType::TOKEN_KW_AWAIT;
+        case KeywordType::KwThread:      return TokenType::TOKEN_KW_THREAD;
+        case KeywordType::KwLock:        return TokenType::TOKEN_KW_LOCK;
+        case KeywordType::KwShared:      return TokenType::TOKEN_KW_SHARED;
+        case KeywordType::KwUnique:      return TokenType::TOKEN_KW_UNIQUE;
+        case KeywordType::KwImport:      return TokenType::TOKEN_KW_IMPORT;
+        case KeywordType::KwExport:      return TokenType::TOKEN_KW_EXPORT;
+        case KeywordType::KwModule:      return TokenType::TOKEN_KW_MODULE;
+        case KeywordType::KwAlternative: return TokenType::TOKEN_KW_ALTERNATIVE;
+
+        // 9. GUI Keywords
+        case KeywordType::KwButton:      return TokenType::TOKEN_KW_BUTTON;
+        case KeywordType::KwTextField:   return TokenType::TOKEN_KW_TEXTFIELD;
+        case KeywordType::KwComboBox:    return TokenType::TOKEN_KW_COMBOBOX;
+        case KeywordType::KwImage:       return TokenType::TOKEN_KW_IMAGE;
+        case KeywordType::KwCheckBox:    return TokenType::TOKEN_KW_CHECKBOX;
+        case KeywordType::KwSlider:      return TokenType::TOKEN_KW_SLIDER;
+        case KeywordType::KwDropDown:    return TokenType::TOKEN_KW_DROPDOWN;
+        case KeywordType::KwPanel:       return TokenType::TOKEN_KW_PANEL;
+        case KeywordType::KwLabel:       return TokenType::TOKEN_KW_LABEL;
+        case KeywordType::KwColumn:      return TokenType::TOKEN_KW_COLUMN;
+        case KeywordType::KwRow:         return TokenType::TOKEN_KW_ROW;
+        case KeywordType::KwGrid:        return TokenType::TOKEN_KW_GRID;
+        case KeywordType::KwProgressBar: return TokenType::TOKEN_KW_PROGRESSBAR;
+        case KeywordType::KwTabBar:      return TokenType::TOKEN_KW_TABBAR;
+
+        // 10. Print / Input
+        case KeywordType::KwPrint:       return TokenType::TOKEN_KW_PRINT;
+        case KeywordType::KwInput:       return TokenType::TOKEN_KW_INPUT;
+
+        // 11. Arabic logic
+        case KeywordType::KwAndArabic:   return TokenType::TOKEN_KW_AND_ARABIC;
+        case KeywordType::KwOrArabic:    return TokenType::TOKEN_KW_OR_ARABIC;
+
+        // 12. Image Processing
+        case KeywordType::KwLoadImage:   return TokenType::TOKEN_KW_LOAD_IMAGE;
+        case KeywordType::KwDrawImage:   return TokenType::TOKEN_KW_DRAW_IMAGE;
+        case KeywordType::KwImageSize:   return TokenType::TOKEN_KW_IMAGE_SIZE;
+        case KeywordType::KwSaveImage:   return TokenType::TOKEN_KW_SAVE_IMAGE;
+        case KeywordType::KwCropImage:   return TokenType::TOKEN_KW_CROP_IMAGE;
+        case KeywordType::KwResize:      return TokenType::TOKEN_KW_RESIZE;
+        case KeywordType::KwRotateImage: return TokenType::TOKEN_KW_ROTATE_IMAGE;
+        case KeywordType::KwFlipImage:   return TokenType::TOKEN_KW_FLIP_IMAGE;
+        case KeywordType::KwOpacity:     return TokenType::TOKEN_KW_OPACITY;
+        case KeywordType::KwFilter:      return TokenType::TOKEN_KW_FILTER;
+        case KeywordType::KwOverlay:     return TokenType::TOKEN_KW_OVERLAY;
+        case KeywordType::KwBackground:  return TokenType::TOKEN_KW_BACKGROUND;
+        case KeywordType::KwPixel:       return TokenType::TOKEN_KW_PIXEL;
+        case KeywordType::KwDraw:        return TokenType::TOKEN_KW_DRAW;
+        case KeywordType::KwFill:        return TokenType::TOKEN_KW_FILL;
+        case KeywordType::KwRectangle:   return TokenType::TOKEN_KW_RECTANGLE;
+        case KeywordType::KwCircle:      return TokenType::TOKEN_KW_CIRCLE;
+        case KeywordType::KwLine:        return TokenType::TOKEN_KW_LINE;
+        case KeywordType::KwTextOnCanvas: return TokenType::TOKEN_KW_TEXT_ON_CANVAS;
+        case KeywordType::KwClear:       return TokenType::TOKEN_KW_CLEAR;
+
+        // 13. Coordinate axes
+        case KeywordType::KwX:           return TokenType::TOKEN_KW_X;
+        case KeywordType::KwY:           return TokenType::TOKEN_KW_Y;
+    }
+    return TokenType::TOKEN_KEYWORD; // fallback
+}
+
 Lexer::Lexer(std::string_view source)
     : m_source(source), m_position(0), m_line(1), m_column(1) {
     m_codepoints = unicode::toCodepoints(m_source);
@@ -223,8 +361,10 @@ Token Lexer::scanIdentifier() {
     std::string_view text = tokenText(start, m_position);
 
     auto& registry = getStandardKeywordRegistry();
-    if (registry.findKeyword(text)) {
-        return makeToken(TokenType::TOKEN_KEYWORD, text);
+    auto kwType = registry.findKeyword(text);
+    if (kwType.has_value()) {
+        // Return the distinct TOKEN_KW_* type instead of generic TOKEN_KEYWORD
+        return makeToken(keywordTypeToTokenType(kwType.value()), text);
     }
 
     return makeToken(TokenType::TOKEN_IDENTIFIER, text);

@@ -57,7 +57,7 @@ private:
     std::unique_ptr<TryCatchStmtAST> parseTryCatchStatement();
     std::unique_ptr<StmtAST> parseTemplateDeclaration();
     std::unique_ptr<FunctionDeclAST> parseFunctionDefinition();
-    std::unique_ptr<ClassDeclAST> parseClassDeclaration();
+    std::unique_ptr<ClassDeclAST> parseClassDeclaration(bool isAbstract = false);
     std::unique_ptr<ForEachStmtAST> parseForEachStatement();
     std::unique_ptr<ThrowStmtAST> parseThrowStatement();
     std::unique_ptr<DeleteStmtAST> parseDeleteStatement();
@@ -91,6 +91,9 @@ private:
     std::string parseTypeName();
     std::pair<std::string, std::string> parseParam();
     void skipUntilMemberEnd();
+
+    // Keyword type checking — accepts both TOKEN_KEYWORD and all TOKEN_KW_* types
+    static bool isAnyKeyword(TokenType type);
 
     Lexer& m_lexer;
     DiagnosticsEngine& m_diag;

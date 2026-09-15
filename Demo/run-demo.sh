@@ -91,8 +91,11 @@ else
   SRV="$ROOT/Studio/desktop-app/server"
   DB="file:$SRV/prisma/dev.db"
   say "سيُفتح المتصفح الآن على موقع المنصة الحقيقي — وسأعطيكم حسابًا جاهزًا للدخول"
+  # مهم: التشغيل من داخل مجلد السيرفر حتى يجد .env (dotenv يبحث في CWD)
+  pushd "$SRV" > /dev/null
   DATABASE_URL="$DB" PORT=3000 NODE_ENV=development nohup node "$SRV/src/index.js" > /tmp/demo_server.log 2>&1 &
   SERVER_PID=$!
+  popd > /dev/null
   for _ in $(seq 1 20); do curl -s --max-time 2 http://localhost:3000/health > /dev/null 2>&1 && break; sleep 1; done
   node "$ROOT/Demo/api-demo.js" 3000 demo@example.com
   if command -v xdg-open >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then

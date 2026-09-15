@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "vscode-debugadapter": "^1.51.0"
+  }
+}

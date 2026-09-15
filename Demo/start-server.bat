@@ -25,5 +25,7 @@ echo.
 set DBF=%SRV:\=/%
 set DATABASE_URL=file:%DBF%/prisma/dev.db
 set PORT=3000
+REM مهم: التشغيل من داخل مجلد السيرفر حتى يجد ملف .env
+cd /d "%SRV%"
 node "%SRV%\src\index.js"
 endlocal

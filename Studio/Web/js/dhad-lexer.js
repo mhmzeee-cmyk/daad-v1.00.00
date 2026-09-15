@@ -243,6 +243,7 @@ var DhadLexer = (function () {
     // Error Handling (8)
     'حاول':      TT.KW_TRY,
     'امسك':     TT.KW_CATCH,
+    'أمسك':     TT.KW_CATCH,
     'أخيراً':   TT.KW_FINALLY,
     'ارمِ':     TT.KW_THROW,
     'تأكد':     TT.KW_ASSERT,

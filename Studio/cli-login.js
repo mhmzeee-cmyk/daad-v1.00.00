@@ -72,7 +72,6 @@ async function login(email, password) {
 
     await saveSession({
       email,
-      accessToken: data.accessToken,
       userId: data.userId,
       role: data.role,
       username: data.username,

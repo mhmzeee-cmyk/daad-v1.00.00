@@ -16,6 +16,7 @@ var DhadCodeGen = (function () {
     this.globals = [];      // global variable declarations
     this.initialized = {};  // track initialized variables
     this.classFields = null; // track class fields when inside a method
+    this._privateNames = null; // P6b: track private field names for closure access
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -39,6 +40,7 @@ var DhadCodeGen = (function () {
     this.classes = {};
     this.globals = [];
     this.initialized = {};
+    this._privateNames = null;
 
     // First pass: collect all function and class declarations
     this.collectDeclarations(program);
@@ -228,6 +230,17 @@ var DhadCodeGen = (function () {
     for (var name in this.classes) {
       if (this.classes.hasOwnProperty(name)) {
         var cls = this.classes[name];
+
+        // P4: Interface → empty function (just inheritance chain)
+        if (cls.isInterface) {
+          this.line('function ' + name + '() {}');
+          if (cls.parent) {
+            this.line(name + '.prototype = Object.create(' + cls.parent + '.prototype);');
+            this.line(name + '.prototype.constructor = ' + name + ';');
+          }
+          continue;
+        }
+
         var ctor = null;
         var fields = [];
         var methods = [];
@@ -242,9 +255,21 @@ var DhadCodeGen = (function () {
           else if (m.type === 'FunctionDecl') methods.push(m);
         }
 
+        // P6b: Collect private field names
+        var privateFieldNames = privateVars.map(function(p) { return p.name; });
+
         // Emit constructor function
         this.line('function ' + name + '(' + (ctor ? ctor.params.map(function(p) { return p.name; }).join(', ') : '') + ') {');
         this.open();
+
+        // §9: Abstract enforcement via new.target.name
+        if (cls.isAbstract) {
+          this.line('if (new.target && new.target.name === \'' + name + '\') {');
+          this.open();
+          this.line('throw new Error(\'لا يمكن إنشاء كائن من صنف مجرّد\');');
+          this.close();
+          this.line('}');
+        }
 
         // Call parent constructor if inheriting
         if (cls.parent) {
@@ -255,7 +280,7 @@ var DhadCodeGen = (function () {
           }
         }
 
-        // Private vars as closure variables
+        // P6b: Private vars as closure variables
         for (var pv = 0; pv < privateVars.length; pv++) {
           var pvar = privateVars[pv];
           this.line('var _' + pvar.name + ' = ' + (pvar.init ? this.genExpr(pvar.init) : 'undefined') + ';');
@@ -279,33 +304,54 @@ var DhadCodeGen = (function () {
           }
         }
 
-        // Constructor body
+        // Constructor body — set classFields (exclude constructor params for P6c)
         if (ctor) {
+          var ctorParamNames = ctor.params.map(function(p) { return p.name; });
+          var savedFieldsForCtor = this.classFields;
+          var savedPrivateNames = this._privateNames;
+          this.classFields = fields.map(function(f) { return f.name; }).filter(function(n) {
+            return ctorParamNames.indexOf(n) === -1;
+          });
+          this._privateNames = privateFieldNames;
           this.emitStatements(ctor.body);
+          this._privateNames = savedPrivateNames;
+          this.classFields = savedFieldsForCtor;
         }
 
-        // Methods with getters/setters for private fields
+        // P6b: Define getters/setters for private fields via closure
         for (var pm = 0; pm < privateVars.length; pm++) {
-          var pv = privateVars[pm];
-          this.line('Object.defineProperty(this, "' + pv.name + '", {');
+          var pv2 = privateVars[pm];
+          this.line('Object.defineProperty(this, "' + pv2.name + '", {');
           this.open();
-          this.line('get: function() { return _' + pv.name + '; },');
-          this.line('set: function(v) { _' + pv.name + ' = v; },');
+          this.line('get: function() { return _' + pv2.name + '; },');
+          this.line('set: function(v) { _' + pv2.name + ' = v; },');
           this.line('enumerable: true');
           this.close();
           this.line('});');
         }
 
-        // Methods
+        // Methods with classFields + privateNames for field access
+        var fieldNames = fields.map(function(f) { return f.name; });
         for (var mi = 0; mi < methods.length; mi++) {
           var met = methods[mi];
+          // P6c: Exclude method params from classFields
+          var metParamNames = met.params.map(function(p) { return p.name; });
+          var filteredFields = fieldNames.filter(function(n) {
+            return metParamNames.indexOf(n) === -1;
+          });
           if (met.isStatic) {
             this.line(name + '.' + met.name + ' = function(' + met.params.map(function(p) { return p.name; }).join(', ') + ') {');
           } else {
             this.line('this.' + met.name + ' = function(' + met.params.map(function(p) { return p.name; }).join(', ') + ') {');
           }
           this.open();
+          var savedFields = this.classFields;
+          var savedPriv = this._privateNames;
+          this.classFields = filteredFields;
+          this._privateNames = privateFieldNames;
           this.emitStatements(met.body);
+          this._privateNames = savedPriv;
+          this.classFields = savedFields;
           this.close();
           this.line('};');
         }
@@ -327,14 +373,19 @@ var DhadCodeGen = (function () {
     for (var name in this.functions) {
       if (this.functions.hasOwnProperty(name)) {
         var fn = this.functions[name];
+        var defaults = [];
         var params = fn.params.map(function(p) {
           var n = p.name;
           if (n === 'س') n = 'x';
           if (n === 'ص') n = 'y';
+          if (p.defaultValue) defaults.push({ name: n, expr: p.defaultValue });
           return n;
         }).join(', ');
         this.line('function ' + name + '(' + params + ') {');
         this.open();
+        for (var di = 0; di < defaults.length; di++) {
+          this.line('if (' + defaults[di].name + ' === undefined) ' + defaults[di].name + ' = ' + this.genExpr(defaults[di].expr) + ';');
+        }
         this.emitStatements(fn.body);
         this.close();
         this.line('}');
@@ -374,9 +425,9 @@ var DhadCodeGen = (function () {
       case 'ReturnStmt': this.emitReturn(stmt); break;
       case 'BreakStmt': this.line('break;'); break;
       case 'ContinueStmt': this.line('continue;'); break;
-      case 'FunctionDecl': this.emitFunctionDecl(stmt); break;
-      case 'ClassDecl': this.emitClassDecl(stmt); break;
-      case 'StructDecl': this.emitStructDecl(stmt); break;
+      case 'FunctionDecl': break; // already emitted via emitFunctions
+      case 'ClassDecl': break; // already emitted via emitClasses
+      case 'StructDecl': break; // already emitted via emitClasses
       case 'NamespaceDecl': this.emitNamespace(stmt); break;
       case 'EnumDecl': this.emitEnum(stmt); break;
       case 'TryCatchStmt': this.emitTryCatch(stmt); break;
@@ -385,7 +436,13 @@ var DhadCodeGen = (function () {
       case 'PrintStmt': this.emitPrint(stmt); break;
       case 'InputStmt': this.emitInput(stmt); break;
       case 'MemberAssignment': this.line(this.genExpr(stmt.object) + '.' + stmt.member + ' = ' + this.genExpr(stmt.value) + ';'); break;
-      case 'ArraySubscriptAssign': this.line(stmt.name + '[' + this.genExpr(stmt.index) + '] = ' + this.genExpr(stmt.value) + ';'); break;
+      case 'ArraySubscriptAssign': 
+        if (stmt.name && typeof stmt.name === 'object' && stmt.name.type === 'MemberAccessExpr') {
+          this.line(this.genExpr(stmt.name) + '[' + this.genExpr(stmt.index) + '] = ' + this.genExpr(stmt.value) + ';');
+        } else {
+          this.line(stmt.name + '[' + this.genExpr(stmt.index) + '] = ' + this.genExpr(stmt.value) + ';');
+        }
+        break;
       case 'TemplateDecl': break; // templates are erased at runtime
       case 'Import': break; // no-op in web interpreter
       case 'Export': break; // no-op in web interpreter
@@ -433,7 +490,10 @@ var DhadCodeGen = (function () {
   // ── Assignment ──────────────────────────────────────────────────────────────
   CodeGen.prototype.emitAssignment = function (stmt) {
     var name = stmt.name;
-    if (this.classFields && this.classFields.indexOf(name) !== -1) {
+    // P6b: Private fields use closure variable _name
+    if (this._privateNames && this._privateNames.indexOf(name) !== -1) {
+      name = '_' + name;
+    } else if (this.classFields && this.classFields.indexOf(name) !== -1) {
       name = 'this.' + name;
     }
     if (name === 'س') name = 'x';
@@ -448,7 +508,10 @@ var DhadCodeGen = (function () {
     if (op === '^') op = '**';
     if (op === '^=') op = '**=';
     var name = stmt.name;
-    if (this.classFields && this.classFields.indexOf(name) !== -1) {
+    // P6b: Private fields use closure variable _name
+    if (this._privateNames && this._privateNames.indexOf(name) !== -1) {
+      name = '_' + name;
+    } else if (this.classFields && this.classFields.indexOf(name) !== -1) {
       name = 'this.' + name;
     }
     if (name === 'س') name = 'x';
@@ -635,9 +698,12 @@ var DhadCodeGen = (function () {
         this.line('this.' + member.name + ' = ' + (member.init ? this.genExpr(member.init) : 'undefined') + ';');
       }
     }
-    // Constructor body
+    // Constructor body — set classFields so field assignments use this.
     if (ctor) {
+      var savedFieldsForCtor = this.classFields;
+      this.classFields = fieldNames;
       this.emitStatements(ctor.body);
+      this.classFields = savedFieldsForCtor;
     }
     // Instance methods
     var fieldNames = members.filter(function(m) { return m.type === 'VarDecl' && !m.isStatic; }).map(function(m) { return m.name; });
@@ -741,6 +807,12 @@ var DhadCodeGen = (function () {
       this.emitStatements(stmt.catchBody);
       this.close();
     }
+    if (stmt.finallyBody && stmt.finallyBody.length > 0) {
+      this.line('} finally {');
+      this.open();
+      this.emitStatements(stmt.finallyBody);
+      this.close();
+    }
     this.line('}');
   };
 
@@ -779,6 +851,10 @@ var DhadCodeGen = (function () {
         return 'null';
 
       case 'VariableExpr':
+        // P6b: Private fields use closure variable _name
+        if (this._privateNames && this._privateNames.indexOf(expr.name) !== -1) {
+          return '_' + expr.name;
+        }
         if (this.classFields && this.classFields.indexOf(expr.name) !== -1) {
           return 'this.' + expr.name;
         }
@@ -788,7 +864,10 @@ var DhadCodeGen = (function () {
 
       case 'Assignment':
         var aName = expr.name;
-        if (this.classFields && this.classFields.indexOf(aName) !== -1) {
+        // P6b: Private fields use closure variable _name
+        if (this._privateNames && this._privateNames.indexOf(aName) !== -1) {
+          aName = '_' + aName;
+        } else if (this.classFields && this.classFields.indexOf(aName) !== -1) {
           aName = 'this.' + aName;
         }
         if (aName === 'س') aName = 'x';
@@ -797,7 +876,10 @@ var DhadCodeGen = (function () {
 
       case 'CompoundAssignment':
         var cName = expr.name;
-        if (this.classFields && this.classFields.indexOf(cName) !== -1) {
+        // P6b: Private fields use closure variable _name
+        if (this._privateNames && this._privateNames.indexOf(cName) !== -1) {
+          cName = '_' + cName;
+        } else if (this.classFields && this.classFields.indexOf(cName) !== -1) {
           cName = 'this.' + cName;
         }
         if (cName === 'س') cName = 'x';
@@ -830,7 +912,7 @@ var DhadCodeGen = (function () {
         if (expr.name === 'طول' || expr.name === 'حجم') {
           return this.genExpr(expr.args[0]) + '.length';
         }
-        if (expr.name instanceof Object && expr.name.type === 'MemberAccessExpr') {
+        if (expr.name && typeof expr.name === 'object' && expr.name.type === 'MemberAccessExpr') {
           var obj = this.genExpr(expr.name.object);
           var member = expr.name.member;
           // Arabic method translation
@@ -848,6 +930,7 @@ var DhadCodeGen = (function () {
             'لأحرف_كبيرة': 'toUpperCase',
             'لأحرف_صغيرة': 'toLowerCase',
             'كرر': 'repeat',
+            'كرّر': 'repeat',
             'اتجه': 'trim',
             'ابحث': 'indexOf',
             'استخرج': 'substring',
@@ -877,7 +960,7 @@ var DhadCodeGen = (function () {
           }
           return obj + '.' + member + '(' + this.genExprList(expr.args) + ')';
         }
-        if (expr.name instanceof Object) {
+        if (expr.name && typeof expr.name === 'object') {
           // Method call via expression
           return this.genExpr(expr.name) + '(' + this.genExprList(expr.args) + ')';
         }
@@ -896,6 +979,9 @@ var DhadCodeGen = (function () {
         return objStr + '.' + expr.member;
 
       case 'ArraySubscriptExpr':
+        if (expr.name && typeof expr.name === 'object' && expr.name.type === 'MemberAccessExpr') {
+          return this.genExpr(expr.name) + '[' + this.genExpr(expr.index) + ']';
+        }
         return expr.name + '[' + this.genExpr(expr.index) + ']';
 
       case 'NewExpr':

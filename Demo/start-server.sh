@@ -25,4 +25,6 @@ echo "  👤 البريد:  demo@example.com   |   🔑 كلمة المرور:  
 echo ""
 echo "  ⚠️  أبقِ هذه النافذة مفتوحة — إغلاقها يُطفئ الموقع."
 echo ""
+# مهم: يجب التشغيل من داخل مجلد السيرفر حتى يجد ملف .env (dotenv يبحث في CWD)
+cd "$SRV" || { echo "❌ مجلد السيرفر غير موجود: $SRV"; read -r -p "اضغط Enter للإغلاق... " _; exit 1; }
 DATABASE_URL="file:$SRV/prisma/dev.db" PORT=$PORT NODE_ENV=development node "$SRV/src/index.js"

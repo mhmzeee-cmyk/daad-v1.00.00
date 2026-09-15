@@ -448,6 +448,17 @@ void CodeGenVisitor::visit(FunctionDeclAST& node) {
     // طرق الصف: إعلانها الداخلي كُتب في ClassDeclAST (داخل class)، هنا نكتب التعريف المؤهل فقط
     bool isClassMethod = !m_currentClassScope.empty();
     if (!isClassMethod) {
+        if (node.isAbstract) {
+            // مجرّد دالة خارج الصف — تحذير + توليد = 0;
+            m_headerStream << "virtual " << cppRetType << " " << fnName << "(";
+            for (size_t i = 0; i < node.params.size(); ++i) {
+                std::string pType = mapType(node.params[i].first);
+                m_headerStream << pType << " " << sanitizeIdent(node.params[i].second);
+                if (i < node.params.size() - 1) m_headerStream << ", ";
+            }
+            m_headerStream << ") = 0;\n";
+            return; // no definition body for pure virtual
+        }
         m_headerStream << cppRetType << " " << fnName << "(";
         for (size_t i = 0; i < node.params.size(); ++i) {
             std::string pType = mapType(node.params[i].first);
@@ -455,6 +466,11 @@ void CodeGenVisitor::visit(FunctionDeclAST& node) {
             if (i < node.params.size() - 1) m_headerStream << ", ";
         }
         m_headerStream << ");\n";
+    }
+
+    if (node.isAbstract && isClassMethod) {
+        // مجرّد دالة داخل الصف — pure virtual declaration only (no definition)
+        return;
     }
 
     std::string fullName = isClassMethod ? m_currentClassScope + "::" + fnName : fnName;
@@ -483,29 +499,74 @@ void CodeGenVisitor::visit(FunctionCallAST& node) {
 }
 
 void CodeGenVisitor::visit(ClassDeclAST& node) {
-    m_headerStream << "class " << sanitizeIdent(node.name) << " {\npublic:\n";
-    for (auto& [type, name] : node.members) {
-        std::string cppType = mapType(type);
-        m_headerStream << "    " << cppType << " " << sanitizeIdent(name) << ";\n";
-    }
-    // إعلانات الطرق داخل الصف
-    for (auto& method : node.methods) {
-        if (!method) continue;
-        std::string ret = mapType(method->returnType);
-        m_headerStream << "    " << ret << " " << sanitizeIdent(method->name) << "(";
-        for (size_t i = 0; i < method->params.size(); ++i) {
-            std::string pt = mapType(method->params[i].first);
-            m_headerStream << pt << " " << sanitizeIdent(method->params[i].second);
-            if (i < method->params.size() - 1) m_headerStream << ", ";
+    m_headerStream << "class " << sanitizeIdent(node.name);
+    if (node.isAbstract) m_headerStream << " abstract"; // MSVC extension hint
+    m_headerStream << " {\n";
+
+    // Helper: emit access specifier section if it differs from previous
+    AccessLevel lastAccess = AccessLevel::Private; // C++ default
+    auto emitAccess = [&](AccessLevel level) {
+        if (level != lastAccess) {
+            switch (level) {
+                case AccessLevel::Public:    m_headerStream << "public:\n"; break;
+                case AccessLevel::Private:   m_headerStream << "private:\n"; break;
+                case AccessLevel::Protected: m_headerStream << "protected:\n"; break;
+            }
+            lastAccess = level;
         }
-        m_headerStream << ");\n";
+    };
+
+    // Emit members grouped by access level
+    for (size_t i = 0; i < node.members.size(); ++i) {
+        AccessLevel access = (i < node.memberAccess.size()) ? node.memberAccess[i] : AccessLevel::Private;
+        emitAccess(access);
+        std::string cppType = mapType(node.members[i].first);
+        m_headerStream << "    " << cppType << " " << sanitizeIdent(node.members[i].second) << ";\n";
     }
+
+    // Emit methods with access levels
+    for (size_t i = 0; i < node.methods.size(); ++i) {
+        AccessLevel access = (i < node.methodAccess.size()) ? node.methodAccess[i] : AccessLevel::Private;
+        emitAccess(access);
+        if (!node.methods[i]) continue;
+        auto& method = node.methods[i];
+        std::string ret = mapType(method->returnType);
+
+        if (method->isAbstract) {
+            // Pure virtual: virtual ReturnType name(params) = 0;
+            m_headerStream << "    virtual " << ret << " " << sanitizeIdent(method->name) << "(";
+            for (size_t j = 0; j < method->params.size(); ++j) {
+                std::string pt = mapType(method->params[j].first);
+                m_headerStream << pt << " " << sanitizeIdent(method->params[j].second);
+                if (j < method->params.size() - 1) m_headerStream << ", ";
+            }
+            m_headerStream << ") = 0;\n";
+        } else {
+            // Regular virtual method declaration in header
+            m_headerStream << "    virtual " << ret << " " << sanitizeIdent(method->name) << "(";
+            for (size_t j = 0; j < method->params.size(); ++j) {
+                std::string pt = mapType(method->params[j].first);
+                m_headerStream << pt << " " << sanitizeIdent(method->params[j].second);
+                if (j < method->params.size() - 1) m_headerStream << ", ";
+            }
+            m_headerStream << ");\n";
+        }
+    }
+
+    // For abstract classes, add virtual destructor
+    if (node.isAbstract) {
+        if (lastAccess != AccessLevel::Public) {
+            m_headerStream << "public:\n";
+        }
+        m_headerStream << "    virtual ~" << sanitizeIdent(node.name) << "() = default;\n";
+    }
+
     m_headerStream << "};\n";
     // تعريفات الطرق المؤهلة بـ Class:: خارج الصف
     std::string prevScope = m_currentClassScope;
     m_currentClassScope = sanitizeIdent(node.name);
     for (auto& method : node.methods) {
-        if (method) method->accept(*this);
+        if (method && !method->isAbstract) method->accept(*this);
     }
     m_currentClassScope = prevScope;
 }

@@ -4,6 +4,135 @@
 
 namespace daad {
 
+// ═══ isAnyKeyword: accepts TOKEN_KEYWORD + all TOKEN_KW_* types ═══
+bool Parser::isAnyKeyword(TokenType type) {
+    switch (type) {
+        case TokenType::TOKEN_KEYWORD:
+        // Data types
+        case TokenType::TOKEN_KW_INT:
+        case TokenType::TOKEN_KW_DOUBLE:
+        case TokenType::TOKEN_KW_BOOL:
+        case TokenType::TOKEN_KW_CHAR:
+        case TokenType::TOKEN_KW_STRING:
+        case TokenType::TOKEN_KW_CONST:
+        case TokenType::TOKEN_KW_VOID:
+        case TokenType::TOKEN_KW_AUTO:
+        // Literals & typedef
+        case TokenType::TOKEN_KW_TRUE:
+        case TokenType::TOKEN_KW_FALSE:
+        case TokenType::TOKEN_KW_NULLPTR:
+        case TokenType::TOKEN_KW_TYPEDEF:
+        // Control flow
+        case TokenType::TOKEN_KW_IF:
+        case TokenType::TOKEN_KW_ELSE:
+        case TokenType::TOKEN_KW_WHILE:
+        case TokenType::TOKEN_KW_DO:
+        case TokenType::TOKEN_KW_FOR:
+        case TokenType::TOKEN_KW_IN:
+        case TokenType::TOKEN_KW_SWITCH:
+        case TokenType::TOKEN_KW_CASE:
+        case TokenType::TOKEN_KW_DEFAULT:
+        case TokenType::TOKEN_KW_BREAK:
+        case TokenType::TOKEN_KW_CONTINUE:
+        case TokenType::TOKEN_KW_GOTO:
+        case TokenType::TOKEN_KW_RETURN:
+        // OOP & Scoping
+        case TokenType::TOKEN_KW_CLASS:
+        case TokenType::TOKEN_KW_STRUCT:
+        case TokenType::TOKEN_KW_ENUM:
+        case TokenType::TOKEN_KW_INTERFACE:
+        case TokenType::TOKEN_KW_NAMESPACE:
+        // Access & Inheritance
+        case TokenType::TOKEN_KW_PUBLIC:
+        case TokenType::TOKEN_KW_PRIVATE:
+        case TokenType::TOKEN_KW_PROTECTED:
+        case TokenType::TOKEN_KW_INHERIT:
+        case TokenType::TOKEN_KW_SELF:
+        case TokenType::TOKEN_KW_BASE:
+        case TokenType::TOKEN_KW_ABSTRACT:
+        // Functions & Memory
+        case TokenType::TOKEN_KW_FUNCTION:
+        case TokenType::TOKEN_KW_NEW:
+        case TokenType::TOKEN_KW_DELETE:
+        case TokenType::TOKEN_KW_POINTER:
+        case TokenType::TOKEN_KW_REFERENCE:
+        case TokenType::TOKEN_KW_STATIC:
+        case TokenType::TOKEN_KW_INLINE:
+        case TokenType::TOKEN_KW_EXTERN:
+        case TokenType::TOKEN_KW_TEMPLATE:
+        // Exception Handling
+        case TokenType::TOKEN_KW_TRY:
+        case TokenType::TOKEN_KW_CATCH:
+        case TokenType::TOKEN_KW_FINALLY:
+        case TokenType::TOKEN_KW_THROW:
+        case TokenType::TOKEN_KW_ASSERT:
+        case TokenType::TOKEN_KW_EXCEPTION:
+        case TokenType::TOKEN_KW_TYPEOF:
+        case TokenType::TOKEN_KW_SIZEOF:
+        case TokenType::TOKEN_KW_INCREMENT:
+        case TokenType::TOKEN_KW_DECREMENT:
+        // Advanced Systems
+        case TokenType::TOKEN_KW_SYNC:
+        case TokenType::TOKEN_KW_AWAIT:
+        case TokenType::TOKEN_KW_THREAD:
+        case TokenType::TOKEN_KW_LOCK:
+        case TokenType::TOKEN_KW_SHARED:
+        case TokenType::TOKEN_KW_UNIQUE:
+        case TokenType::TOKEN_KW_IMPORT:
+        case TokenType::TOKEN_KW_EXPORT:
+        case TokenType::TOKEN_KW_MODULE:
+        case TokenType::TOKEN_KW_ALTERNATIVE:
+        // GUI
+        case TokenType::TOKEN_KW_BUTTON:
+        case TokenType::TOKEN_KW_TEXTFIELD:
+        case TokenType::TOKEN_KW_COMBOBOX:
+        case TokenType::TOKEN_KW_IMAGE:
+        case TokenType::TOKEN_KW_CHECKBOX:
+        case TokenType::TOKEN_KW_SLIDER:
+        case TokenType::TOKEN_KW_DROPDOWN:
+        case TokenType::TOKEN_KW_PANEL:
+        case TokenType::TOKEN_KW_LABEL:
+        case TokenType::TOKEN_KW_COLUMN:
+        case TokenType::TOKEN_KW_ROW:
+        case TokenType::TOKEN_KW_GRID:
+        case TokenType::TOKEN_KW_PROGRESSBAR:
+        case TokenType::TOKEN_KW_TABBAR:
+        // Print / Input
+        case TokenType::TOKEN_KW_PRINT:
+        case TokenType::TOKEN_KW_INPUT:
+        // Arabic logic
+        case TokenType::TOKEN_KW_AND_ARABIC:
+        case TokenType::TOKEN_KW_OR_ARABIC:
+        // Image Processing
+        case TokenType::TOKEN_KW_LOAD_IMAGE:
+        case TokenType::TOKEN_KW_DRAW_IMAGE:
+        case TokenType::TOKEN_KW_IMAGE_SIZE:
+        case TokenType::TOKEN_KW_SAVE_IMAGE:
+        case TokenType::TOKEN_KW_CROP_IMAGE:
+        case TokenType::TOKEN_KW_RESIZE:
+        case TokenType::TOKEN_KW_ROTATE_IMAGE:
+        case TokenType::TOKEN_KW_FLIP_IMAGE:
+        case TokenType::TOKEN_KW_OPACITY:
+        case TokenType::TOKEN_KW_FILTER:
+        case TokenType::TOKEN_KW_OVERLAY:
+        case TokenType::TOKEN_KW_BACKGROUND:
+        case TokenType::TOKEN_KW_PIXEL:
+        case TokenType::TOKEN_KW_DRAW:
+        case TokenType::TOKEN_KW_FILL:
+        case TokenType::TOKEN_KW_RECTANGLE:
+        case TokenType::TOKEN_KW_CIRCLE:
+        case TokenType::TOKEN_KW_LINE:
+        case TokenType::TOKEN_KW_TEXT_ON_CANVAS:
+        case TokenType::TOKEN_KW_CLEAR:
+        // Coordinate axes
+        case TokenType::TOKEN_KW_X:
+        case TokenType::TOKEN_KW_Y:
+            return true;
+        default:
+            return false;
+    }
+}
+
 void Parser::consume() {
     m_currentToken = m_lexer.getNextToken();
 }
@@ -41,7 +170,7 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
         return nullptr;
     }
 
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    if (isAnyKeyword(m_currentToken.type)) {
         auto& kw = m_currentToken.text;
 
         // أنواع البيانات
@@ -82,7 +211,7 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
             if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER) {
                 varName = m_currentToken.text;
                 consume();
-            } else if (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+            } else if (isAnyKeyword(m_currentToken.type) &&
                        (m_currentToken.text == "س" || m_currentToken.text == "ص")) {
                 varName = m_currentToken.text;
                 consume();
@@ -100,6 +229,17 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
         if (kw == "نطاق") return parseNamespaceDeclaration();
         if (kw == "تعداد") return parseEnumDeclaration();
         if (kw == "قالب") return parseTemplateDeclaration();
+        // مجرّد صنف → abstract class
+        if (kw == "مجرّد") {
+            consume(); // consume 'مجرّد'
+            if (isAnyKeyword(m_currentToken.type) &&
+                (m_currentToken.text == "صنف" || m_currentToken.text == "فئة")) {
+                return parseClassDeclaration(true); // isAbstract=true
+            }
+            // Not followed by class keyword — error or treat as variable
+            reportError("توقع 'صنف' أو 'فئة' بعد 'مجرّد'");
+            return nullptr;
+        }
         if (kw == "صنف" || kw == "فئة") return parseClassDeclaration();
 
         // الاستثناءات
@@ -235,7 +375,7 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
 
     // كلمات مفتاحية كمتغيرات في جملة (س = 10، ص = 20، خيط = ...، حالة = ...)
     // أي كلمة مفتاحية تصل هنا لم تُطابق فرعًا لغويًا أعلاه — تُعامل كاسم متغير/استدعاء
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    if (isAnyKeyword(m_currentToken.type)) {
         std::string varName = m_currentToken.text;
         consume();
 
@@ -344,8 +484,8 @@ int Parser::getCurrentPrecedence() const {
     auto t = m_currentToken.type;
     if (t == TokenType::TOKEN_OR)               return 1;
     if (t == TokenType::TOKEN_AND)              return 2;
-    if (t == TokenType::TOKEN_KEYWORD && m_currentToken.text == "أو")  return 1;
-    if (t == TokenType::TOKEN_KEYWORD && m_currentToken.text == "و")   return 2;
+    if (isAnyKeyword(t) && m_currentToken.text == "أو")  return 1;
+    if (isAnyKeyword(t) && m_currentToken.text == "و")   return 2;
     if (t == TokenType::TOKEN_EQUAL_EQUAL ||
         t == TokenType::TOKEN_NOT_EQUALS)       return 3;
     if (t == TokenType::TOKEN_LESS ||
@@ -372,7 +512,7 @@ std::unique_ptr<ExprAST> Parser::parseUnary() {
         auto operand = parseUnary();
         return std::make_unique<UnaryExprAST>("!", std::move(operand));
     }
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "ليس") {
+    if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "ليس") {
         consume();
         auto operand = parseUnary();
         return std::make_unique<UnaryExprAST>("!", std::move(operand));
@@ -433,7 +573,7 @@ std::unique_ptr<ExprAST> Parser::parsePrimary() {
     }
 
     // قيم منطقية — يجب أن تأتي قبل فحص TOKEN_KEYWORD العام
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    if (isAnyKeyword(m_currentToken.type)) {
         if (m_currentToken.text == "صواب") {
             consume();
             return std::make_unique<BoolExprAST>(true);
@@ -474,11 +614,11 @@ std::unique_ptr<ExprAST> Parser::parsePrimary() {
     // ناقص أحادي handled by parseUnary()
 
     // محور الإحداثيات: س → x، ص → y
-    if (m_currentToken.text == "س" && m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    if (m_currentToken.text == "س" && isAnyKeyword(m_currentToken.type)) {
         consume();
         return std::make_unique<VariableExprAST>("x");
     }
-    if (m_currentToken.text == "ص" && m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    if (m_currentToken.text == "ص" && isAnyKeyword(m_currentToken.type)) {
         consume();
         return std::make_unique<VariableExprAST>("y");
     }
@@ -529,7 +669,7 @@ std::unique_ptr<StmtAST> Parser::parseVariableDeclaration() {
     if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER) {
         name = m_currentToken.text;
         consume();
-    } else if (m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    } else if (isAnyKeyword(m_currentToken.type)) {
         name = m_currentToken.text;
         consume();
     } else {
@@ -619,7 +759,7 @@ std::unique_ptr<StmtAST> Parser::parseInputStatement() {
     consume(); // (
 
     if (m_currentToken.type != TokenType::TOKEN_IDENTIFIER &&
-        !(m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+        !(isAnyKeyword(m_currentToken.type) &&
           (m_currentToken.text == "س" || m_currentToken.text == "ص"))) {
         reportError("توقع اسم متغير داخل 'ادخل(...)'");
         if (m_currentToken.type == TokenType::TOKEN_RIGHT_PAREN) consume();
@@ -642,7 +782,7 @@ std::unique_ptr<IfStmtAST> Parser::parseIfStatement() {
     auto thenBody = parseBlock();
     std::vector<std::unique_ptr<StmtAST>> elseBody;
 
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "وإلا") {
+    if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "وإلا") {
         consume();
         elseBody = parseBlock();
     }
@@ -667,7 +807,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
     // Simple heuristic: if we see a type keyword, then identifier, then "في" — it's for-each
     
     // Try to detect for-each pattern
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+    if (isAnyKeyword(m_currentToken.type) &&
         (m_currentToken.text == "صحيح" || m_currentToken.text == "عشري" ||
          m_currentToken.text == "حرف" || m_currentToken.text == "منطقي" ||
          m_currentToken.text == "نص" || m_currentToken.text == "تلقائي")) {
@@ -679,7 +819,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
         std::string savedName = m_currentToken.text;
         consume(); // identifier
         
-        if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "في") {
+        if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "في") {
             // This is for-each!
             consume(); // في
             auto iterExpr = parseExpression();
@@ -707,7 +847,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
         
         std::unique_ptr<StmtAST> update;
         if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER ||
-            (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+            (isAnyKeyword(m_currentToken.type) &&
              (m_currentToken.text == "س" || m_currentToken.text == "ص"))) {
             std::string uName = m_currentToken.text;
             consume();
@@ -730,7 +870,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
                 auto val = parseExpression();
                 update = std::make_unique<CompoundAssignmentAST>(uName, op, std::move(val));
             }
-        } else if (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+        } else if (isAnyKeyword(m_currentToken.type) &&
                    (m_currentToken.text == "زد" || m_currentToken.text == "انقص")) {
             std::string op = (m_currentToken.text == "زد") ? "+=" : "-=";
             consume();
@@ -738,7 +878,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
             if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER) {
                 uName = m_currentToken.text;
                 consume();
-            } else if (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+            } else if (isAnyKeyword(m_currentToken.type) &&
                        (m_currentToken.text == "س" || m_currentToken.text == "ص")) {
                 uName = m_currentToken.text;
                 consume();
@@ -758,7 +898,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
         std::string name = m_currentToken.text;
         consume();
         
-        if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "في") {
+        if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "في") {
             // for-each: لكل (اسم في تعبير)
             consume(); // في
             auto iterExpr = parseExpression();
@@ -787,7 +927,7 @@ std::unique_ptr<StmtAST> Parser::parseForEachOrForStatement() {
             
             std::unique_ptr<StmtAST> update;
             if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER ||
-                (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+                (isAnyKeyword(m_currentToken.type) &&
                  (m_currentToken.text == "س" || m_currentToken.text == "ص"))) {
                 std::string uName = m_currentToken.text;
                 consume();
@@ -832,7 +972,7 @@ std::unique_ptr<DoWhileStmtAST> Parser::parseDoWhileStatement() {
     consume(); // 'افعل'
     auto body = parseBlock();
 
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "طالما") {
+    if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "طالما") {
         consume();
     }
 
@@ -856,7 +996,7 @@ std::unique_ptr<SwitchStmtAST> Parser::parseSwitchStatement() {
     if (m_currentToken.type == TokenType::TOKEN_LEFT_BRACE) {
         consume();
         while (m_currentToken.type != TokenType::TOKEN_RIGHT_BRACE && m_currentToken.type != TokenType::TOKEN_EOF) {
-            if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "حالة") {
+            if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "حالة") {
                 consume();
                 auto caseVal = parseExpression();
                 if (m_currentToken.type == TokenType::TOKEN_COLON || m_currentToken.text == ":") consume();
@@ -869,7 +1009,7 @@ std::unique_ptr<SwitchStmtAST> Parser::parseSwitchStatement() {
                     if (s) sc.body.push_back(std::move(s));
                 }
                 cases.push_back(std::move(sc));
-            } else if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "افتراضي") {
+            } else if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "افتراضي") {
                 consume();
                 if (m_currentToken.type == TokenType::TOKEN_COLON || m_currentToken.text == ":") consume();
                 while (m_currentToken.type != TokenType::TOKEN_RIGHT_BRACE && m_currentToken.type != TokenType::TOKEN_EOF) {
@@ -913,7 +1053,7 @@ std::unique_ptr<EnumDeclAST> Parser::parseEnumDeclaration() {
     if (m_currentToken.type == TokenType::TOKEN_LEFT_BRACE) {
         consume();
         while (m_currentToken.type != TokenType::TOKEN_RIGHT_BRACE && m_currentToken.type != TokenType::TOKEN_EOF) {
-            if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER || m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+            if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER || isAnyKeyword(m_currentToken.type)) {
                 values.push_back(m_currentToken.text);
                 consume();
             }
@@ -933,7 +1073,7 @@ std::unique_ptr<TryCatchStmtAST> Parser::parseTryCatchStatement() {
     std::vector<std::unique_ptr<StmtAST>> catchBody;
     std::vector<std::unique_ptr<StmtAST>> finallyBody;
 
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "امسك") {
+    if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "امسك") {
         consume();
         if (m_currentToken.type == TokenType::TOKEN_LEFT_PAREN) {
             consume();
@@ -945,7 +1085,7 @@ std::unique_ptr<TryCatchStmtAST> Parser::parseTryCatchStatement() {
     }
 
     // أخيراً (finally) block
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "أخيراً") {
+    if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "أخيراً") {
         consume();
         finallyBody = parseBlock();
     }
@@ -1081,7 +1221,7 @@ std::pair<std::string, std::string> Parser::parseParam() {
     std::vector<std::string> words;
     while (true) {
         if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER ||
-            m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+            isAnyKeyword(m_currentToken.type)) {
             std::string word = m_currentToken.text;
             consume();
             while (m_currentToken.type == TokenType::TOKEN_LEFT_BRACKET) {
@@ -1123,7 +1263,7 @@ std::pair<std::string, std::string> Parser::parseParam() {
     return {type, name};
 }
 
-std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
+std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration(bool isAbstract) {
     consume(); // 'صنف' or 'فئة'
     std::string name = m_currentToken.text;
     consume(); // class name
@@ -1139,20 +1279,54 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
     
     std::vector<std::pair<std::string, std::string>> members;
     std::vector<std::unique_ptr<FunctionDeclAST>> methods;
+    std::vector<AccessLevel> memberAccess;
+    std::vector<AccessLevel> methodAccess;
+    
+    // Default access for class is private (C++ convention)
+    AccessLevel currentAccess = AccessLevel::Private;
     
     while (true) {
         // الإنهاء الموثوق في كل الحالات: '}' ينهي الصف و'EOF' يتوقف
         if (m_currentToken.type == TokenType::TOKEN_RIGHT_BRACE) break;
         if (m_currentToken.type == TokenType::TOKEN_EOF) break;
 
+        // ── Access specifiers: خاص / عام / محمي (اختيارياً بـ ':' ) ──
+        if (isAnyKeyword(m_currentToken.type)) {
+            if (m_currentToken.text == "خاص") {
+                currentAccess = AccessLevel::Private;
+                consume();
+                if (m_currentToken.type == TokenType::TOKEN_COLON) consume(); // optional ':'
+                continue;
+            }
+            if (m_currentToken.text == "عام") {
+                currentAccess = AccessLevel::Public;
+                consume();
+                if (m_currentToken.type == TokenType::TOKEN_COLON) consume(); // optional ':'
+                continue;
+            }
+            if (m_currentToken.text == "محمي") {
+                currentAccess = AccessLevel::Protected;
+                consume();
+                if (m_currentToken.type == TokenType::TOKEN_COLON) consume(); // optional ':'
+                continue;
+            }
+        }
+
         auto isNameLike = [this]() {
-            return m_currentToken.type == TokenType::TOKEN_KEYWORD ||
+            return isAnyKeyword(m_currentToken.type) ||
                    m_currentToken.type == TokenType::TOKEN_IDENTIFIER;
         };
         if (!isNameLike()) {
             reportError("رمز غير متوقع في جسم الصف: " + m_currentToken.text);
             skipUntilMemberEnd();
             continue;
+        }
+
+        // ── مجرّد دالة داخل الصف ──
+        bool isMethodAbstract = false;
+        if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "مجرّد") {
+            isMethodAbstract = true;
+            consume(); // consume 'مجرّد'
         }
 
         std::string first = m_currentToken.text;
@@ -1179,6 +1353,7 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
             if (m_currentToken.type == TokenType::TOKEN_SEMICOLON) {
                 consume(); // ;
                 members.push_back({memberType, first});
+                memberAccess.push_back(currentAccess);
             } else if (m_currentToken.type == TokenType::TOKEN_LEFT_PAREN) {
                 // طريقة على الصيغة: الاسم : النوع (معاملات) { ... }  — غير مدعومة، خطأ واضح
                 reportError("طريقة الصف بصيغة 'الاسم : النوع' غير مدعومة، استخدم 'النوع الاسم (معاملات)'");
@@ -1186,6 +1361,7 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
             } else if (m_currentToken.line > typeLine) {
                 // سطر جديد يفصل الأعضاء؛ الفاصلة المنقوطة اختيارية
                 members.push_back({memberType, first});
+                memberAccess.push_back(currentAccess);
             } else {
                 reportError("متوقع ';' أو نهاية سطر بعد تعريف العضو: " + first);
                 skipUntilMemberEnd();
@@ -1194,6 +1370,64 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
         }
 
         // ── الصيغة (1): النوع الاسم  أو  النوع[] الاسم  أو  النوع الاسم(معاملات){...}
+        // ── Special case: "دالة" keyword inside class = method definition
+        if (first == "دالة") {
+            // Method definition using "دالة" keyword: دالة اسم(معاملات) { ... }
+            if (!isNameLike()) {
+                reportError("متوقع اسم الطريقة بعد 'دالة'");
+                skipUntilMemberEnd();
+                continue;
+            }
+            std::string methodName = m_currentToken.text;
+            consume(); // method name
+
+            if (m_currentToken.type != TokenType::TOKEN_LEFT_PAREN) {
+                reportError("متوقع '(' بعد اسم الطريقة: " + methodName);
+                skipUntilMemberEnd();
+                continue;
+            }
+            consume(); // (
+            std::vector<std::pair<std::string, std::string>> params;
+            auto isNameAndTypeFn = [this]() {
+                return isAnyKeyword(m_currentToken.type) ||
+                       m_currentToken.type == TokenType::TOKEN_IDENTIFIER;
+            };
+            if (m_currentToken.type != TokenType::TOKEN_RIGHT_PAREN) {
+                while (isNameAndTypeFn()) {
+                    auto [pt, pn] = parseParam();
+                    params.push_back({pt, pn});
+                    if (m_currentToken.type == TokenType::TOKEN_COMMA) {
+                        consume();
+                        continue;
+                    }
+                    break;
+                }
+            }
+            if (m_currentToken.type == TokenType::TOKEN_RIGHT_PAREN) consume(); // )
+            std::string returnType = "فراغ";
+            if (m_currentToken.type == TokenType::TOKEN_MINUS) {
+                consume();
+                if (m_currentToken.type == TokenType::TOKEN_GREATER) {
+                    consume();
+                    if (isNameAndTypeFn()) {
+                        returnType = parseTypeName();
+                    }
+                }
+            }
+            // Check for pure virtual: مجرّد دالة → body is just ';' 
+            bool methodAbstract = isMethodAbstract;
+            auto body = parseBlock();
+            // For pure virtual: consume trailing ';' if present
+            if (methodAbstract && m_currentToken.type == TokenType::TOKEN_SEMICOLON) {
+                consume(); // consume ';' after pure virtual declaration
+            }
+            auto method = std::make_unique<FunctionDeclAST>(returnType, methodName, std::move(params), std::move(body));
+            method->isAbstract = methodAbstract;
+            methodAccess.push_back(currentAccess);
+            methods.push_back(std::move(method));
+            continue;
+        }
+
         std::string memberType = first;
         // دعم مصفوفة: النوع[] الاسم  (بما في ذلك [][])
         while (m_currentToken.type == TokenType::TOKEN_LEFT_BRACKET) {
@@ -1214,12 +1448,14 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
         if (m_currentToken.type == TokenType::TOKEN_SEMICOLON) {
             consume(); // ;
             members.push_back({memberType, memberName});
+            memberAccess.push_back(currentAccess);
             continue;
         }
 
         if (m_currentToken.line > nameLine) {
             // سطر جديد يفصل الأعضاء؛ الفاصلة المنقوطة اختيارية
             members.push_back({memberType, memberName});
+            memberAccess.push_back(currentAccess);
             continue;
         }
 
@@ -1228,7 +1464,7 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
             consume(); // (
             std::vector<std::pair<std::string, std::string>> params;
             auto isNameAndType = [this]() {
-                return m_currentToken.type == TokenType::TOKEN_KEYWORD ||
+                return isAnyKeyword(m_currentToken.type) ||
                        m_currentToken.type == TokenType::TOKEN_IDENTIFIER;
             };
             if (m_currentToken.type != TokenType::TOKEN_RIGHT_PAREN) {
@@ -1254,7 +1490,10 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
                 }
             }
             auto body = parseBlock();
-            methods.push_back(std::make_unique<FunctionDeclAST>(returnType, memberName, std::move(params), std::move(body)));
+            auto method = std::make_unique<FunctionDeclAST>(returnType, memberName, std::move(params), std::move(body));
+            method->isAbstract = isMethodAbstract;
+            methodAccess.push_back(currentAccess);
+            methods.push_back(std::move(method));
             continue;
         }
 
@@ -1264,7 +1503,11 @@ std::unique_ptr<ClassDeclAST> Parser::parseClassDeclaration() {
     
     if (m_currentToken.type == TokenType::TOKEN_RIGHT_BRACE) consume(); // }
     
-    return std::make_unique<ClassDeclAST>(name, std::move(members), std::move(methods));
+    auto classDecl = std::make_unique<ClassDeclAST>(name, std::move(members), std::move(methods));
+    classDecl->isAbstract = isAbstract;
+    classDecl->memberAccess = std::move(memberAccess);
+    classDecl->methodAccess = std::move(methodAccess);
+    return classDecl;
 }
 
 void Parser::skipUntilMemberEnd() {
@@ -1282,7 +1525,7 @@ std::unique_ptr<ForEachStmtAST> Parser::parseForEachStatement() {
     if (m_currentToken.type == TokenType::TOKEN_LEFT_PAREN) consume();
     
     std::string varType = "تلقائي";
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD &&
+    if (isAnyKeyword(m_currentToken.type) &&
         (m_currentToken.text == "صحيح" || m_currentToken.text == "عشري" ||
          m_currentToken.text == "حرف" || m_currentToken.text == "منطقي" ||
          m_currentToken.text == "نص" || m_currentToken.text == "تلقائي")) {
@@ -1293,7 +1536,7 @@ std::unique_ptr<ForEachStmtAST> Parser::parseForEachStatement() {
     std::string varName = m_currentToken.text;
     consume();
     
-    if (m_currentToken.type == TokenType::TOKEN_KEYWORD && m_currentToken.text == "في") {
+    if (isAnyKeyword(m_currentToken.type) && m_currentToken.text == "في") {
         consume();
     }
     
@@ -1335,7 +1578,7 @@ std::unique_ptr<ImportStmtAST> Parser::parseImportStatement() {
 std::unique_ptr<ExportStmtAST> Parser::parseExportStatement() {
     consume(); // 'صدّر'
     std::vector<std::string> names;
-    if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER || m_currentToken.type == TokenType::TOKEN_KEYWORD) {
+    if (m_currentToken.type == TokenType::TOKEN_IDENTIFIER || isAnyKeyword(m_currentToken.type)) {
         names.push_back(m_currentToken.text);
         consume();
         while (m_currentToken.type == TokenType::TOKEN_COMMA) {
