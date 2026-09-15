@@ -5,9 +5,12 @@ const crypto = require('crypto');
 // Cross-origin sites cannot read cookies, so they can't forge the header
 
 const CSRF_TOKEN_NAME = '_csrf_dhad';
-// Derive CSRF key from JWT_SECRET (never the same as JWT itself)
-const CSRF_SECRET = process.env.CSRF_SECRET
-  || crypto.createHmac('sha256', process.env.JWT_SECRET || 'fallback-csrf').update('csrf-dhad-v1').digest('hex');
+// H7: CSRF_SECRET is required and independent — never derived from JWT_SECRET
+const CSRF_SECRET = process.env.CSRF_SECRET;
+
+if (!CSRF_SECRET || CSRF_SECRET.length < 32) {
+  throw new Error('[Security] CSRF_SECRET is required (>= 32 chars). Run: node scripts/generate-secrets.js');
+}
 
 // In-memory token store (paired: cookie value -> header value)
 const csrfTokens = new Map();

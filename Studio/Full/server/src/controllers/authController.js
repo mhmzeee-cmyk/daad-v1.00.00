@@ -1,6 +1,6 @@
 /* Developer: محمد محمود الحموز | Dhad Studio */
 const jwt = require("jsonwebtoken");
-const { isAccountLocked, recordFailedAttempt, clearFailedAttempts, logAudit, strictRateLimit, validatePasswordStrength } = require("../middlewares/strictSecurity");
+const { isAccountLocked, recordFailedAttempt, clearFailedAttempts, logAudit, strictRateLimit, validatePasswordStrength, recordIPFailure, isIPBlocked } = require("../middlewares/strictSecurity");
 const { logger } = require("../utils/logger");
 const authService = require("../services/authService");
 
@@ -40,7 +40,7 @@ function blacklistRefreshToken(token, userId) {
   data.timestamps.push(Date.now());
 }
 
-function isRefreshTokenBlacklisted(token) {
+async function isRefreshTokenBlacklisted(token) {
   const hash = authService.hashToken(token);
   return authService.isTokenBlacklisted(hash);
 }
@@ -59,8 +59,8 @@ function setTokenCookie(res, accessToken, refreshToken) {
 }
 
 function clearTokenCookie(res) {
-  res.clearCookie('access_token', { path: '/', sameSite: 'strict' });
-  res.clearCookie('refresh_token', { path: '/', sameSite: 'strict' });
+  res.clearCookie('access_token', { ...COOKIE_OPTIONS, maxAge: 0 });
+  res.clearCookie('refresh_token', { ...COOKIE_OPTIONS, maxAge: 0 });
 }
 
 // POST /api/v1/auth/login — authenticate user, return JWT
@@ -100,6 +100,15 @@ async function login(req, res, next) {
       });
     }
 
+    // M4: Check IP block
+    if (req.ip && await isIPBlocked(req.ip)) {
+      logAudit("LOGIN_BLOCKED_IP", { username, ip: req.ip });
+      return res.status(423).json({
+        error: "الحساب مقفل",
+        message: "تم حظر هذا العنوان مؤقتاً بسبب محاولات فاشلة كثيرة.",
+      });
+    }
+
     const prisma = req.app.get("prisma");
 
     // Try email first (teachers/admins), then nationalId (students)
@@ -124,10 +133,25 @@ async function login(req, res, next) {
       });
     }
 
+    // R1: Student-only system — reject non-STUDENT roles
+    if (user.role !== 'STUDENT') {
+      await recordFailedAttempt(username);
+      logAudit("LOGIN_REJECTED_NON_STUDENT", { username, role: user.role, ip: req.ip });
+      return res.status(403).json({
+        error: "مرفوض",
+        message: "هذا النظام للطلاب فقط",
+      });
+    }
+
     const validPassword = await authService.comparePassword(password, user.passwordHash);
     if (!validPassword) {
       // Record failed attempt
       await recordFailedAttempt(username);
+
+      // M4: Record IP failure for IP blocking
+      if (req.ip) {
+        await recordIPFailure(req.ip);
+      }
 
       // Log failed attempt
       await prisma.loginLog.create({
@@ -185,7 +209,7 @@ async function login(req, res, next) {
     setTokenCookie(res, accessToken, refreshToken);
 
     res.json({
-      accessToken,
+      success: true,
       expiresIn: 3600,
       userId: user.id,
       username: user.name,
@@ -577,7 +601,7 @@ async function refreshToken(req, res, next) {
     }
 
     // Check if token is blacklisted (already used)
-    if (isRefreshTokenBlacklisted(token)) {
+    if (await isRefreshTokenBlacklisted(token)) {
       clearTokenCookie(res);
       return res.status(401).json({
         error: "غير مصرح",

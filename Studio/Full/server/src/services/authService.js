@@ -71,7 +71,7 @@ function generateTokens(user) {
 
   const refreshToken = jwt.sign(
     { id: user.id, type: "refresh", tokenVersion: user.tokenVersion || 0 },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    process.env.JWT_REFRESH_SECRET,
     {
       algorithm: "HS256",
       expiresIn: process.env.JWT_REFRESH_EXPIRES || "7d",
@@ -90,7 +90,7 @@ function verifyAccessToken(token) {
 
 // ── 6. verifyRefreshToken ─────────────────────────────────────────────────────
 function verifyRefreshToken(token) {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
+  return jwt.verify(token, process.env.JWT_REFRESH_SECRET, {
     algorithms: ["HS256"],
   });
 }

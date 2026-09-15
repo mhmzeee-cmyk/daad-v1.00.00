@@ -363,11 +363,17 @@ async function submitAssessmentAnswer(req, res, next) {
     }
 
     // SECURITY: Never trust client for passed/output/executionTime/syntaxScore
-    // Server executes code in sandbox, same as challenge submissions
-    const { executeDhad } = require("../utils/dhadSandbox");
+    // Server executes code in the ISOLATED worker thread (C2-full), same as submissions
+    const { executeDhadIsolated } = require("../utils/dhadSandbox");
     const { evaluate } = require("../utils/serverEvaluator");
-    const executionResult = executeDhad(code);
-    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId }, select: { expectedOutput: true, tier: true, title: true, allowedCommands: true, validationRules: true, testCases: true, starterCode: true, description: true, type: true, points: true } });
+    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId }, select: { expectedOutput: true, tier: true, title: true, allowedCommands: true, validationRules: true, testCases: true, starterCode: true, description: true, type: true, points: true, inputs: true } });
+    // Item-2: same stdin queue as challenge submissions (server-side only, never trust client).
+    let assessmentInputs = [];
+    try {
+      const parsed = JSON.parse((challenge && challenge.inputs) || '[]');
+      if (Array.isArray(parsed)) assessmentInputs = parsed.slice(0, 1000);
+    } catch (_) {}
+    const executionResult = await executeDhadIsolated(code, assessmentInputs);
     const evalResult = evaluate(code, challenge || {}, "", executionResult);
     const passed = evalResult.passed;
     const output = executionResult.stdout ? executionResult.stdout.substring(0, 10000) : "";

@@ -26,8 +26,13 @@ Dhad Studio is a comprehensive coding education platform with:
 - **Anti-cheat security** with suspicious activity detection
 
 ## Authentication
-All protected endpoints require a JWT token in the Authorization header:
+All protected endpoints use httpOnly cookies (Set-Cookie) for JWT tokens.
+Login sets \`access_token\` and \`refresh_token\` as httpOnly cookies.
+No tokens are returned in response bodies for browser clients.
+Desktop (CLI) clients may use Bearer tokens in the Authorization header.
 \`\`\`
+Cookie: access_token=<jwt>; refresh_token=<jwt>
+# OR for CLI/desktop:
 Authorization: Bearer <your-jwt-token>
 \`\`\`
 
@@ -95,13 +100,14 @@ For MessagePack, set \`Content-Type: application/msgpack\` and send binary paylo
       },
       LoginResponse: {
         type: 'object',
+        description: 'Login success — tokens delivered via httpOnly cookies, NOT in response body',
         properties: {
-          accessToken: { type: 'string', description: 'JWT access token' },
-          refreshToken: { type: 'string' },
-          expiresIn: { type: 'number', example: 604800 },
+          success: { type: 'boolean', example: true },
+          expiresIn: { type: 'number', example: 3600 },
           userId: { type: 'string' },
           username: { type: 'string' },
-          role: { type: 'string', enum: ['STUDENT', 'TEACHER', 'ADMIN'] },
+          role: { type: 'string', enum: ['STUDENT'] },
+          tokenVersion: { type: 'number' },
           profile: { type: 'object' },
         },
       },

@@ -185,7 +185,7 @@ const requestLogger = (req, res, next) => {
     };
 
     // Skip health check logs to reduce noise
-    if (req.path === '/health') return;
+    if (req.path === '/health' || req.path.startsWith('/health/')) return;
 
     if (res.statusCode >= 500) {
       logger.error('HTTP Request Error', logData);

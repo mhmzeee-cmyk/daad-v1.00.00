@@ -271,11 +271,17 @@ router.post("/student/challenge/submit", authenticate, requireStudent, trainingS
     const studentName = student ? student.name : "";
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // SECURITY: Server-side code execution via Sandbox
-    // Code runs in isolated VM — NOT in API process
+    // SECURITY: Server-side code execution via ISOLATED worker (C2-full)
+    // Code runs in isolated worker thread — NOT in API process
+    // Item-2: per-challenge stdin queue from DB (server-side only, never trust client)
     // ═══════════════════════════════════════════════════════════════════════════
-    const { executeDhad } = require("../utils/dhadSandbox");
-    const executionResult = executeDhad(code);
+    const { executeDhadIsolated } = require("../utils/dhadSandbox");
+    let challengeInputs = [];
+    try {
+      const parsed = JSON.parse(challenge.inputs || '[]');
+      if (Array.isArray(parsed)) challengeInputs = parsed.slice(0, 1000);
+    } catch (_) {}
+    const executionResult = await executeDhadIsolated(code, challengeInputs);
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SECURITY: Server-side evaluation — uses execution result from sandbox

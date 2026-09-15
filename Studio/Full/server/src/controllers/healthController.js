@@ -6,6 +6,7 @@
 // ====================================================
 
 const os = require('os');
+const crypto = require('crypto');
 const prisma = require("../utils/prisma");
 
 // Package version for health reporting
@@ -32,7 +33,17 @@ const setWebSocketServer = (ws) => {
 const healthCheck = async (req, res) => {
   // Security: Only return detailed info with valid health key
   const healthKey = req.headers['x-health-key'];
-  const isDetailed = healthKey && process.env.HEALTH_SECRET && healthKey === process.env.HEALTH_SECRET;
+  // M9: Use timingSafeEqual to prevent timing attacks on health key
+  let isDetailed = false;
+  if (healthKey && process.env.HEALTH_SECRET) {
+    try {
+      const keyBuf = Buffer.from(healthKey, 'utf8');
+      const secretBuf = Buffer.from(process.env.HEALTH_SECRET, 'utf8');
+      if (keyBuf.length === secretBuf.length) {
+        isDetailed = crypto.timingSafeEqual(keyBuf, secretBuf);
+      }
+    } catch (_) { /* invalid input */ }
+  }
 
   if (!isDetailed) {
     // Basic response: minimal info safe for load balancers

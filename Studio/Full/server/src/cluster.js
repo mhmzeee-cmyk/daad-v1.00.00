@@ -1,5 +1,6 @@
 /* Dhad Studio - Cluster Mode Entry Point */
 // Forks one worker per CPU core. Each worker runs src/index.js
+// H8: Without Redis, run single worker to prevent shared-nothing rate limit bypass
 
 const cluster = require('cluster');
 const os = require('os');
@@ -7,10 +8,17 @@ const os = require('os');
 let logger;
 try { logger = require('./utils/logger').logger; } catch (_) { logger = console; }
 
-const NUM_WORKERS = process.env.WEB_CONCURRENCY || os.cpus().length;
+// H8: Without Redis, all workers have independent in-memory stores
+// (N workers × limit = N× actual limit). Force single worker.
+const hasRedis = !!process.env.REDIS_URL;
+const NUM_WORKERS = process.env.WEB_CONCURRENCY || (hasRedis ? os.cpus().length : 1);
+
+if (!hasRedis && os.cpus().length > 1) {
+  logger.warn(`[CLUSTER] No REDIS_URL — forcing single worker (hasRedis=${hasRedis})`);
+}
 
 if (cluster.isPrimary) {
-  logger.info(`[CLUSTER] Primary ${process.pid} — starting ${NUM_WORKERS} workers`);
+  logger.info(`[CLUSTER] Primary ${process.pid} — starting ${NUM_WORKERS} worker(s)`);
 
   for (let i = 0; i < NUM_WORKERS; i++) {
     cluster.fork();

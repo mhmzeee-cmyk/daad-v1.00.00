@@ -292,7 +292,13 @@ const router = require("./router/index");
 app.use('/api/v1', router);
 
 // ── Static Files (Frontend) ──────────────────────────────────────────────────
-const frontendPath = path.join(__dirname, "../../frontend/frontend-web");
+// Robust: supports real path (Full) + symlinked via desktop-app + canonical Web
+const frontendCandidates = [
+  path.join(__dirname, "../../frontend/frontend-web"),
+  path.join(__dirname, "../../frontend-web"),
+  path.join(__dirname, "../../../Web"),
+];
+const frontendPath = frontendCandidates.find((p) => fs.existsSync(p)) || frontendCandidates[0];
 
 // Static files with caching for production
 app.use(express.static(frontendPath, {

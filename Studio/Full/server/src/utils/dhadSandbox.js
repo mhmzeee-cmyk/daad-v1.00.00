@@ -4,6 +4,8 @@
 // ============================================================
 
 const vm = require('vm');
+const { Worker } = require('worker_threads');
+const path = require('path');
 const { logger } = require('./logger');
 
 // ── Execution Limits (centralized configuration) ────────────
@@ -48,6 +50,8 @@ const DANGEROUS_PROPS = new Set([
   'constructor', '__proto__', 'prototype',
   '__defineGetter__', '__defineSetter__',
   '__lookupGetter__', '__lookupSetter__',
+  // C2 (2026-09-11): block reflection that yields live prototypes
+  'getPrototypeOf',
 ]);
 
 function createSandboxProxy(obj) {
@@ -70,7 +74,12 @@ function createSandboxProxy(obj) {
             return createSandboxProxy(result);
           },
           get: function (fn, p) {
-            if (p === 'constructor') return undefined;
+            // C2: block constructor walks + reflection on functions.
+            // NOTE: 'prototype' must NOT be blocked here — V8 Proxy
+            // invariants require the real value for non-configurable
+            // 'prototype' (e.g. `Array.prototype.slice` used by __array).
+            if (p === 'constructor' || p === 'getPrototypeOf') return undefined;
+            if (typeof p === 'string' && p !== 'prototype' && DANGEROUS_PROPS.has(p)) return undefined;
             return fn[p];
           },
         });
@@ -84,12 +93,26 @@ function createSandboxProxy(obj) {
 }
 
 // ── Execute JavaScript in sandboxed VM ──────────────────────
-function executeInSandbox(jsCode) {
+// Item-2: input queue shared by sync + worker paths. Values come from the
+// challenge inputs JSON. Coercion mirrors the browser prompt() path
+// (dhad.js): null/empty → 0, numeric strings → numbers, else raw value.
+function coerceInputValue(raw) {
+  if (raw === undefined || raw === null) return 0;
+  if (typeof raw === 'number') return raw;
+  const num = Number(raw);
+  return isNaN(num) ? raw : num;
+}
+
+function executeInSandbox(jsCode, inputs) {
   const output = [];
+  const inputQueue = Array.isArray(inputs) ? inputs.slice(0, 1000) : [];
   const startTime = Date.now();
   let timedOut = false;
   let heapExceeded = false;
 
+  // C2 (2026-09-11): output accounting lives outside the context literal
+  let outputBytes = 0;
+  let outputTruncated = false;
   // Build isolated context — NO access to:
   // - process, require, fs, child_process, http, net
   // - module, __dirname, __filename, global
@@ -118,8 +141,9 @@ function executeInSandbox(jsCode) {
     JSON: JSON,
     console: { log: function() {}, error: function() {}, warn: function() {} },
 
-    // Dhad print function — captures output
+    // Dhad print function — captures output (C2: hard output cap enforced)
     __print: function () {
+      if (outputTruncated) return;
       const args = Array.prototype.slice.call(arguments);
       const s = args.map(function (x) {
         if (x === null || x === undefined) return 'عدم';
@@ -127,6 +151,13 @@ function executeInSandbox(jsCode) {
         if (x === false) return 'خطأ';
         return String(x);
       }).join(' ');
+      outputBytes += Buffer.byteLength(s, 'utf8') + 1;
+      if (outputBytes > LIMITS.MAX_OUTPUT_BYTES) {
+        outputTruncated = true;
+        output.push('…[تم اقتطاع المخرجات: تجاوزت الحد المسموح]');
+        logger.warn('Sandbox: output cap exceeded');
+        return;
+      }
       output.push(s);
     },
 
@@ -135,9 +166,11 @@ function executeInSandbox(jsCode) {
       return Array.prototype.slice.call(arguments);
     },
 
-    // Dhad input function — returns 0 (no user input on server)
+    // Dhad input function — pops the challenge inputs queue (item 2);
+    // an exhausted queue keeps the legacy 0 default.
     __input: function () {
-      return 0;
+      if (inputQueue.length === 0) return 0;
+      return coerceInputValue(inputQueue.shift());
     },
 
     // Block dangerous globals
@@ -176,6 +209,10 @@ function executeInSandbox(jsCode) {
     eval: undefined,
     Function: undefined,
   };
+
+  // Item-2 extra: generated CallExpr emits ادخل() directly (var a = ادخل())
+  // — alias to the same queue-backed __input so both spellings share the queue.
+  rawContext['ادخل'] = rawContext.__input;
 
   // Wrap context in Proxy to block constructor/__proto__ escape
   const sandboxContext = createSandboxProxy(rawContext);
@@ -248,23 +285,22 @@ function executeInSandbox(jsCode) {
 }
 
 // ── Main API: Compile + Execute Dhad code safely ────────────
-function executeDhad(source) {
-  // Step 1: Compile
-  const compileResult = compileDhad(source);
-  if (compileResult.errors.length > 0) {
-    return {
-      success: false,
-      output: '',
-      stdout: '',
-      errors: compileResult.errors,
-      executionTime: 0,
-      timedOut: false,
-      exitStatus: 1,
-    };
-  }
+function compileErrorResult(compileResult) {
+  return {
+    success: false,
+    output: '',
+    stdout: '',
+    errors: compileResult.errors,
+    executionTime: 0,
+    timedOut: false,
+    exitStatus: 1,
+  };
+}
 
-  // Step 2: Execute in sandbox
-  const result = executeInSandbox(compileResult.code);
+// Shared shaping for BOTH execution backends (in-process VM and worker).
+// Keeps user-visible results identical whichever backend ran the code.
+function shapeExecResult(execResult) {
+  const result = execResult;
 
   if (result.timedOut) {
     return {
@@ -313,9 +349,126 @@ function executeDhad(source) {
   };
 }
 
+function executeDhad(source, inputs) {
+  // Step 1: Compile
+  const compileResult = compileDhad(source);
+  if (compileResult.errors.length > 0) {
+    return compileErrorResult(compileResult);
+  }
+
+  // Step 2: Execute in sandbox (in-process VM — same shaping as isolated path)
+  return shapeExecResult(executeInSandbox(compileResult.code, inputs));
+}
+
+// ── C2-full: isolated worker execution ─────────────────────────────────────
+// Spawns dhadWorker.js in a dedicated thread with V8 heap caps. The worker
+// owns NO secrets/DB/handles; a vm escape still lands in the throwaway
+// thread, which the parent kills on timeout. Fail-closed: any spawn or
+// protocol failure returns an error result — never silent in-process exec.
+const WORKER_TIMEOUT_GRACE_MS = 1000;
+
+function normalizeWorkerResult(msg) {
+  const m = (msg && typeof msg === 'object') ? msg : {};
+  return {
+    stdout: typeof m.stdout === 'string' ? m.stdout : '',
+    stderr: typeof m.stderr === 'string' ? m.stderr : '',
+    executionTime: typeof m.executionTime === 'number' ? m.executionTime : 0,
+    timedOut: m.timedOut === true,
+    heapExceeded: m.heapExceeded === true,
+    exitStatus: typeof m.exitStatus === 'number' ? m.exitStatus : 1,
+    runtimeError: m.runtimeError || undefined,
+  };
+}
+
+function executeIsolated(jsCode, inputs) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (result) => {
+      if (!settled) {
+        settled = true;
+        resolve(result);
+      }
+    };
+
+    let worker;
+    try {
+      worker = new Worker(path.join(__dirname, 'dhadWorker.js'), {
+        workerData: {
+          code: jsCode,
+          timeoutMs: LIMITS.TIMEOUT_MS,
+          maxOutputBytes: LIMITS.MAX_OUTPUT_BYTES,
+          inputs: Array.isArray(inputs) ? inputs.slice(0, 1000) : [],
+        },
+        resourceLimits: {
+          maxOldGenerationSizeMb: 64,
+          codeRangeSizeMb: 32,
+          stackSizeMb: 4,
+        },
+      });
+    } catch (e) {
+      done({
+        stdout: '', stderr: '', executionTime: 0,
+        timedOut: false, heapExceeded: false, exitStatus: 1,
+        runtimeError: { message: 'تعذر إنشاء بيئة التنفيذ المعزولة', line: 0 },
+      });
+      return;
+    }
+
+    const killTimer = setTimeout(() => {
+      try {
+        const p = worker.terminate();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+      } catch (_) {}
+      done({
+        stdout: '', stderr: '', executionTime: LIMITS.TIMEOUT_MS,
+        timedOut: true, heapExceeded: false, exitStatus: 1,
+      });
+    }, LIMITS.TIMEOUT_MS + WORKER_TIMEOUT_GRACE_MS);
+    if (killTimer && typeof killTimer.unref === 'function') killTimer.unref();
+
+    worker.on('message', (msg) => {
+      clearTimeout(killTimer);
+      done(normalizeWorkerResult(msg));
+    });
+    worker.on('error', (err) => {
+      clearTimeout(killTimer);
+      const text = String((err && err.message) || err || '');
+      const oom = /memory|heap|allocation failed|out of memory/i.test(text);
+      done({
+        stdout: '', stderr: '', executionTime: 0,
+        timedOut: false, heapExceeded: oom, exitStatus: 1,
+        runtimeError: oom ? undefined : { message: 'انهار عامل التنفيذ', line: 0 },
+      });
+    });
+    worker.on('exit', (code) => {
+      clearTimeout(killTimer);
+      if (code !== 0) {
+        // Exited without posting a result (e.g., V8 OOM kill) → memory exhaustion.
+        done({
+          stdout: '', stderr: '', executionTime: 0,
+          timedOut: false, heapExceeded: true, exitStatus: 1,
+        });
+      }
+    });
+  });
+}
+
+async function executeDhadIsolated(source, inputs) {
+  // Step 1: Compile (pure string transform — safe in-process)
+  const compileResult = compileDhad(source);
+  if (compileResult.errors.length > 0) {
+    return compileErrorResult(compileResult);
+  }
+
+  // Step 2: Execute in the isolated worker thread
+  return shapeExecResult(await executeIsolated(compileResult.code, inputs));
+}
+
 module.exports = {
   executeDhad,
   compileDhad,
   executeInSandbox,
+  executeIsolated,
+  executeDhadIsolated,
   LIMITS,
 };
