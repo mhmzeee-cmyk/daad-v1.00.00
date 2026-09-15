@@ -7,11 +7,14 @@ const fs = require('fs');
 const path = require('path');
 
 const DESKTOP_DIR = path.join(__dirname, '..'); // desktop-app/
-const PROJECT_ROOT = path.join(DESKTOP_DIR, '..'); // dhad-studio/
+const PROJECT_ROOT = path.join(DESKTOP_DIR, '..', '..'); // repo root (Dhad-Studio-Unified/)
+
+const SERVER_SRC = path.join(PROJECT_ROOT, 'Studio', 'Full', 'server');
+const WEB_SRC = path.join(PROJECT_ROOT, 'Studio', 'Web');
 
 const DIRS_TO_COPY = [
-  { src: 'server', dst: 'server', exclude: ['node_modules', '.env', 'prisma/dev.db'] },
-  { src: 'frontend-web', dst: 'frontend-web', exclude: [] },
+  { src: SERVER_SRC, dst: 'server', exclude: ['node_modules', '.env', 'prisma/dev.db'] },
+  { src: WEB_SRC, dst: 'frontend-web', exclude: [] },
 ];
 
 function copyRecursive(src, dest, exclude) {
@@ -30,7 +33,7 @@ function copyRecursive(src, dest, exclude) {
 }
 
 for (const { src, dst, exclude } of DIRS_TO_COPY) {
-  const srcPath = path.join(PROJECT_ROOT, src);
+  const srcPath = src; // src is now an absolute path (SERVER_SRC or WEB_SRC)
   const dstPath = path.join(DESKTOP_DIR, dst);
   if (!fs.existsSync(srcPath)) {
     console.warn(`[prepare-build] Source not found: ${srcPath}`);
@@ -54,7 +57,7 @@ const RUNTIME_DEPS = [
 ];
 
 for (const dep of RUNTIME_DEPS) {
-  const srcModules = path.join(PROJECT_ROOT, 'server', 'node_modules', dep);
+  const srcModules = path.join(SERVER_SRC, 'node_modules', dep);
   const dstModules = path.join(serverDst, 'node_modules', dep);
   if (fs.existsSync(srcModules) && !fs.existsSync(dstModules)) {
     console.log(`[prepare-build] Copying node_modules/${dep}`);
@@ -63,7 +66,7 @@ for (const dep of RUNTIME_DEPS) {
 }
 
 // Copy .prisma generated client to server/node_modules
-const srcPrisma = path.join(PROJECT_ROOT, 'server', 'node_modules', '.prisma');
+const srcPrisma = path.join(SERVER_SRC, 'node_modules', '.prisma');
 const dstPrisma = path.join(serverDst, 'node_modules', '.prisma');
 if (fs.existsSync(srcPrisma) && !fs.existsSync(dstPrisma)) {
   console.log('[prepare-build] Copying server node_modules/.prisma');
@@ -71,7 +74,7 @@ if (fs.existsSync(srcPrisma) && !fs.existsSync(dstPrisma)) {
 }
 
 // Copy Prisma schema and migrations for runtime
-const srcPrismaDir = path.join(PROJECT_ROOT, 'server', 'prisma');
+const srcPrismaDir = path.join(SERVER_SRC, 'prisma');
 const dstPrismaDir = path.join(serverDst, 'prisma');
 if (fs.existsSync(srcPrismaDir) && !fs.existsSync(dstPrismaDir)) {
   console.log('[prepare-build] Copying prisma/ schema + migrations');
