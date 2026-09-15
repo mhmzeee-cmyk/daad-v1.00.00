@@ -21,39 +21,56 @@ const KNOWN_INSECURE_SECRETS = [
   undefined,
 ];
 
-function ensureSecureSecrets() {
-  const envPath = path.join(__dirname, '../.env');
-  let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-  let modified = false;
+function assertStrongSecrets() {
+  const required = ['JWT_SECRET', 'JWT_REFRESH_SECRET', 'HMAC_SECRET', 'CSRF_SECRET'];
+  const missing = [];
+  const weak = [];
 
-  if (KNOWN_INSECURE_SECRETS.includes(process.env.JWT_SECRET)) {
-    const newSecret = crypto.randomBytes(64).toString('hex');
-    process.env.JWT_SECRET = newSecret;
-    envContent = envContent.replace(
-      /JWT_SECRET="[^"]*"/,
-      `JWT_SECRET="${newSecret}"`
-    );
-    modified = true;
-    console.warn('\x1b[33m⚠ JWT_SECRET was insecure/auto-generated — new secret created.\x1b[0m');
+  for (const key of required) {
+    const val = process.env[key];
+    if (!val) {
+      missing.push(key);
+    } else if (KNOWN_INSECURE_SECRETS.includes(val) || val.length < 32) {
+      weak.push(key);
+    }
   }
 
-  if (KNOWN_INSECURE_SECRETS.includes(process.env.HMAC_SECRET)) {
-    const newSecret = crypto.randomBytes(64).toString('hex');
-    process.env.HMAC_SECRET = newSecret;
-    envContent = envContent.replace(
-      /HMAC_SECRET="[^"]*"/,
-      `HMAC_SECRET="${newSecret}"`
-    );
-    modified = true;
-    console.warn('\x1b[33m⚠ HMAC_SECRET was insecure/auto-generated — new secret created.\x1b[0m');
-  }
-
-  if (modified) {
-    fs.writeFileSync(envPath, envContent, 'utf8');
+  if (missing.length > 0 || weak.length > 0) {
+    const msgs = [];
+    if (missing.length > 0) msgs.push(`Missing: ${missing.join(', ')}`);
+    if (weak.length > 0) msgs.push(`Weak/insecure: ${weak.join(', ')}`);
+    msgs.push('Run: node scripts/generate-secrets.js');
+    const err = new Error(`[Security] Refusing to start — ${msgs.join(' | ')}`);
+    err.code = 'SEC_SECRETS';
+    throw err;
   }
 }
 
-ensureSecureSecrets();
+assertStrongSecrets();
+
+// CONFLICT ensure(auto-generate) vs assert(strict-throw): chose assert as stricter; ALT ensure kept commented below.
+// ALT-ensureSecureSecrets (Full flavor, auto-generates JWT/HMAC secrets into .env instead of throwing) — kept as comment, not executed:
+// function ensureSecureSecrets() {
+//   const envPath = path.join(__dirname, '../.env');
+//   let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+//   let modified = false;
+//   if (KNOWN_INSECURE_SECRETS.includes(process.env.JWT_SECRET)) {
+//     const newSecret = crypto.randomBytes(64).toString('hex');
+//     process.env.JWT_SECRET = newSecret;
+//     envContent = envContent.replace(/JWT_SECRET="[^"]*"/, `JWT_SECRET="${newSecret}"`);
+//     modified = true;
+//     console.warn('JWT_SECRET was insecure/auto-generated — new secret created.');
+//   }
+//   if (KNOWN_INSECURE_SECRETS.includes(process.env.HMAC_SECRET)) {
+//     const newSecret = crypto.randomBytes(64).toString('hex');
+//     process.env.HMAC_SECRET = newSecret;
+//     envContent = envContent.replace(/HMAC_SECRET="[^"]*"/, `HMAC_SECRET="${newSecret}"`);
+//     modified = true;
+//     console.warn('HMAC_SECRET was insecure/auto-generated — new secret created.');
+//   }
+//   if (modified) { fs.writeFileSync(envPath, envContent, 'utf8'); }
+// }
+// ensureSecureSecrets();
 
 const express = require("express");
 const helmet = require("helmet");
@@ -73,7 +90,7 @@ const sessionStore = require("./utils/sessionStore");
 const app = express();
 
 // ── Trust Proxy (for rate limiting behind reverse proxy) ─────────────────────
-app.set('trust proxy', 1);
+app.set('trust proxy', 'loopback');
 
 // ── Request Logging (Winston) ────────────────────────────────────────────────
 app.use(requestLogger);
@@ -172,15 +189,21 @@ app.use((req, res, next) => {
   const envOrigins = process.env.ALLOWED_ORIGINS;
   const isProduction = process.env.NODE_ENV === 'production';
   
+  // M8: In production, ALLOWED_ORIGINS is mandatory — no localhost defaults
+  if (isProduction && !envOrigins) {
+    if (!_corsWarned) {
+      _corsWarned = true;
+      logger.error('CORS: ALLOWED_ORIGINS is mandatory in production — requests will be rejected');
+    }
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(204);
+    }
+    return res.status(403).json({ error: 'CORS', message: 'Server not configured for cross-origin requests' });
+  }
+
   let allowedOrigins = envOrigins
     ? envOrigins.split(',').map(o => o.trim()).filter(Boolean)
     : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174'];
-
-  // SECURITY: In production with no ALLOWED_ORIGINS, log warning once
-  if (isProduction && !envOrigins && !_corsWarned) {
-    _corsWarned = true;
-    logger.warn('CORS: No ALLOWED_ORIGINS set in production — using localhost defaults');
-  }
 
   const origin = req.headers.origin;
   const isAllowed = origin && allowedOrigins.includes(origin);
@@ -189,13 +212,14 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-Request-Timestamp, X-Request-Nonce, X-HMAC-Signature');
     res.setHeader('Access-Control-Max-Age', '7200');
     res.setHeader('Access-Control-Expose-Headers', 'X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset');
   }
 
+  // M8: OPTIONS without Origin → 204 (allow preflight from non-browser clients)
   if (req.method === 'OPTIONS') {
-    if (!isAllowed) {
+    if (!isAllowed && origin) {
       return res.status(403).json({ error: 'CORS', message: 'Origin not allowed' });
     }
     return res.sendStatus(204);
@@ -223,18 +247,25 @@ app.use((req, res, next) => {
   }
 
   // Block path traversal attempts in URL
-  const decodedUrl = decodeURIComponent(req.url);
-  if (
-    decodedUrl.includes('..') ||
-    decodedUrl.includes('%2e') ||
-    decodedUrl.includes('%252e') ||
-    decodedUrl.includes('%2E') ||
-    decodedUrl.includes('\\') ||
-    decodedUrl.includes('\0')
-  ) {
+  try {
+    const decodedUrl = decodeURIComponent(req.url);
+    if (
+      decodedUrl.includes('..') ||
+      decodedUrl.includes('%2e') ||
+      decodedUrl.includes('%252e') ||
+      decodedUrl.includes('%2E') ||
+      decodedUrl.includes('\\') ||
+      decodedUrl.includes('\0')
+    ) {
+      return res.status(400).json({
+        error: "BAD_REQUEST",
+        message: "مسار غير صالح"
+      });
+    }
+  } catch (e) {
     return res.status(400).json({
       error: "BAD_REQUEST",
-      message: "مسار غير صالح"
+      message: "المسار يحتوي على أحرف غير صالحة"
     });
   }
   
@@ -261,7 +292,7 @@ const router = require("./router/index");
 app.use('/api/v1', router);
 
 // ── Static Files (Frontend) ──────────────────────────────────────────────────
-const frontendPath = path.join(__dirname, "../../frontend-web");
+const frontendPath = path.join(__dirname, "../../frontend/frontend-web");
 
 // Static files with caching for production
 app.use(express.static(frontendPath, {
@@ -360,14 +391,19 @@ function startServer() {
     const envOrigins = process.env.ALLOWED_ORIGINS;
     const jwtLen = process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0;
     const hmacLen = process.env.HMAC_SECRET ? process.env.HMAC_SECRET.length : 0;
+    const refreshLen = process.env.JWT_REFRESH_SECRET ? process.env.JWT_REFRESH_SECRET.length : 0;
+    const csrfLen = process.env.CSRF_SECRET ? process.env.CSRF_SECRET.length : 0;
 
     const secLines = [];
     secLines.push('═══════════════════════════════════════════════════');
     secLines.push('  Dhad Studio — Security Status');
     secLines.push('═══════════════════════════════════════════════════');
     secLines.push(`  JWT key length: ${jwtLen >= 32 ? 'OK' : 'TOO SHORT'} (${jwtLen} chars)`);
+    secLines.push(`  JWT_REFRESH key: ${refreshLen >= 32 ? 'OK' : 'TOO SHORT'} (${refreshLen} chars)`);
     secLines.push(`  HMAC key length: ${hmacLen >= 32 ? 'OK' : 'TOO SHORT'} (${hmacLen} chars)`);
-    secLines.push(`  CORS: ${isProd ? (envOrigins ? 'configured' : 'WARN: no origins') : 'dev mode'}`);
+    secLines.push(`  CSRF key length: ${csrfLen >= 32 ? 'OK' : 'TOO SHORT'} (${csrfLen} chars)`);
+    secLines.push(`  CORS: ${isProd ? (envOrigins ? 'configured' : 'BLOCKED (no origins)') : 'dev mode'}`);
+    secLines.push(`  Trust proxy: loopback`);
     secLines.push(`  Helmet: enabled`);
     secLines.push(`  CSRF: enabled`);
     secLines.push(`  Environment: ${process.env.NODE_ENV || 'development'}`);
