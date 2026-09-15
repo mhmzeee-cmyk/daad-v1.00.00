@@ -1,4 +1,0 @@
-# PHASE6_SERVER_RELEASE_AUDIT.md — clean-machine steps (verified in /tmp, NOT production)
-
-1. node ≥18 + npm. 2. `npm install` (485 pkgs; needs network for registry+prisma engines; postinstall runs `prisma generate`). 3. Set env (see ENVIRONMENT audit; minimum: DATABASE_URL, JWT_SECRET, HMAC_SECRET, ALLOWED_ORIGINS, NODE_ENV=production). 4. `prisma db push` (or migrate when migrations exist — NONE exist; R2: adopt migrations before release). 5. Optional seed (admin via SEED_ADMIN_PASSWORD; NEVER ship seed_ui_test). 6. `npm start` (or cluster). 7. Health :3000/health.
-DB: SQLite file at DATABASE_URL (WAL on); dev.db/test.db must NEVER ship (R1 if found in artifact). Redis optional w/ proven fallback. Static files: none served by API (frontend separate). Uploads: multer memory? (onboard files; verify tmp handling at packaging). Logs: winston files+console — secret scan clean.
