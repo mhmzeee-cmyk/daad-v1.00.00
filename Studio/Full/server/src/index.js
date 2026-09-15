@@ -292,11 +292,14 @@ const router = require("./router/index");
 app.use('/api/v1', router);
 
 // ── Static Files (Frontend) ──────────────────────────────────────────────────
-// Robust: supports real path (Full) + symlinked via desktop-app + canonical Web
+// Canonical source: Studio/Web. Mirrors are populated by copy-at-build
+// (see desktop-app/scripts/prepare-build.js). Order: prefer canonical Web,
+// then fall back to local mirrors for Full and desktop-app environments.
+// DRIFT GUARD: If mirrors drift from Web, the build drift check will warn.
 const frontendCandidates = [
-  path.join(__dirname, "../../frontend/frontend-web"),
-  path.join(__dirname, "../../frontend-web"),
-  path.join(__dirname, "../../../Web"),
+  path.join(__dirname, "../../../Web"),                                    // Studio/Web (canonical)
+  path.join(__dirname, "../../frontend/frontend-web"),                     // Studio/Full/frontend/frontend-web (mirror)
+  path.join(__dirname, "../../frontend-web"),                              // desktop-app/frontend-web (mirror, via symlink)
 ];
 const frontendPath = frontendCandidates.find((p) => fs.existsSync(p)) || frontendCandidates[0];
 

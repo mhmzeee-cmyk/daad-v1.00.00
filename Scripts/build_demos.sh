@@ -1,8 +1,11 @@
 #!/bin/bash
 # Build demo programs: .ض -> (linux daad-compiler) -> .cpp -> (mingw) -> .exe
-BASE="/run/media/m_hmoz/UBUNTU 26_0/"$'\xc2\xa0'
-LINUX_CC=/tmp/dhad-phase4-5/compiler-build/bin/daad-compiler
-OUT=/tmp/dhad-interview/demos
+# Original: BASE="/run/media/m_hmoz/UBUNTU 26_0/"$'\xc2\xa0'  (external drive)
+# Original: LINUX_CC=/tmp/dhad-phase4-5/compiler-build/bin/daad-compiler
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BASE="${DAAD_BASE:-$REPO_ROOT}"
+LINUX_CC="${DAAD_CC:-$REPO_ROOT/Compiler/build/bin/daad-compiler}"
+OUT="${DAAD_OUT:-/tmp/dhad-interview/demos}"
 mkdir -p "$OUT"
 SRC="$BASE/Daad-Compiler/examples/conversions/simple/before"
 declare -A DEMOS=(

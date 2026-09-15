@@ -1,6 +1,8 @@
 #!/bin/bash
-BASE="/run/media/m_hmoz/UBUNTU 26_0/"$'\xc2\xa0'
-OUT=/tmp/dhad-interview/winbuild
+# BASE: configurable root; override via environment or leave default for relative usage
+# Original: BASE="/run/media/m_hmoz/UBUNTU 26_0/"$'\xc2\xa0'  (external drive)
+BASE="${DAAD_BASE:-$(cd "$(dirname "$0")/.." && pwd)}"
+OUT="${DAAD_OUT:-/tmp/dhad-interview/winbuild}"
 mkdir -p "$OUT"
 find "$BASE/Daad-Compiler/src" -maxdepth 1 -name "*.cpp" | sort | while IFS= read -r f; do
   name=$(basename "$f" .cpp)
