@@ -16,7 +16,7 @@ $(BIN): $(SRC) $(wildcard include/Daad/*.hpp)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $@
 
 test: $(BIN)
-	@cd .. && cmake -B build -DCMAKE_BUILD_TYPE=Release > /dev/null && \
+	@cmake -B build -DCMAKE_BUILD_TYPE=Release > /dev/null && \
 	 cmake --build build -j$$(nproc) > /dev/null && ./build/bin/DaadTests
 
 run: $(BIN)
