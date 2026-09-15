@@ -139,3 +139,9 @@ desktop.ini
 # Binary test data (keep .bin sources, ignore compiled)
 # ========================
 Compiler/build-make/CMakeFiles/
+
+# ========================
+# Wine Prefix & IDE User Cache
+# ========================
+.wine-demo/
+**/vsc-user*/
