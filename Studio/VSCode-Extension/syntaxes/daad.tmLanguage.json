@@ -1,53 +1,297 @@
 {
   "scopeName": "source.daad",
   "name": "Daad",
-  "fileTypes": ["daad", "ض"],
+  "fileTypes": [
+    "daad",
+    "ض"
+  ],
   "patterns": [
-    { "include": "#keywords" },
-    { "include": "#types" },
-    { "include": "#strings" },
-    { "include": "#comments" },
-    { "include": "#numbers" },
-    { "include": "#operators" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#widgets"
+    },
+    {
+      "include": "#images"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    },
+    {
+      "include": "#identifiers"
+    }
   ],
   "repository": {
-    "keywords": {
-      "patterns": [{
-        "match": "\\b(اذا|والا|كرر|بينما|ارجع|فئة|هيكل|قالب|طباعة|ثابت|منطقي|حاول|امسك|ارم)\\b",
-        "name": "keyword.control.daad"
-      }]
-    },
-    "types": {
-      "patterns": [{
-        "match": "\\b(صحيح|مزدوج|حرف|فراغ|ذاتي|منطقي)\\b",
-        "name": "storage.type.daad"
-      }]
-    },
-    "strings": {
-      "patterns": [{
-        "begin": "\"",
-        "end": "\"",
-        "name": "string.quoted.double.daad",
-        "patterns": [{ "match": "\\\\.", "name": "constant.character.escape.daad" }]
-      }]
-    },
     "comments": {
-      "patterns": [{
-        "match": "//.*$",
-        "name": "comment.line.double-slash.daad"
-      }]
+      "patterns": [
+        {
+          "match": "//.*$",
+          "name": "comment.line.double-slash.daad"
+        },
+        {
+          "begin": "/\\*",
+          "end": "\\*/",
+          "name": "comment.block.daad"
+        },
+        {
+          "match": "#.*$",
+          "name": "comment.line.number-sign.daad"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "match": "(\\.)([\\p{L}_][\\p{L}\\p{N}_]*)",
+          "name": "variable.other.member.daad"
+        },
+        {
+          "match": "[\\p{L}_][\\p{L}\\p{N}_]*",
+          "name": "variable.other.readwrite.daad"
+        }
+      ]
+    },
+    "images": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(حمّل_صورة|ارسم_صورة|حجم_صورة|احفظ_صورة|قص_صورة|غيّر_حجم|لف_صورة|قلب_صورة|شفافية|فلتر|تراكب|خلفية|بكسل|ارسم|ملء|مستطيل|دائرة|خط|نص_على_لوحة|مسح)(?![\\p{L}\\p{N}_])",
+          "name": "support.function.image.daad"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "include": "#kw-types"
+        },
+        {
+          "include": "#kw-constants"
+        },
+        {
+          "include": "#kw-control"
+        },
+        {
+          "include": "#kw-logic"
+        },
+        {
+          "include": "#kw-decl"
+        },
+        {
+          "include": "#kw-access"
+        },
+        {
+          "include": "#kw-self"
+        },
+        {
+          "include": "#kw-funcmem"
+        },
+        {
+          "include": "#kw-inherit"
+        },
+        {
+          "include": "#kw-exc"
+        },
+        {
+          "include": "#kw-adv"
+        },
+        {
+          "include": "#kw-io"
+        },
+        {
+          "include": "#kw-axes"
+        }
+      ]
+    },
+    "kw-access": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(عام|خاص|محمي)(?![\\p{L}\\p{N}_])",
+          "name": "storage.modifier.access.daad"
+        }
+      ]
+    },
+    "kw-adv": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(تزامن|انتظر|بانتظار|خيط|احجز|مشترك|فريد|استورد|صدّر|وحدة)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.other.advanced.daad"
+        }
+      ]
+    },
+    "kw-axes": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(س|ص)(?![\\p{L}\\p{N}_])",
+          "name": "variable.language.axis.daad"
+        }
+      ]
+    },
+    "kw-constants": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(صواب|خطأ|عدم)(?![\\p{L}\\p{N}_])",
+          "name": "constant.language.daad"
+        }
+      ]
+    },
+    "kw-control": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(إذا|اذا|وإلا|طالما|بينما|افعل|لكل|كرر|في|اختر|حالة|افتراضي|توقف|اكسر|استمر|تابع|انتقل|بديل)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.control.daad"
+        }
+      ]
+    },
+    "kw-decl": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(صنف|فئة|هيكل|تعداد|واجهة|نطاق|قالب|دالة)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.declaration.daad"
+        }
+      ]
+    },
+    "kw-exc": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(حاول|امسك|أخيراً|ارمِ|تأكد|استثناء|نوع_الـ|حجم_الـ|زد|انقص)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.control.exception.daad"
+        }
+      ]
+    },
+    "kw-funcmem": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(ارجع|جديد|احذف|مؤشر|مرجع|ساكن|مضمن|خارجي)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.other.memory.daad"
+        }
+      ]
+    },
+    "kw-inherit": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(يرث|مجرّد)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.declaration.inherit.daad"
+        }
+      ]
+    },
+    "kw-io": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(طباعة|اطبع|ادخل)(?![\\p{L}\\p{N}_])",
+          "name": "support.function.builtin.daad"
+        }
+      ]
+    },
+    "kw-logic": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(و|أو|ليس)(?![\\p{L}\\p{N}_])",
+          "name": "keyword.operator.logical.daad"
+        }
+      ]
+    },
+    "kw-self": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(ذاتي|هذا|الأصل)(?![\\p{L}\\p{N}_])",
+          "name": "variable.language.self.daad"
+        }
+      ]
+    },
+    "kw-types": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(صحيح|عشري|منطقي|حرف|نص|فراغ|تلقائي|ثابت|عرّف)(?![\\p{L}\\p{N}_])",
+          "name": "storage.type.daad"
+        }
+      ]
     },
     "numbers": {
-      "patterns": [{
-        "match": "\\b\\d+(\\.\\d+)?\\b",
-        "name": "constant.numeric.daad"
-      }]
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_.])0[xX][0-9a-fA-F]+(?![\\p{L}\\p{N}_])",
+          "name": "constant.numeric.hex.daad"
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_.])\\d+(\\.\\d+)?[eE][+-]?\\d+(?![\\p{L}\\p{N}_])",
+          "name": "constant.numeric.scientific.daad"
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_.])\\.\\d+(?![\\p{L}\\p{N}_])",
+          "name": "constant.numeric.leading-dot.daad"
+        },
+        {
+          "match": "(?<![\\p{L}\\p{N}_.])\\d+(\\.\\d+)?(?![\\p{L}\\p{N}_])",
+          "name": "constant.numeric.decimal.daad"
+        }
+      ]
     },
     "operators": {
-      "patterns": [{
-        "match": "[=+\\-*/<>!&|]",
-        "name": "keyword.operator.daad"
-      }]
+      "patterns": [
+        {
+          "match": "==|!=|<=|>=|&&|\\|\\||\\+=|-=|\\*=|/=|%=|\\+\\+|--|\\^=|->|::|[+\\-*/%=<>!^&@?:]",
+          "name": "keyword.operator.daad"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "match": "[{}()\\[\\]]",
+          "name": "punctuation.bracket.daad"
+        },
+        {
+          "match": "[;؛,،]",
+          "name": "punctuation.separator.daad"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "begin": "\"",
+          "end": "\"",
+          "name": "string.quoted.double.daad",
+          "patterns": [
+            {
+              "match": "\\\\([0-7]{1,3}|n|t|r|\\\\|\"|.)",
+              "name": "constant.character.escape.daad"
+            }
+          ]
+        },
+        {
+          "begin": "'",
+          "end": "'",
+          "name": "string.quoted.single.daad",
+          "patterns": [
+            {
+              "match": "\\\\(n|t|r|\\\\|'|\"|0|.)",
+              "name": "constant.character.escape.daad"
+            }
+          ]
+        }
+      ]
+    },
+    "widgets": {
+      "patterns": [
+        {
+          "match": "(?<![\\p{L}\\p{N}_])(زر_أمر|حقل_نص|قائمة_خيارات|صورة|مربع_اختيار|شريط_تمرير|قائمة_منسدلة|لوحة|تسمية|عمود|صف|شبكة|شريط_تلوين|علامة_تبويب)(?![\\p{L}\\p{N}_])",
+          "name": "support.class.widget.daad"
+        }
+      ]
     }
   }
 }
