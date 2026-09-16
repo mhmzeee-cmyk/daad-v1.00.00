@@ -263,7 +263,14 @@ class DhadDebugSession extends DebugSession {
 	async launchRequest(response, args) {
 		const program = args.program;
 		try {
-			if (!program || !fs.existsSync(program)) throw new Error('ملف البرنامج غير موجود: ' + program);
+			if (!program || !fs.existsSync(program)) {
+				const cwd = (args && args.cwd) || process.cwd();
+				throw new Error('ملف البرنامج غير موجود: ' + program + '\n' +
+					'تأكد من: 1) فتح مجلد المشروع Dhad-Studio-Unified نفسه (وليس Documents)\n' +
+					'2) فتح ملف .ض في المحرر قبل F5\n' +
+					'3) اختيار الإعداد «تصحيح ض: الملف الحالي» من قائمة التشغيل أعلى الشريط الجانبي\n' +
+					'(مجلد العمل الحالي للمحول: ' + cwd + ')');
+			}
 			sessionLog('launch program=' + program);
 			// حارس الإدخال التفاعلي: القارئ في التصحيح كان سيلتهم قناة DAP فيعلق الجلسة بصمت.
 			// نفشل بسرعة برسالة واضحة بدل التعليق الغامض (البديل: F9 للتشغيل الطرفي).
