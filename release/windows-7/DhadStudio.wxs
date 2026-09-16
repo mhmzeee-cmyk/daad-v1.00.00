@@ -4,6 +4,8 @@
   <Product Id="1c7afe83-5cdd-4c19-8913-40c145d068e7" Name="Dhad Studio" Language="1033" Version="1.0.1" Manufacturer="Dhad Studio" UpgradeCode="21bec704-9ba8-4d78-87a0-172d3fd60c28">
     <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="Dhad Studio v1.0.1 - Arabic Programming Language (Windows 7 native programs)" />
     <Media Id="1" Cabinet="dhad.cab" EmbedCab="yes" />
+    <Icon Id="DhadIcon" SourceFile="$(var.PayloadDir)/dhad-icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="DhadIcon" />
     <Property Id="ARPCOMMENTS" Value="Native Windows x64 programs built from Arabic sources: hello, arithmetic, factorial, loops, functions + acceptance script." />
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFilesFolder">

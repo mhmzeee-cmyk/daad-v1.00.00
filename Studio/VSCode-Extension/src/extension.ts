@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import { execFile } from 'child_process';
+import { DHAD_KEYWORDS } from './keywords';
 
 // اكتشاف مترجم ض الحقيقي: مجلد المشروع أولًا ثم PATH
 function findCompiler(workspaceFolder: string | undefined): string {
@@ -76,6 +77,44 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(compileCmd);
+
+    // إكمال تلقائي لكل الكلمات المفتاحية (116) مع التفاصيل
+    const kindMap: Record<string, vscode.CompletionItemKind> = {
+        Type: vscode.CompletionItemKind.TypeParameter,
+        Control: vscode.CompletionItemKind.Keyword,
+        Variable: vscode.CompletionItemKind.Variable,
+        Class: vscode.CompletionItemKind.Class,
+        Function: vscode.CompletionItemKind.Function,
+        Module: vscode.CompletionItemKind.Module,
+        Builtin: vscode.CompletionItemKind.Function,
+        Operator: vscode.CompletionItemKind.Operator,
+        Widget: vscode.CompletionItemKind.Class,
+        Library: vscode.CompletionItemKind.Reference,
+    };
+    const completion = vscode.languages.registerCompletionItemProvider('daad', {
+        provideCompletionItems() {
+            return DHAD_KEYWORDS.map((k) => {
+                const item = new vscode.CompletionItem(k.word, kindMap[k.kind] ?? vscode.CompletionItemKind.Keyword);
+                item.detail = k.detail;
+                item.documentation = new vscode.MarkdownString(k.doc);
+                return item;
+            });
+        },
+    });
+    context.subscriptions.push(completion);
+
+    // تفاصيل عند التحويم فوق أي كلمة مفتاحية
+    const hover = vscode.languages.registerHoverProvider('daad', {
+        provideHover(doc, pos) {
+            const range = doc.getWordRangeAtPosition(pos);
+            if (!range) { return undefined; }
+            const word = doc.getText(range);
+            const found = DHAD_KEYWORDS.find((k) => k.word === word);
+            if (!found) { return undefined; }
+            return new vscode.Hover(new vscode.MarkdownString(`**${found.word}** — ${found.detail}\n\n${found.doc}`));
+        },
+    });
+    context.subscriptions.push(hover);
 }
 
 export function deactivate() {}

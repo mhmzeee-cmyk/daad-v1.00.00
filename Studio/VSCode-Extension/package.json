@@ -2,8 +2,9 @@
   "name": "daad-language",
   "displayName": "لغة ض - Daad Language Support",
   "description": "دعم تلوين القواعد، المقتطفات، وتحويل إلى C++ للغة ض",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "publisher": "DaadStudio",
+  "icon": "icon.png",
   "repository": "https://github.com/mhmzeee-cmyk/daad-v1.00.00",
   "license": "MIT",
   "engines": {
