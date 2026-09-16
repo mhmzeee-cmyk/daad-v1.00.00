@@ -61,7 +61,7 @@ Dhad-Studio-Unified/
 ├── release/              ← حزم windows-7 (v1.0.1) و windows-10-11 (v1.1.0)
 ├── Operational-Evidence/ ← أدلة التشغيل الحية (CPU/MSI/WINE/…)
 ├── Sources-Archive/ + archive/ ← لقطات وأرشيف خارج خط البناء
-├── PROJECT_UNDERSTANDING.md + PROJECT_INDEX.md + تقرير.md ← شرح المشروع وفهارسه
+├── PROJECT_UNDERSTANDING.md + PROJECT_INDEX.md ← شرح المشروع وفهارسه
 └── README.md             ← هذا الملف
 ```
 
@@ -317,7 +317,7 @@ bash Tests/run_all_tests.sh       # فحص دخاني موسع
 
 ## 10- التوثيق
 
-- ابدأ من `PROJECT_UNDERSTANDING.md` ثم `تقرير.md` ثم `PROJECT_INDEX.md`.
+- ابدأ من `PROJECT_UNDERSTANDING.md` ثم `PROJECT_INDEX.md`.
 - عقود اللغة: `Docs/Specs/` — وخط البناء: `Docs/Reference/BUILD_PIPELINE.md`.
 - الأدلة الحية: `Operational-Evidence/`.
 
