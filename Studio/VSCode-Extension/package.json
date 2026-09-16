@@ -2,7 +2,7 @@
   "name": "daad-language",
   "displayName": "لغة ض - Daad Language Support",
   "description": "دعم تلوين القواعد، المقتطفات، وتحويل إلى C++ للغة ض",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "publisher": "DaadStudio",
   "icon": "icon.png",
   "repository": "https://github.com/mhmzeee-cmyk/daad-v1.00.00",
@@ -39,6 +39,13 @@
       {
         "language": "daad",
         "path": "./snippets/daad.code-snippets"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "dhad-icons",
+        "label": "ض Icons",
+        "path": "./icons/dhad-fileicons.json"
       }
     ],
     "commands": [

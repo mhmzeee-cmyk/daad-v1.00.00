@@ -1,0 +1,25 @@
+{
+  "fileExtensions": {
+    "ض": "_dhad"
+  },
+  "languageIds": {
+    "daad": "_dhad"
+  },
+  "iconDefinitions": {
+    "_dhad": {
+      "iconPath": "./../icon.png"
+    },
+    "_file": {
+      "iconPath": "./file.png"
+    },
+    "_folder": {
+      "iconPath": "./folder.png"
+    },
+    "_folderExpanded": {
+      "iconPath": "./folder-open.png"
+    }
+  },
+  "file": "_file",
+  "folder": "_folder",
+  "folderExpanded": "_folderExpanded"
+}

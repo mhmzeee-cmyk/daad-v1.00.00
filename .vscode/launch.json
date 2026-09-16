@@ -1,0 +1,13 @@
+{
+  // F5 هنا يصحح ملف ض الحالي بمحول ض (يتطلب تثبيت إضافة ض)
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "dhad",
+      "request": "launch",
+      "name": "تصحيح ض: الملف الحالي",
+      "program": "${file}",
+      "stopOnEntry": false
+    }
+  ]
+}
