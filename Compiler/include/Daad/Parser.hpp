@@ -26,6 +26,7 @@ public:
     bool isAtEnd() const { return m_currentToken.type == TokenType::TOKEN_EOF; }
 
 private:
+    std::unique_ptr<StmtAST> parseStatementImpl(); // الجسم الأصلي — يغلّفه parseStatement بختم السطر
     // Core helpers
     void consume();
     void reportError(const std::string& message);

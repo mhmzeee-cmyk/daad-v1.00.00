@@ -208,8 +208,8 @@ function findCompiler(startDir) {
 		const c = path.join(dir, 'Compiler');
 		try {
 			if (fs.statSync(c).isDirectory()) {
-				const b1 = path.join(c, 'build-make', 'bin', 'daad-compiler');
-				const b2 = path.join(c, 'build', 'bin', 'daad-compiler');
+				const b1 = path.join(c, 'build', 'bin', 'daad-compiler');
+				const b2 = path.join(c, 'build-make', 'bin', 'daad-compiler');
 				if (fs.existsSync(b1)) return { root: c, bin: b1 };
 				if (fs.existsSync(b2)) return { root: c, bin: b2 };
 				return { root: c, bin: 'daad-compiler' };
@@ -281,7 +281,7 @@ class DhadDebugSession extends DebugSession {
 			const exe = path.join(tmpDir, base + '.out');
 			this.sendEvent(new OutputEvent(`ترجمة ${program} ...\n`, 'console'));
 			try {
-				await execFileP(bin, [program, '-o', cpp]);
+				await execFileP(bin, [program, '-g', '-o', cpp]);
 			} catch (e) {
 				throw new Error('فشلت ترجمة ض:\n' + (e.stderr || e.message));
 			}
@@ -293,9 +293,26 @@ class DhadDebugSession extends DebugSession {
 				throw new Error('فشل بناء g++:\n' + (e.stderr || e.message));
 			}
 			this._exe = exe;
+			this._cppFile = cpp;
 			sessionLog('build ok exe=' + exe);
+			// خريطة .ض→cpp من توجيهات #line: gdb الكسول لا يحل أسماء .ض العربية
+			// قبل القراءة الكاملة للرموز، فنضع النقاط على سطور cpp المكافئة مباشرة
+			this._lineMap = new Map();
+			try {
+				const cppText = fs.readFileSync(cpp, 'utf8').split('\n');
+				const base = program.replace(/\\/g, '/');
+				cppText.forEach((ln, i) => {
+					const m = /^#line\s+(\d+)\s+"(.*)"\s*$/.exec(ln.trim());
+					if (m && m[2].replace(/\\/g, '/') === base && !this._lineMap.has(parseInt(m[1], 10))) {
+						this._lineMap.set(parseInt(m[1], 10), i + 2); // السطر التالي للتوجيه
+					}
+				});
+				sessionLog('linemap entries=' + this._lineMap.size);
+			} catch (e) { /* بلا خريطة — رجوع للمسار القديم */ }
 			this._stopOnEntry = !!args.stopOnEntry;
 			this._gdb = new GdbMI(exe, ev => this._onGdbEvent(ev), () => this._running);
+			// الرموز تُحمَّل لاتزامنيًا بعد spawn — بدون هذا ترفض gdb النقطة بـ No source file
+			try { await this._gdb.send('-gdb-set breakpoint pending on'); } catch (e) { /* تجاوز */ }
 			// طبّق نقاط التوقف المعلقة + أخبر العميل بتحققها (كانت ستظهر رمادية)
 			for (const [src, lines] of this._pendingBp) {
 				const applied = await this._applyBreakpoints(src, lines);
@@ -330,8 +347,12 @@ class DhadDebugSession extends DebugSession {
 		const out = [];
 		for (const ln of lines) {
 			if (cur.has(ln)) { out.push({ verified: true, line: ln, id: cur.get(ln) }); continue; }
+			// النقطة على مسار .ض مباشرة مع -f: توجيهات #line تنسب الكود للمصدر،
+			// وسطور cpp نفسها لا تحمل كودًا حسب gdb — والخريطة احتياط تشخيصي
+			const loc = `"${src}:${ln}"`;
 			try {
-				const r = await this._gdb.send(`-break-insert "${src}:${ln}"`);
+				// -f: إنشاء معلق يتحقق عند اكتمال قراءة الرموز (gdb كسول مع مسارات .ض)
+				const r = await this._gdb.send(`-break-insert -f ${loc}`);
 				const num = parseInt(r.bkpt && r.bkpt.number, 10);
 				if (Number.isFinite(num)) {
 					cur.set(ln, num);

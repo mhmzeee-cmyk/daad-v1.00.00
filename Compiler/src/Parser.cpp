@@ -169,6 +169,19 @@ std::unique_ptr<StmtAST> Parser::parseStatement() {
     if (m_currentToken.type == TokenType::TOKEN_EOF) {
         return nullptr;
     }
+    // ختم كل جملة بسطر رمزها الأول — أساس #line للتصحيح (F5)
+    int stmtLine = static_cast<int>(m_currentToken.line);
+    auto stmt = parseStatementImpl();
+    if (stmt && stmt->line <= 0) {
+        stmt->line = stmtLine;
+    }
+    return stmt;
+}
+
+std::unique_ptr<StmtAST> Parser::parseStatementImpl() {
+    if (m_currentToken.type == TokenType::TOKEN_EOF) {
+        return nullptr;
+    }
 
     if (isAnyKeyword(m_currentToken.type)) {
         auto& kw = m_currentToken.text;

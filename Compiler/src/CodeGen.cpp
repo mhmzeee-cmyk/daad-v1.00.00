@@ -33,9 +33,17 @@ static std::string escapeString(const std::string& value) {
 // ── Helper Methods ────────────────────────────────────────────────────────────
 
 void CodeGenVisitor::emitSourceComment(int line) {
-    if (m_debugInfo && line > 0) {
-        target() << "// [daad:" << line << "]\n";
+    // توجيه #line حقيقي يفهمه gdb: يربط السطور المولدة بسطور .ض (يُستخدم مع -g فقط)
+    if (!m_debugInfo || line <= 0 || m_debugSourcePath.empty()) {
+        return;
     }
+    std::string escaped;
+    for (char c : m_debugSourcePath) {
+        if (c == '\\') escaped += '/';
+        else if (c == '"') escaped += "\\\"";
+        else escaped += c;
+    }
+    m_sourceStream << "#line " << line << " \"" << escaped << "\"\n";
 }
 
 void CodeGenVisitor::trackAllocation(const std::string& varName) {
@@ -220,6 +228,7 @@ void CodeGenVisitor::visit(RawExprAST& node) {
 }
 
 void CodeGenVisitor::visit(VarDeclStmtAST& node) {
+    if (!m_inForContext) emitSourceComment(node.line);
     if (node.type == "__builtin_print") {
         node.init->accept(*this);
         target() << "daad::runtime::daad_print(" << m_lastExpr << ");\n";
@@ -279,6 +288,7 @@ void CodeGenVisitor::visit(VarDeclStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(AssignmentAST& node) {
+    if (!m_inForContext) emitSourceComment(node.line);
     node.value->accept(*this);
     if (m_inForContext) {
         m_lastExpr = sanitizeIdent(node.name) + " = " + m_lastExpr;
@@ -288,6 +298,7 @@ void CodeGenVisitor::visit(AssignmentAST& node) {
 }
 
 void CodeGenVisitor::visit(CompoundAssignmentAST& node) {
+    if (!m_inForContext) emitSourceComment(node.line);
     node.value->accept(*this);
     // Handle ^= as power assignment (C++ has no ^= for power)
     if (node.op == "^=") {
@@ -305,6 +316,7 @@ void CodeGenVisitor::visit(CompoundAssignmentAST& node) {
 }
 
 void CodeGenVisitor::visit(IfStmtAST& node) {
+    emitSourceComment(node.line);
     node.condition->accept(*this);
     target() << "if (" << m_lastExpr << ") {\n";
     for (auto& stmt : node.thenBody) {
@@ -322,6 +334,7 @@ void CodeGenVisitor::visit(IfStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(WhileStmtAST& node) {
+    emitSourceComment(node.line);
     node.condition->accept(*this);
     target() << "while (" << m_lastExpr << ") {\n";
     for (auto& stmt : node.body) {
@@ -331,6 +344,7 @@ void CodeGenVisitor::visit(WhileStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(ForStmtAST& node) {
+    emitSourceComment(node.line);
     target() << "for (";
     m_inForContext = true;
     if (node.init) {
@@ -356,6 +370,7 @@ void CodeGenVisitor::visit(ForStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(DoWhileStmtAST& node) {
+    emitSourceComment(node.line);
     target() << "do {\n";
     for (auto& stmt : node.body) {
         stmt->accept(*this);
@@ -366,6 +381,7 @@ void CodeGenVisitor::visit(DoWhileStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(SwitchStmtAST& node) {
+    emitSourceComment(node.line);
     node.expression->accept(*this);
     std::string expr = m_lastExpr;
     
@@ -425,6 +441,7 @@ void CodeGenVisitor::visit(SwitchStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(ReturnStmtAST& node) {
+    emitSourceComment(node.line);
     if (node.value) {
         node.value->accept(*this);
         target() << "return " << m_lastExpr << ";\n";
@@ -434,10 +451,12 @@ void CodeGenVisitor::visit(ReturnStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(BreakStmtAST& node) {
+    emitSourceComment(node.line);
     target() << "break;\n";
 }
 
 void CodeGenVisitor::visit(ContinueStmtAST& node) {
+    emitSourceComment(node.line);
     target() << "continue;\n";
 }
 
@@ -473,6 +492,7 @@ void CodeGenVisitor::visit(FunctionDeclAST& node) {
         return;
     }
 
+    emitSourceComment(node.line);
     std::string fullName = isClassMethod ? m_currentClassScope + "::" + fnName : fnName;
     target() << cppRetType << " " << fullName << "(";
     for (size_t i = 0; i < node.params.size(); ++i) {
@@ -594,6 +614,7 @@ void CodeGenVisitor::visit(EnumDeclAST& node) {
 }
 
 void CodeGenVisitor::visit(TryCatchStmtAST& node) {
+    emitSourceComment(node.line);
     target() << "try {\n";
     for (auto& stmt : node.tryBody) {
         stmt->accept(*this);
@@ -636,6 +657,7 @@ void CodeGenVisitor::visit(MemberAccessExprAST& node) {
 }
 
 void CodeGenVisitor::visit(MemberAssignmentAST& node) {
+    emitSourceComment(node.line);
     node.value->accept(*this);
     target() << sanitizeIdent(node.object) << "." << sanitizeIdent(node.member) << " = " << m_lastExpr << ";\n";
 }
@@ -652,6 +674,7 @@ void CodeGenVisitor::visit(ArraySubscriptExprAST& node) {
 }
 
 void CodeGenVisitor::visit(ArraySubscriptAssignAST& node) {
+    emitSourceComment(node.line);
     node.index->accept(*this);
     std::string idx = m_lastExpr;
     node.value->accept(*this);
@@ -682,6 +705,7 @@ void CodeGenVisitor::visit(TernaryExprAST& node) {
 }
 
 void CodeGenVisitor::visit(ForEachStmtAST& node) {
+    emitSourceComment(node.line);
     node.iterable->accept(*this);
     std::string iterExpr = m_lastExpr;
     std::string cppType = mapType(node.varType);
@@ -693,6 +717,7 @@ void CodeGenVisitor::visit(ForEachStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(ThrowStmtAST& node) {
+    emitSourceComment(node.line);
     if (node.value) {
         node.value->accept(*this);
         target() << "throw " << m_lastExpr << ";\n";
@@ -702,6 +727,7 @@ void CodeGenVisitor::visit(ThrowStmtAST& node) {
 }
 
 void CodeGenVisitor::visit(DeleteStmtAST& node) {
+    emitSourceComment(node.line);
     node.operand->accept(*this);
     target() << "delete " << m_lastExpr << ";\n";
 }
@@ -717,6 +743,7 @@ void CodeGenVisitor::visit(ExportStmtAST& node) {
 // ── New AST Node Visitors — يتوافق مع Web ─────────────────────────────────────
 
 void CodeGenVisitor::visit(PrintStmtAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::runtime::daad_print(";
     for (size_t i = 0; i < node.args.size(); ++i) {
         node.args[i]->accept(*this);
@@ -728,6 +755,7 @@ void CodeGenVisitor::visit(PrintStmtAST& node) {
 
 // ادخل(متغير) → قراءة من لوحة المفاتيح إلى المتغير
 void CodeGenVisitor::visit(InputStmtAST& node) {
+    emitSourceComment(node.line);
     if (node.varName.empty()) return; // خطأ تحليلي — لا شيء يُولَّد
     target() << "std::cin >> " << sanitizeIdent(node.varName) << ";\n";
 }
@@ -748,6 +776,7 @@ void CodeGenVisitor::visit(ConstructorDeclAST& node) {
 }
 
 void CodeGenVisitor::visit(ExprStmtAST& node) {
+    emitSourceComment(node.line);
     node.expr->accept(*this);
     target() << m_lastExpr << ";\n";
 }
@@ -777,10 +806,12 @@ void CodeGenVisitor::visit(TypeofExprAST& node) {
 // ── Image Processing CodeGen (20) — يتوافق مع Web ────────────────────────────
 
 void CodeGenVisitor::visit(LoadImageAST& node) {
+    emitSourceComment(node.line);
     target() << "auto " << node.varName << " = daad::image::load(\"" << node.path << "\");\n";
 }
 
 void CodeGenVisitor::visit(DrawImageAST& node) {
+    emitSourceComment(node.line);
     node.x->accept(*this); std::string x = m_lastExpr;
     node.y->accept(*this); std::string y = m_lastExpr;
     node.w->accept(*this); std::string w = m_lastExpr;
@@ -793,10 +824,12 @@ void CodeGenVisitor::visit(ImageSizeAST& node) {
 }
 
 void CodeGenVisitor::visit(SaveImageAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::save(" << node.imgVar << ", \"" << node.path << "\");\n";
 }
 
 void CodeGenVisitor::visit(CropImageAST& node) {
+    emitSourceComment(node.line);
     node.x->accept(*this); std::string x = m_lastExpr;
     node.y->accept(*this); std::string y = m_lastExpr;
     node.w->accept(*this); std::string w = m_lastExpr;
@@ -805,36 +838,43 @@ void CodeGenVisitor::visit(CropImageAST& node) {
 }
 
 void CodeGenVisitor::visit(ResizeAST& node) {
+    emitSourceComment(node.line);
     node.w->accept(*this); std::string w = m_lastExpr;
     node.h->accept(*this); std::string h = m_lastExpr;
     target() << "daad::image::resize(" << node.imgVar << ", " << w << ", " << h << ");\n";
 }
 
 void CodeGenVisitor::visit(RotateImageAST& node) {
+    emitSourceComment(node.line);
     node.angle->accept(*this);
     target() << "daad::image::rotate(" << node.imgVar << ", " << m_lastExpr << ");\n";
 }
 
 void CodeGenVisitor::visit(FlipImageAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::flip(" << node.imgVar << ", \"" << node.direction << "\");\n";
 }
 
 void CodeGenVisitor::visit(OpacityAST& node) {
+    emitSourceComment(node.line);
     node.value->accept(*this);
     target() << "daad::image::opacity(" << node.imgVar << ", " << m_lastExpr << ");\n";
 }
 
 void CodeGenVisitor::visit(FilterAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::filter(" << node.imgVar << ", \"" << node.filterName << "\");\n";
 }
 
 void CodeGenVisitor::visit(OverlayAST& node) {
+    emitSourceComment(node.line);
     node.x->accept(*this); std::string x = m_lastExpr;
     node.y->accept(*this); std::string y = m_lastExpr;
     target() << "daad::image::overlay(" << node.imgVar1 << ", " << node.imgVar2 << ", " << x << ", " << y << ");\n";
 }
 
 void CodeGenVisitor::visit(BackgroundAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::background(" << node.imgVar << ", " << node.bgVar << ");\n";
 }
 
@@ -845,6 +885,7 @@ void CodeGenVisitor::visit(PixelAST& node) {
 }
 
 void CodeGenVisitor::visit(DrawAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::drawShape(\"" << node.shape << "\", ";
     for (size_t i = 0; i < node.args.size(); ++i) {
         node.args[i]->accept(*this);
@@ -855,6 +896,7 @@ void CodeGenVisitor::visit(DrawAST& node) {
 }
 
 void CodeGenVisitor::visit(FillAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::fill(\"" << node.shape << "\", ";
     for (size_t i = 0; i < node.args.size(); ++i) {
         node.args[i]->accept(*this);
@@ -865,6 +907,7 @@ void CodeGenVisitor::visit(FillAST& node) {
 }
 
 void CodeGenVisitor::visit(RectangleAST& node) {
+    emitSourceComment(node.line);
     node.x->accept(*this); std::string x = m_lastExpr;
     node.y->accept(*this); std::string y = m_lastExpr;
     node.w->accept(*this); std::string w = m_lastExpr;
@@ -873,6 +916,7 @@ void CodeGenVisitor::visit(RectangleAST& node) {
 }
 
 void CodeGenVisitor::visit(CircleAST& node) {
+    emitSourceComment(node.line);
     node.x->accept(*this); std::string x = m_lastExpr;
     node.y->accept(*this); std::string y = m_lastExpr;
     node.r->accept(*this); std::string r = m_lastExpr;
@@ -880,6 +924,7 @@ void CodeGenVisitor::visit(CircleAST& node) {
 }
 
 void CodeGenVisitor::visit(LineAST& node) {
+    emitSourceComment(node.line);
     node.x1->accept(*this); std::string x1 = m_lastExpr;
     node.y1->accept(*this); std::string y1 = m_lastExpr;
     node.x2->accept(*this); std::string x2 = m_lastExpr;
@@ -888,6 +933,7 @@ void CodeGenVisitor::visit(LineAST& node) {
 }
 
 void CodeGenVisitor::visit(TextOnCanvasAST& node) {
+    emitSourceComment(node.line);
     node.x->accept(*this); std::string x = m_lastExpr;
     node.y->accept(*this); std::string y = m_lastExpr;
     node.fontSize->accept(*this); std::string fs = m_lastExpr;
@@ -895,6 +941,7 @@ void CodeGenVisitor::visit(TextOnCanvasAST& node) {
 }
 
 void CodeGenVisitor::visit(ClearAST& node) {
+    emitSourceComment(node.line);
     target() << "daad::image::clear();\n";
 }
 

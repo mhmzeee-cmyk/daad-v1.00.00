@@ -58,7 +58,8 @@ CompileResult DaadCompiler::compile(const std::string& sourceCode, const std::st
     // توليد الكود — فصل النطاق العام عن جسم main
     CodeGenVisitor codegen;
     codegen.setUserFunctionNames(userFns);
-    codegen.enableDebugInfo(true); // Enable source line comments for debugging
+    codegen.enableDebugInfo(m_debugLines); // -g فقط: بدونه المخرج بايت-مطابق للسابق
+    codegen.setDebugSourcePath(m_sourcePath);
     if (!headerFileName.empty()) codegen.setSourceFileName(headerFileName);
 
     std::vector<StmtAST*> executable;

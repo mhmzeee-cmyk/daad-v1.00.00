@@ -17,6 +17,7 @@ public:
     void setUserFunctionNames(const std::unordered_set<std::string>& names);
     void enableDebugInfo(bool enable) { m_debugInfo = enable; }
     void setSourceFileName(const std::string& name) { m_sourceFileName = name; }
+    void setDebugSourcePath(const std::string& p) { m_debugSourcePath = p; }
 
     // Output access
     std::string getSourceCode() const { return m_sourceStream.str(); }
@@ -117,6 +118,7 @@ private:
     std::string m_lastExpr;
     std::string m_currentClassScope;
     std::string m_sourceFileName;
+    std::string m_debugSourcePath; // مسار .ض الحقيقي لتوجيهات #line (يُضبط فقط مع -g)
     bool m_debugInfo = false;
     bool m_inForContext = false;
     std::unordered_map<std::string, std::string> m_typeMap;

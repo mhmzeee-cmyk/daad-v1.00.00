@@ -23,7 +23,19 @@ function findCompiler(workspaceFolder: string | undefined): string {
     return 'daad-compiler'; // الاعتماد على PATH كحل أخير
 }
 
-// استخراج رقم السطر من تشخيصات المترجم العربية (سطر N) أو الإنجليزية (line N)
+// صعودًا من ملف حتى جذر المستودع (مجلد Compiler/) لضبط مسارات التضمين
+function findCompilerRoot(startDir: string): string | null {
+    let dir = startDir;
+    for (let i = 0; i < 8; i++) {
+        try {
+            if (fs.statSync(path.join(dir, 'Compiler')).isDirectory()) { return dir; }
+        } catch { /* تابع الصعود */ }
+        const parent = path.dirname(dir);
+        if (parent === dir) { break; }
+        dir = parent;
+    }
+    return null;
+}
 function parseDiagnostics(output: string, docUri: vscode.Uri): vscode.Diagnostic[] {
     const diags: vscode.Diagnostic[] = [];
     const re = /(?:سطر|line)\s*[:#]?\s*(\d+)/g;
@@ -77,6 +89,30 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(compileCmd);
+
+    // بناء وتشغيل F9: ترجمة حقيقية ثم g++ ثم تنفيذ — المخرجات في /tmp دائمًا
+    const buildRunCmd = vscode.commands.registerCommand('daad.buildAndRun', async () => {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor || editor.document.languageId !== 'daad') {
+            vscode.window.showErrorMessage('افتح ملف ض (.ض) أولاً');
+            return;
+        }
+        const doc = editor.document;
+        if (doc.isUntitled) {
+            vscode.window.showErrorMessage('احفظ ملف ض أولاً ثم شغّله');
+            return;
+        }
+        await doc.save();
+        const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const compiler = findCompiler(ws);
+        const root = findCompilerRoot(path.dirname(doc.fileName)) ?? ws;
+        const inc = root ? `-I "${root}" -I "${path.join(root, 'Compiler', 'include')}"` : '';
+        const term = vscode.window.createTerminal('ض: تشغيل');
+        term.show();
+        // ملاحظة: مسارات التضمين تُحسم لصالح جذر المستودع عند توفره
+        term.sendText(`${compiler} "${doc.fileName}" -o /tmp/daad-run.cpp && g++ -std=c++20 /tmp/daad-run.cpp -o /tmp/daad-run ${inc} && echo "─── مخرجات البرنامج ───" && /tmp/daad-run`);
+    });
+    context.subscriptions.push(buildRunCmd);
 
     // إكمال تلقائي لكل الكلمات المفتاحية (116) مع التفاصيل
     const kindMap: Record<string, vscode.CompletionItemKind> = {

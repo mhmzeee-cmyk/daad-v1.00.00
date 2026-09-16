@@ -121,6 +121,7 @@ class StmtAST {
 public:
     virtual ~StmtAST() = default;
     virtual void accept(StmtVisitor& v) = 0;
+    int line = 0; // سطر المصدر (.ض) — يملؤه المحلل، ويستخدمه مولد #line للتصحيح
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

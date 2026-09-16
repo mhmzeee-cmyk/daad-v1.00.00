@@ -2,7 +2,7 @@
   "name": "daad-language",
   "displayName": "لغة ض - Daad Language Support",
   "description": "دعم تلوين القواعد، المقتطفات، وتحويل إلى C++ للغة ض",
-  "version": "1.2.4",
+  "version": "1.2.6",
   "publisher": "DaadStudio",
   "icon": "icon.png",
   "repository": "https://github.com/mhmzeee-cmyk/daad-v1.00.00",
@@ -45,13 +45,60 @@
       {
         "command": "daad.compileCurrentFile",
         "title": "ض: تحويل الملف الحالي إلى C++"
+      },
+      {
+        "command": "daad.buildAndRun",
+        "title": "ض: بناء وتشغيل الملف الحالي (F9)"
       }
     ],
     "keybindings": [
       {
-        "command": "daad.compileCurrentFile",
+        "command": "daad.buildAndRun",
         "key": "f9",
         "when": "editorTextFocus && resourceLangId == daad"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "dhad",
+        "label": "ض Dhad (gdb)",
+        "program": "./debug/dhadDebug.js",
+        "runtime": "node",
+        "languages": ["daad"],
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "ملف ض المراد تصحيحه",
+                "default": "${file}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "توقف عند بداية main",
+                "default": false
+              },
+              "cwd": {
+                "type": "string",
+                "description": "مجلد عمل البرنامج (اختياري)"
+              }
+            }
+          }
+        },
+        "configurationSnippets": [
+          {
+            "label": "ض: تصحيح الملف الحالي (gdb)",
+            "description": "ترجمة .ض ثم تصحيح تفاعلي بأسطر ض الأصلية",
+            "body": {
+              "type": "dhad",
+              "request": "launch",
+              "name": "تصحيح ض",
+              "program": "^\"\\${file}\"",
+              "stopOnEntry": false
+            }
+          }
+        ]
       }
     ]
   },

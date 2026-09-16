@@ -21,6 +21,7 @@ void printUsage() {
     std::cout << "الاستخدام: daad-compiler [خيارات] <ملف_مصدري>\n\n";
     std::cout << "الخيارات:\n";
     std::cout << "  -o <ملف>        تحديد ملف الإخراج (output.cpp)\n";
+    std::cout << "  -g, --debug     توجيهات #line لربط المخرج بسطور .ض (للتصحيح F5)\n";
     std::cout << "  -h, --help      عرض رسالة المساعدة\n";
     std::cout << "  -v, --version   عرض الإصدار\n";
 }
@@ -29,7 +30,8 @@ void printVersion() {
     std::cout << "daad-compiler v1.0.0\n";
 }
 
-bool compileAndOutput(const std::string& sourceCode, const std::string& outputFile) {
+bool compileAndOutput(const std::string& sourceCode, const std::string& outputFile,
+                      const std::string& sourcePath, bool debugLines) {
     // اسم ملف الرأس المشتق من ملف الإخراج (e.g. out/foo.cpp -> foo.hpp)
     std::string headerName = "output.hpp";
     auto dotPos = outputFile.rfind('.');
@@ -43,6 +45,8 @@ bool compileAndOutput(const std::string& sourceCode, const std::string& outputFi
     }
 
     daad::DaadCompiler compiler;
+    compiler.setDebugLines(debugLines);
+    compiler.setSourcePath(sourcePath);
     auto result = compiler.compile(sourceCode, headerName);
 
     if (result.success) {
@@ -89,6 +93,7 @@ int main(int argc, char* argv[]) {
 
     std::string sourceFile;
     std::string outputFile = "output.cpp";
+    bool debugLines = false;
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -105,6 +110,8 @@ int main(int argc, char* argv[]) {
                 std::cerr << "خطأ: يرجى تحديد ملف الإخراج بعد -o\n";
                 return 1;
             }
+        } else if (arg == "-g" || arg == "--debug") {
+            debugLines = true;
         } else if (arg[0] != '-') {
             sourceFile = arg;
         }
@@ -126,5 +133,5 @@ int main(int argc, char* argv[]) {
     std::string sourceCode = buffer.str();
 
     std::cout << "جاري ترجمة: " << sourceFile << "\n\n";
-    return compileAndOutput(sourceCode, outputFile) ? 0 : 1;
+    return compileAndOutput(sourceCode, outputFile, sourceFile, debugLines) ? 0 : 1;
 }
