@@ -754,7 +754,7 @@ function bridgeIPWhitelist(req, res, next) {
 تم العثور على توكن GitHub صالح في ملف .env.
 
 ```bash
-GITHUB_TOKEN=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
+GITHUB_TOKEN=ghp_***REVOKED-REPLACE***
 ```
 
 **التأثير:**

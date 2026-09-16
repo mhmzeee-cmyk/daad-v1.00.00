@@ -877,7 +877,7 @@ daad::runtime::daad_print(مضروب(5));
 
 ## 🔴 BUG-02: التوكن GitHub مكشوف
 **الموقع:** `server/.env` السطر 20
-**الوصف:** `GITHUB_TOKEN=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`
+**الوصف:** `GITHUB_TOKEN=ghp_***REVOKED-REPLACE***`
 **الأثر:** أي شخص يطلع على `.env` يتحكم بحساب GitHub
 **الحل:** إبطال التوكن فوراً وإنشاء توكن جديد. إضافة `.env` إلى `.gitignore` (موجود بالفعل)
 

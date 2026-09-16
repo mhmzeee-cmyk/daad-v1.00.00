@@ -2066,7 +2066,7 @@ RATE_LIMIT_OTP_VERIFY=5
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:8080,https://dhad-studio.onrender.com
 
 # GitHub Models API Token
-GITHUB_TOKEN=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
+GITHUB_TOKEN=ghp_***REVOKED-REPLACE***
 ```
 
 ### 9.2 مراجعة أمنية كاملة
@@ -2075,7 +2075,7 @@ GITHUB_TOKEN=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
 
 | المشكلة | الخطورة | الشرح |
 |---------|---------|-------|
-| **GITHUB_TOKEN مكشوف** | 🔴 حرج | التوكن `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` مكشوف بالكامل في المستودع |
+| **GITHUB_TOKEN مكشوف** | 🔴 حرج | التوكن `ghp_***REVOKED-REPLACE***` مكشوف بالكامل في المستودع |
 | **JWT_SECRET ضعيف** | 🔴 حرج | `dhad-studio-dev-secret-key-change-in-production` — قصير وسهل التخمين |
 | **HMAC_SECRET ضعيف** | 🔴 حرج | `dhad-studio-hmac-secret-2026-production` — يحتوي على كلمات قابلة للتخمين |
 | **GITHUB_TOKEN في .env** | 🔴 حرج | ملف `.env` مضمن في المستودع — يجب إضافته إلى `.gitignore` |
@@ -3076,7 +3076,7 @@ getTop: async (count) => {
 ### ز.2 تحليل المتغيرات المكشوفة
 
 **GITHUB_TOKEN:**
-- قيمة: `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`
+- قيمة: `ghp_***REVOKED-REPLACE***`
 - هذا توكن GitHub شخصي مع صلاحيات كاملة
 - مكشوف في المستودع — أي شخص لديه وصول إلى المستودع يمكنه استخدامه
 - **يجب إبطاله فوراً** عبر https://github.com/settings/tokens
