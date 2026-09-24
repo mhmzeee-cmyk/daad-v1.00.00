@@ -54,5 +54,5 @@ daad-v1.00.00-main/
 **محمد محمود الحموز** (Mohammed Mahmoud Al-Hamouz)
 ---
 <div align="center">
-**صُنع بـ ❤️ للمجتمع العربي**
+**صُنع للمجتمع العربي**
 </div>
