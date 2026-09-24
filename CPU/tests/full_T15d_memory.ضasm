@@ -1,0 +1,11 @@
+# T15d: Memory access — الوصول للذاكرة (64KB)
+load acc, 42
+load s0, 0
+# حفظ في عنوان عشوائي
+st acc, 0x100
+st acc, 0x200
+st acc, 0x300
+# اقرأ
+ld s0, 0x100
+# مح = 42
+halt

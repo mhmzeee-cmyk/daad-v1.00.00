@@ -1,0 +1,1 @@
+FIX-NOTE: server requires DATABASE_URL=file:<ABSOLUTE>/prisma/dev.db (relative fails with code 14); .env in repo is empty

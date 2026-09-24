@@ -1,0 +1,9 @@
+DAAD->DHAD generation: all 6 EXIT 0 REAL-PASS (generation works)
+DHAD->CPU execution:
+  hello(42)->42 REAL-PASS (6x stri/ldri warnings, error-recovery, HALTED)
+  1+2->3 REAL-PASS
+  vars 10+20->30 REAL-PASS
+  branch->1 REAL-PASS
+  func 20+22->42 REAL-PASS (32 warnings)
+  loop 1..5 expect 15 got 0 REAL-FAIL
+ROOT CAUSE: DAAD backend emits stri/ldri (frame indirect); CPU/dhad_asm.c has no such mnemonic (grep=0); unified dhad_cpu.c supports opcodes but assembler+main.c-inline do not; skipped lines break loop-carried memory

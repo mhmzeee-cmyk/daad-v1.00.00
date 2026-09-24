@@ -1,0 +1,13 @@
+.globl main
+main:
+  pushq %rbp
+  movq %rsp, %rbp
+  subq $160, %rsp
+.L_main_.Lentry:
+  movq $0, %rax
+  jmp .L_main_epilogue
+.L_main_epilogue:
+  addq $160, %rsp
+  leave
+  ret
+

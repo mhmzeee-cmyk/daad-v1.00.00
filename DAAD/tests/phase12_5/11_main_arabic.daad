@@ -1,0 +1,8 @@
+# Phase 12.5-F: Main Arabic function name test
+# Tests: الرئيسية() function name works correctly
+
+دالة: الرئيسية() -> رقم :-
+    متغير: x = 42
+    اطبع(x)
+    ارجع(x)
+نهاية

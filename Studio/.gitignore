@@ -1,0 +1,58 @@
+# ====================================================
+# Dhad Studio - Git Ignore
+# ====================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Logs
+**/logs/
+*.log
+npm-debug.log*
+
+# Build
+dist/
+build/
+coverage/
+__cmake_systeminformation/
+
+# Runtime
+.pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.dockerignore
+
+# Prisma
+**/prisma/*.db
+**/prisma/*.db-journal
+**/dev.db
+
+# AWS
+.aws/
+
+# Temp
+tmp/
+temp/
+*.tmp

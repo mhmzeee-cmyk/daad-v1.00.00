@@ -1,0 +1,14 @@
+# ══════════════════════════════════════════════════════════════
+#  T26e: LDRI multiple registers — different addr reg combos
+#  Test s2/s3 as address registers (not just s0/s1)
+#  Store 55 to 0x0200 using s2/s3, load back
+#  Expected: ACC = 55
+# ══════════════════════════════════════════════════════════════
+
+    حمّل s2, 0x02     # addr_hi = 0x02
+    حمّل s3, 0x00     # addr_lo = 0x00 (address = 0x0200)
+    حمّل s7, 55       # value to store
+    خزن_غيرمباشر s7, s2, s3   # mem[0x0200] = 55
+    اقرأ_غيرمباشر s5, s2, s3  # s5 = mem[0x0200]
+    نقل مح, s5        # ACC = s5
+    توقف

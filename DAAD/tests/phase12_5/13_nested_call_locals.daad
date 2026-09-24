@@ -1,0 +1,23 @@
+# Phase 12.5-F.3.5: Nested Call with Locals
+# Tests that local variables survive across a nested call.
+# compute(x) calls helper(x), then uses locals after the call.
+# Expected: compute(3, 4) returns helper(3) + sum + prod
+
+دالة: helper(a: رقم) -> رقم :-
+    متغير: b = a + 10
+    ارجع(b)
+نهاية
+
+دالة: compute(x: رقم, y: رقم) -> رقم :-
+    متغير: sum = x + y
+    متغير: prod = x * y
+    متغير: h = helper(x)
+    متغير: result = sum + prod + h
+    ارجع(result)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: r = compute(3, 4)
+    اطبع(r)
+    ارجع(r)
+نهاية

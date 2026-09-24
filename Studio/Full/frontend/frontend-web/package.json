@@ -1,0 +1,15 @@
+{
+  "name": "dhad-studio-frontend",
+  "version": "2.0.0",
+  "description": "Dhad Studio - Arabic EdTech Frontend",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve .",
+    "deploy:vercel": "vercel --prod",
+    "deploy:netlify": "netlify deploy --prod"
+  },
+  "keywords": ["edtech", "arabic", "programming", "education"],
+  "author": "moomdh77",
+  "license": "MIT"
+}

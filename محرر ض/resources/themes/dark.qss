@@ -1,0 +1,21 @@
+/* ثيم غامق — ليلي — لغة ض — بدون إيموجي */
+QMainWindow, QDockWidget, QMenuBar, QToolBar, QStatusBar {
+    background: #002b36;
+    color: #839496;
+    font-family: "Noto Naskh Arabic", "Tahoma", sans-serif;
+}
+QPlainTextEdit, QTextEdit {
+    background: #073642;
+    color: #fdf6e3;
+    selection-background-color: #586e75;
+    selection-color: #ffffff;
+    border: 1px solid #586e75;
+}
+QTabWidget::pane { border: 1px solid #586e75; background: #002b36; }
+QTabBar::tab { background: #073642; color: #839496; padding: 6px 12px; }
+QTabBar::tab:selected { background: #268bd2; color: #ffffff; }
+QTreeView { background: #002b36; color: #839496; }
+QHeaderView::section { background: #073642; }
+QMenuBar::item:selected, QMenu::item:selected { background: #268bd2; color: #ffffff; }
+QToolBar { background: #073642; spacing: 4px; }
+QStatusBar { background: #073642; color: #839496; }

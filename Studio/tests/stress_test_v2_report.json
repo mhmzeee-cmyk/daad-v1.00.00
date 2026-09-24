@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-07-06T03:34:26.790Z",
+  "totalBots": 10000,
+  "totalTime": "10.2",
+  "requestsPerSecond": "980",
+  "results": {
+    "success": 4,
+    "rateLimited": 1875,
+    "locked": 3221,
+    "errors": 1728,
+    "serverErrors": 0,
+    "timeouts": 3172
+  },
+  "responseTimes": {
+    "average": "509",
+    "p50": 406,
+    "p95": 708,
+    "p99": 3441
+  },
+  "statusCodes": {
+    "0": 3172,
+    "200": 4,
+    "400": 341,
+    "401": 1387,
+    "423": 3221,
+    "429": 1875
+  },
+  "verdict": "PASSED"
+}

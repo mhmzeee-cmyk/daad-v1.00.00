@@ -1,0 +1,31 @@
+{
+  "targetGroupName": "daad-studio-tg",
+  "protocol": "HTTP",
+  "port": 3000,
+  "vpcId": "vpc-0123456789abcdef0",
+  "targetType": "ip",
+  "healthCheck": {
+    "enabled": true,
+    "protocol": "HTTP",
+    "port": "traffic-port",
+    "path": "/health",
+    "healthyThresholdCount": 3,
+    "unhealthyThresholdCount": 3,
+    "timeoutSeconds": 10,
+    "intervalSeconds": 30,
+    "matcher": {
+      "HttpCode": "200"
+    }
+  },
+  "stickiness": {
+    "Enabled": false,
+    "Type": "lb_cookie",
+    "DurationSeconds": 86400
+  },
+  "tags": [
+    {
+      "Key": "Project",
+      "Value": "DhadStudio"
+    }
+  ]
+}

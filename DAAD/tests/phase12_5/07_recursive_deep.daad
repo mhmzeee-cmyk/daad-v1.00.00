@@ -1,0 +1,17 @@
+# Phase 12.5-F: Deep recursion (factorial 8)
+# Tests: recursion depth, frame independence
+
+دالة: factorial(n: رقم) -> رقم :-
+    إذا (n <= 1) :-
+        ارجع(1)
+    وإلا :-
+        ارجع(n * factorial(n - 1))
+    نهاية
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: result = factorial(8)
+    # 8! = 40320
+    اطبع(result)
+    ارجع(result)
+نهاية

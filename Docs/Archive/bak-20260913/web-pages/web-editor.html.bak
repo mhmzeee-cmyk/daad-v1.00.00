@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محرر الويب - ض استوديو</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0f172a;color:#e2e8f0;height:100vh;display:flex;flex-direction:column}
+    .header{background:#1e293b;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155}
+    .header h1{font-size:16px;color:#10b981}
+    .header .actions{display:flex;gap:10px}
+    .btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all .2s}
+    .btn-run{background:#10b981;color:#fff}
+    .btn-run:hover{background:#059669}
+    .btn-reset{background:#334155;color:#94a3b8}
+    .btn-reset:hover{background:#475569}
+    .btn-submit{background:#f59e0b;color:#000}
+    .btn-submit:hover{background:#d97706}
+    .editor-container{display:flex;flex:1;overflow:hidden}
+    .code-panel{flex:1;display:flex;flex-direction:column;border-left:1px solid #334155}
+    .panel-header{background:#1e293b;padding:8px 16px;font-size:13px;color:#94a3b8;border-bottom:1px solid #334155;display:flex;align-items:center;justify-content:space-between}
+    .code-editor{flex:1;width:100%;background:#0f172a;color:#e2e8f0;border:none;outline:none;padding:16px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;resize:none;direction:ltr;text-align:left}
+    .preview-panel{flex:1;display:flex;flex-direction:column}
+    .preview-frame{flex:1;width:100%;background:#fff;border:none}
+    .status-bar{background:#1e293b;padding:6px 16px;font-size:11px;color:#64748b;border-top:1px solid #334155;display:flex;justify-content:space-between}
+    .error-panel{background:#1e1b4b;border:1px solid #ef4444;border-radius:8px;margin:8px;padding:12px;display:none;color:#fca5a5;font-size:13px}
+    .error-panel.show{display:block}
+    .split-handle{width:4px;background:#334155;cursor:col-resize}
+    .split-handle:hover{background:#10b981}
+  </style>
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <a href="#" onclick="window.history.go(-1);return false" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#334155;border:none;border-radius:8px;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        رجوع
+      </a>
+      <h1>محرر الويب</h1>
+    </div>
+    <div class="actions">
+      <button class="btn btn-reset" onclick="resetCode()">إعادة</button>
+      <button class="btn btn-run" onclick="runCode()">تشغيل</button>
+      <button class="btn btn-submit" onclick="submitCode()">إرسال الحل</button>
+    </div>
+  </div>
+  <div id="errorPanel" class="error-panel"></div>
+  <div class="editor-container">
+    <div class="code-panel">
+      <div class="panel-header">
+        <span>محرر HTML + CSS</span>
+        <span id="lineCount">1 سطر</span>
+      </div>
+      <textarea id="codeEditor" class="code-editor" spellcheck="false" placeholder="اكتب كود HTML هنا..."></textarea>
+    </div>
+    <div class="split-handle"></div>
+    <div class="preview-panel">
+      <div class="panel-header">
+        <span>المعاينة</span>
+        <span>معاينة مباشرة</span>
+      </div>
+      <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+  </div>
+  <div class="status-bar">
+    <span id="statusText">جاهز</span>
+    <span id="challengeInfo">-</span>
+  </div>
+
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/web-editor-page.js"></script>
+</body>
+</html>

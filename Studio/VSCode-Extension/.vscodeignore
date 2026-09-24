@@ -1,0 +1,6 @@
+dhad-lang/**
+.vscode/**
+**/*.ts
+**/*.map
+tsconfig.json
+out/**/*.map

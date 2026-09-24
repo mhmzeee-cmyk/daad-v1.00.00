@@ -1,0 +1,70 @@
+{
+  "name": "dhad-studio-server",
+  "version": "1.0.0",
+  "description": "Dhad Studio EdTech Platform - REST API Server",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "start:cluster": "node src/cluster.js",
+    "dev": "node --watch src/index.js",
+    "dev:cluster": "node --watch src/cluster.js",
+    "build": "npx prisma generate",
+    "postinstall": "npx prisma generate",
+    "prestart": "npx prisma migrate deploy",
+    "db:migrate": "npx prisma migrate dev",
+    "db:deploy": "npx prisma migrate deploy",
+    "db:push": "npx prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "db:studio": "npx prisma studio",
+    "db:reset": "npx prisma migrate reset",
+    "test": "jest --forceExit --clearMocks",
+    "test:unit": "jest tests/unit --forceExit --clearMocks",
+    "test:integration": "jest tests/integration --forceExit --clearMocks",
+    "test:coverage": "jest --coverage --forceExit --clearMocks",
+    "test:mega": "node scripts/mega_classroom_simulator.js",
+    "deploy": "echo 'Deploy script not configured yet'",
+    "prod": "pm2 start ecosystem.config.js --env production",
+    "prod:stop": "pm2 stop dhad-studio",
+    "prod:restart": "pm2 restart dhad-studio",
+    "prod:logs": "pm2 logs dhad-studio",
+    "prod:status": "pm2 status",
+    "prod:monit": "pm2 monit",
+    "docker:build": "docker build -t dhad-studio .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^3.1.3",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.2.0",
+    "openai": "^6.46.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "winston": "^3.11.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "prisma": "^5.22.0",
+    "supertest": "^7.2.2"
+  },
+  "keywords": [
+    "dhad",
+    "edtech",
+    "api",
+    "daad"
+  ],
+  "license": "MIT"
+}

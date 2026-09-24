@@ -1,0 +1,73 @@
+name: CI — لغة ض
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  daad-compiler:
+    name: DAAD C Compiler — 7 test suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y cmake gcc g++ make
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        working-directory: DAAD
+      - name: Build
+        run: cmake --build build -j$(nproc)
+        working-directory: DAAD
+      - name: Run tests
+        run: |
+          cd DAAD/build
+          ./test_phase2_fixes
+          ./test_semantic
+          ./test_parser
+          ./test_codegen
+          ./test_precedence
+          ./test_stress
+          ./test_performance
+      - name: Runtime — input test
+        run: |
+          cd DAAD
+          ./build/daad tests/valid/011-input.deff -o /tmp/input.s
+          gcc -nostartfiles -o /tmp/input /tmp/input.s
+          echo "5" | /tmp/input | grep -q "^10$"
+
+  studio:
+    name: Studio C++ — 248 gtest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ make
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        working-directory: daad-studio/dhad-studio
+      - name: Build DaadTests
+        run: cmake --build build --target DaadTests -j$(nproc)
+        working-directory: daad-studio/dhad-studio
+      - name: Run 248 tests
+        run: ./build/bin/DaadTests
+        working-directory: daad-studio/dhad-studio
+
+  gate-stdlib:
+    name: Gate — StdlibRealCompile (100/100)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ make
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        working-directory: daad-studio/dhad-studio
+      - name: Build
+        run: cmake --build build --target DaadTests -j$(nproc)
+        working-directory: daad-studio/dhad-studio
+      - name: Gate test
+        run: DAAD_STDLIB_REAL=1 ./build/bin/DaadTests --gtest_filter='StdlibRealCompile.*'
+        working-directory: daad-studio/dhad-studio

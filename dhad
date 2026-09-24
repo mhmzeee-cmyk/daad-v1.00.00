@@ -1,0 +1,137 @@
+#!/bin/bash
+# ============================================================
+#  dhad — unified build orchestration for Dhad Studio (NOT a compiler)
+#  Thin layer over the existing tools; reads Docs/Reference/targets.json.
+#  Architecture: frontend → representation → TargetResolver → Driver → toolchain.
+#  Each target's logic lives in its driver_*() function below (J.7) —
+#  no target-specific code in the main flow.
+#
+#  Usage:
+#    ./dhad targets
+#    ./dhad build <program.ض|.daad> --target=<id> [-o output]
+#    ./dhad run   <program.ض|.daad> --target=<id>   (linux-x64 | linux-x64-cpp | dhad-cpu)
+#
+#  Supported (anything else fails with a reason, never a fake binary):
+#    .ض   + linux-x64 / linux-x64-cpp → daad-compiler → g++ → ELF
+#    .ض   + windows-x64               → daad-compiler → MinGW → PE32+ EXE
+#    .daad + linux-x64                → daad → gcc -nostartfiles → ELF
+#    .daad + dhad-cpu                 → daad --target=dhad → dhad_asm → .bin (+run)
+# ============================================================
+set -u
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+REG="$ROOT/Docs/Reference/targets.json"
+
+# ---------- TargetResolver (registry-backed) ----------
+tfield() { python3 -c "import json,sys; d=json.load(open('$REG')); print([t.get('$2','') for t in d['targets'] if t['id']=='$1'][0])" 2>/dev/null; }
+tstatus() { tfield "$1" status; }
+tproof()  { tfield "$1" proof; }
+
+# ---------- drivers: validate() → compile() → link() → verify() ----------
+driver_cpp() { # $1=src $2=out $3=cxx(compiler) — shared C++ emission stage (J.6-A: NOT a formal IR)
+  [ -x "$ROOT/Compiler/build/bin/daad-compiler" ] || {
+    echo "BUILD: compiling daad-compiler..."
+    cmake -B "$ROOT/Compiler/build" -S "$ROOT/Compiler" -DCMAKE_BUILD_TYPE=Release -DDAAD_BUILD_TESTS=OFF >/dev/null 2>&1 &&
+    cmake --build "$ROOT/Compiler/build" -j"$(nproc)" >/dev/null 2>&1 || { echo "FATAL: compiler build failed"; return 2; }
+  }
+  "$ROOT/Compiler/build/bin/daad-compiler" "$1" -o "$2" >/dev/null 2>&1 || { echo "FATAL: Track-A compile failed"; return 2; }
+}
+driver_linux_cpp() { # $1=src $2=out — linux-x64-cpp / .ض+linux-x64
+  local cxx_tmp; cxx_tmp="$(mktemp -d /tmp/dhad_cpp.XXXXXX)" || return 2
+  driver_cpp "$1" "$cxx_tmp/out.cpp" || { rm -rf "$cxx_tmp"; return 2; }
+  command -v g++ >/dev/null 2>&1 || { echo "FATAL: missing tool: g++"; rm -rf "$cxx_tmp"; return 2; }
+  g++ -std=c++20 -O2 "$cxx_tmp/out.cpp" -o "$2" -I "$ROOT/Compiler/include" -I "$ROOT/Compiler" || { rm -rf "$cxx_tmp"; return 2; }
+  rm -rf "$cxx_tmp"
+}
+driver_windows() { # $1=src $2=out — windows-x64 (same steps as Demo/build-windows.sh)
+  local cxx_tmp; cxx_tmp="$(mktemp -d /tmp/dhad_win.XXXXXX)" || return 2
+  driver_cpp "$1" "$cxx_tmp/out.cpp" || { rm -rf "$cxx_tmp"; return 2; }
+  command -v x86_64-w64-mingw32-g++ >/dev/null 2>&1 || { echo "FATAL: missing tool: x86_64-w64-mingw32-g++"; rm -rf "$cxx_tmp"; return 2; }
+  x86_64-w64-mingw32-g++ -std=c++20 -O2 -static -static-libgcc -static-libstdc++ "$cxx_tmp/out.cpp" -o "$2" -I "$ROOT/Compiler/include" -I "$ROOT/Compiler" || { rm -rf "$cxx_tmp"; return 2; }
+  rm -rf "$cxx_tmp"
+  file "$2" | grep -q "PE32" || { echo "FATAL: output is not a PE binary"; return 2; }
+}
+driver_daad() { # $1=src $2=out — linux-x64 via Track B (SysV, custom _start)
+  [ -x "$ROOT/DAAD/build/daad" ] || {
+    echo "BUILD: compiling daad..."
+    cmake -B "$ROOT/DAAD/build" -S "$ROOT/DAAD" -DCMAKE_BUILD_TYPE=Release >/dev/null 2>&1 &&
+    cmake --build "$ROOT/DAAD/build" -j"$(nproc)" >/dev/null 2>&1 || { echo "FATAL: daad build failed"; return 2; }
+  }
+  command -v gcc >/dev/null 2>&1 || { echo "FATAL: missing tool: gcc"; return 2; }
+  local asm_tmp; asm_tmp="$(mktemp /tmp/dhad_daad.XXXXXX.s)" || return 2
+  "$ROOT/DAAD/build/daad" "$1" -o "$asm_tmp" 2>/dev/null || { rm -f "$asm_tmp"; echo "FATAL: Track-B compile failed"; return 2; }
+  gcc -nostartfiles "$asm_tmp" -o "$2" || { rm -f "$asm_tmp"; return 2; }
+  rm -f "$asm_tmp"
+}
+driver_dhad_cpu() { # $1=src $2=out(.bin) — dhad-cpu via Track B DHAD backend
+  [ -x "$ROOT/CPU/dhad_asm" ] || { make -C "$ROOT/CPU" dhad_asm >/dev/null 2>&1 || { echo "FATAL: assembler build failed"; return 2; }; }
+  [ -x "$ROOT/DAAD/build/daad" ] || {
+    cmake -B "$ROOT/DAAD/build" -S "$ROOT/DAAD" -DCMAKE_BUILD_TYPE=Release >/dev/null 2>&1 &&
+    cmake --build "$ROOT/DAAD/build" -j"$(nproc)" >/dev/null 2>&1 || { echo "FATAL: daad build failed"; return 2; }
+  }
+  local a_tmp; a_tmp="$(mktemp /tmp/dhad_cpu.XXXXXX.ضasm)" || return 2
+  "$ROOT/DAAD/build/daad" "$1" --target=dhad -o "$a_tmp" 2>/dev/null || { rm -f "$a_tmp"; echo "FATAL: Track-B/DHAD compile failed"; return 2; }
+  "$ROOT/CPU/dhad_asm" "$a_tmp" "$2" || { rm -f "$a_tmp"; return 2; }
+  rm -f "$a_tmp"
+}
+
+# ---------- CLI ----------
+cmd="${1:-}"; shift 2>/dev/null || true
+TARGET=""; OUT=""; SRC=""; OUTNEXT=0
+for a in "$@"; do
+  case "$a" in
+    --target=*) TARGET="${a#--target=}" ;;
+    -o) OUTNEXT=1 ;;
+    *) if [ "$OUTNEXT" = "1" ]; then OUT="$a"; OUTNEXT=0; elif [ -z "$SRC" ]; then SRC="$a"; else echo "unknown arg: $a"; exit 2; fi ;;
+  esac
+done
+
+if [ "$cmd" = "targets" ]; then
+  python3 -c "
+import json
+d = json.load(open('$REG'))
+for t in d['targets']:
+    print('%-14s %-15s %-9s %s' % (t['id'], t['status'], t.get('proof',''), t.get('note','')[:58]))
+"; exit 0
+fi
+
+[ "$cmd" = "build" ] || [ "$cmd" = "run" ] || { echo "Usage: ./dhad {targets|build|run} ..."; exit 2; }
+[ -n "$SRC" ] || { echo "FATAL: no source file"; exit 2; }
+[ -f "$SRC" ] || SRC="$ROOT/$SRC"
+[ -f "$SRC" ] || { echo "FATAL: source not found"; exit 2; }
+[ -n "$TARGET" ] || { echo "FATAL: --target required (see ./dhad targets)"; exit 2; }
+ST=$(tstatus "$TARGET")
+[ "$ST" = "AVAILABLE" ] || { echo "FATAL: target '$TARGET' is ${ST:-UNKNOWN} — not available (see Docs/Reference/targets.json)"; exit 3; }
+
+EXT="${SRC##*.}"
+case "$EXT:$TARGET" in
+  ض:linux-x64|ض:linux-x64-cpp)
+    [ -z "$OUT" ] && OUT="${SRC%.ض}.out"
+    driver_linux_cpp "$SRC" "$OUT" || exit 2
+    echo "OK: $OUT"
+    if [ "$cmd" = "run" ]; then exec "$OUT"; fi ;;
+  ض:windows-x64)
+    [ -z "$OUT" ] && OUT="${SRC%.ض}.exe"
+    driver_windows "$SRC" "$OUT" || exit 2
+    echo "OK: $OUT (PE verified; boot on real Windows pending)"
+    if [ "$cmd" = "run" ]; then echo "FATAL: cannot boot Windows binaries on this machine"; exit 3; fi ;;
+  daad:linux-x64)
+    [ -z "$OUT" ] && OUT="${SRC%.daad}.out"
+    driver_daad "$SRC" "$OUT" || exit 2
+    echo "OK: $OUT"
+    if [ "$cmd" = "run" ]; then exec "$OUT"; fi ;;
+  daad:dhad-cpu)
+    [ -z "$OUT" ] && OUT="${SRC%.daad}.bin"
+    driver_dhad_cpu "$SRC" "$OUT" || exit 2
+    echo "OK: $OUT"
+    if [ "$cmd" = "run" ]; then
+      [ -x "$ROOT/CPU/dhad_cpu" ] || { make -C "$ROOT/CPU" dhad_cpu >/dev/null 2>&1; }
+      exec "$ROOT/CPU/dhad_cpu" "$OUT"
+    fi ;;
+  ض:*)
+    echo "FATAL: target '$TARGET' does not accept .ض sources (high-level Track-A dialect)"; exit 3 ;;
+  daad:*)
+    echo "FATAL: target '$TARGET' does not accept .daad sources (low-level Track-B dialect; x86 output is Linux-SysV-only)"; exit 3 ;;
+  *)
+    echo "FATAL: unknown source extension '.$EXT' (want .ض or .daad)"; exit 2 ;;
+esac
+exit 0

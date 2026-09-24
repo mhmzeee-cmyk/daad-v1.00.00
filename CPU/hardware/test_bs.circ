@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project source="3.8.0" version="1.0">
+  <lib name="0" desc="#Wiring"/>
+  <lib name="2" desc="#Plexers"/>
+  <main name="main"/>
+  <circuit name="ADDER_8">
+    <comp lib="2" name="Bit Selector" loc="(150,100)">
+      <a name="width" val="8"/>
+      <a name="selections" val="1"/>
+      <a name="selection0" val="0"/>
+    </comp>
+  </circuit>
+</project>

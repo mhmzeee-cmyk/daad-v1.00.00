@@ -1,0 +1,6 @@
+# T10i: Hex literals — أرقام hex
+load s0, 0x0A    # س0 = 10
+load s1, 0x14    # س1 = 20
+add s0           # مح = 10
+add s1           # مح = 10 + 20 = 30
+halt

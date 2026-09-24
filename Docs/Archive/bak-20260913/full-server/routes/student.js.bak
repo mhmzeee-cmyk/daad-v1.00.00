@@ -1,0 +1,691 @@
+const express = require("express");
+const router = express.Router();
+const {
+  getStudentProfile,
+  getStudentRoadmap,
+  processBulkTelemetry
+} = require("../controllers/studentProfileController");
+const {
+  getActiveAssessment,
+  getStudentAssessments,
+  submitAssessmentAnswer,
+  startAssessmentAttempt,
+  completeAssessment,
+} = require("../controllers/assessmentController");
+const { authenticate, requireStudent } = require("../middlewares/auth");
+const { logAudit } = require("../middlewares/strictSecurity");
+const { trainingSubmissionRateLimit, examSubmissionRateLimit, writeRateLimit, destructiveRateLimit } = require("../middlewares/security");
+const rateLimit = require("express-rate-limit");
+const { logger } = require("../utils/logger");
+const msgpack = require("@msgpack/msgpack");
+const prisma = require("../utils/prisma");
+// verifyCode moved to client-side SmartEvaluator — server does lightweight checks only
+
+// All student routes require authentication
+router.use(authenticate);
+
+// ── Student Profile & Gamification ────────────────────────────────────────────
+router.get("/student/profile", requireStudent, getStudentProfile);
+
+// ── Join Classroom via Invite Code ────────────────────────────────────────────
+router.post("/student/join-classroom", requireStudent, writeRateLimit, async (req, res, next) => {
+  try {
+    const { id: studentId, schoolId } = req.user;
+    const { inviteCode } = req.body;
+
+    if (!inviteCode || typeof inviteCode !== "string" || inviteCode.trim().length < 4) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "كود الدعوة مطلوب (4 أحرف على الأقل)",
+      });
+    }
+
+    const code = inviteCode.trim().toUpperCase();
+
+    const classroom = await prisma.classroom.findUnique({
+      where: { inviteCode: code },
+      select: { id: true, name: true, schoolId: true, isActive: true, maxStudents: true, _count: { select: { students: true } } },
+    });
+
+    if (!classroom) {
+      return res.status(404).json({
+        error: "غير موجود",
+        message: "كود الدعوة غير صحيح أو الفصل غير موجود",
+      });
+    }
+
+    if (!classroom.isActive) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "هذا الفصل غير نشط",
+      });
+    }
+
+    if (classroom.schoolId !== schoolId) {
+      return res.status(403).json({
+        error: "محظور",
+        message: "لا يمكنك الانضمام لفصل في مدرسة أخرى",
+      });
+    }
+
+    if (classroom._count.students >= classroom.maxStudents) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "الفصل ممتلئ. الحد الأقصى " + classroom.maxStudents + " طالب",
+      });
+    }
+
+    // Assign student to classroom
+    await prisma.user.update({
+      where: { id: studentId },
+      data: { classroomId: classroom.id },
+    });
+
+    logAudit("STUDENT_JOINED_CLASSROOM", { studentId, classroomId: classroom.id, code });
+
+    res.json({
+      success: true,
+      message: "تم الانضمام لفصل " + classroom.name + " بنجاح",
+      classroom: { id: classroom.id, name: classroom.name },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Get Current Classroom Info ────────────────────────────────────────────────
+router.get("/student/my-classroom", requireStudent, async (req, res, next) => {
+  try {
+    const { id: studentId } = req.user;
+    const user = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: {
+        classroomId: true,
+        classroom: {
+          select: {
+            id: true, name: true, subject: true, gradeLevel: true, inviteCode: true,
+            teacher: { select: { id: true, name: true } },
+            _count: { select: { students: true } }
+          }
+        }
+      }
+    });
+
+    if (!user || !user.classroom) {
+      return res.json({ success: true, assigned: false, classroom: null });
+    }
+
+    res.json({
+      success: true,
+      assigned: true,
+      classroom: {
+        ...user.classroom,
+        studentCount: user.classroom._count.students,
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/student/leaderboard", requireStudent, async (req, res, next) => {
+  try {
+    const { id: studentId, schoolId } = req.user;
+    const limit = parseInt(req.query.limit) || 50;
+
+    let ranked = [];
+    try {
+      const students = await prisma.user.findMany({
+        where: { schoolId, role: "STUDENT" },
+        take: Math.min(limit, 100),
+        orderBy: { studentProfile: { totalXP: "desc" } },
+        select: {
+          id: true,
+          name: true,
+          studentProfile: {
+            select: { totalXP: true, currentLevel: true, currentStreak: true }
+          }
+        }
+      });
+      const totalStudents = await prisma.user.count({ where: { schoolId, role: "STUDENT" } });
+
+      ranked = students.map((s, i) => ({
+        studentId: s.id,
+        studentName: s.name,
+        totalXP: s.studentProfile?.totalXP || 0,
+        currentLevel: s.studentProfile?.currentLevel || 1,
+        currentStreak: s.studentProfile?.currentStreak || 0,
+        ranking: i + 1
+      }));
+    } catch (dbErr) {
+      logger.error('Student leaderboard query failed', { error: dbErr.message });
+    }
+
+    res.json({
+      success: true,
+      leaderboard: ranked,
+      totalStudents: ranked.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+router.get("/student/roadmap", requireStudent, getStudentRoadmap);
+
+// ── Challenge Submission (with XP awarding) ─────────────────────────────────
+// SECURITY: Client sends ONLY { challengeId, code }.
+// Server evaluates everything: output, passed, score, XP.
+// Never trust client-provided: output, score, passed, syntaxScore, performanceScore, xpAwarded.
+router.post("/student/challenge/submit", requireStudent, trainingSubmissionRateLimit, async (req, res, next) => {
+  try {
+    const { id: studentId } = req.user;
+    const { challengeId, code } = req.body;
+
+    // Type validation
+    if (typeof challengeId !== 'string' || typeof code !== 'string') {
+      return res.status(400).json({ error: "Invalid input types" });
+    }
+
+    if (!challengeId || !code || !code.trim()) {
+      return res.status(400).json({ error: "Missing challengeId or empty code" });
+    }
+
+    // Check challenge exists
+    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
+    if (!challenge) {
+      return res.status(404).json({ error: "التحدي غير موجود" });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SECURITY: Tier lock — server determines tier from DB
+    // ═══════════════════════════════════════════════════════════════════════════
+    const challengeTier = challenge.tier || 1;
+    if (challengeTier > 1) {
+      const prevTier = challengeTier - 1;
+      const prevChallenges = await prisma.challenge.findMany({
+        take: 50,
+        where: { tier: prevTier },
+        select: {
+          id: true,
+          submissions: {
+            where: { studentId, passed: true },
+            select: { id: true }
+          }
+        }
+      });
+
+      const prevTotal = prevChallenges.length;
+      const prevPassed = prevChallenges.filter(c => c.submissions.length > 0).length;
+      const prevCompletionRate = prevTotal > 0 ? (prevPassed / prevTotal) * 100 : 0;
+
+      if (prevCompletionRate < 80) {
+        logAudit("CHALLENGE_SUBMISSION_BLOCKED_TIER_LOCKED", {
+          studentId, challengeId, tier: challengeTier,
+          prevTier, completionRate: Math.round(prevCompletionRate)
+        });
+        return res.status(403).json({
+          error: "Tier Locked",
+          message: "يجب إكمال " + Math.round(prevCompletionRate) + "% على الأقل من المستوى " + prevTier + " قبل فتح المستوى " + challengeTier,
+          tierLocked: true,
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SECURITY: Sequential lock — server determines from DB
+    // ═══════════════════════════════════════════════════════════════════════════
+    const challengesInTier = await prisma.challenge.findMany({
+      take: 50,
+      where: { tier: challengeTier },
+      select: { id: true, order: true },
+      orderBy: { order: "asc" }
+    });
+    const challengeIndex = challengesInTier.findIndex(c => c.id === challengeId);
+    if (challengeIndex > 0) {
+      const prevChallenge = challengesInTier[challengeIndex - 1];
+      const prevChallengePassed = await prisma.submission.findFirst({
+        where: { challengeId: prevChallenge.id, studentId, passed: true }
+      });
+      if (!prevChallengePassed) {
+        logAudit("CHALLENGE_SUBMISSION_BLOCKED_SEQUENTIAL", {
+          studentId, challengeId, tier: challengeTier,
+          prevChallengeId: prevChallenge.id
+        });
+        return res.status(403).json({
+          error: "Challenge Locked",
+          message: "يجب حل التحدي رقم " + challengesInTier[challengeIndex - 1].order + " أولاً",
+          challengeLocked: true,
+        });
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SECURITY: Idempotent — check if already passed (use upsert-like pattern)
+    // ═══════════════════════════════════════════════════════════════════════════
+    const existingPass = await prisma.submission.findFirst({
+      where: { challengeId, studentId, passed: true }
+    });
+    if (existingPass) {
+      return res.json({ success: true, message: "مكتمل بالفعل", alreadyPassed: true });
+    }
+
+    // Get student name for dynamic output
+    const student = await prisma.user.findUnique({ where: { id: studentId }, select: { name: true } });
+    const studentName = student ? student.name : "";
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SECURITY: Server-side code execution via Sandbox
+    // Code runs in isolated VM — NOT in API process
+    // ═══════════════════════════════════════════════════════════════════════════
+    const { executeDhad } = require("../utils/dhadSandbox");
+    const executionResult = executeDhad(code);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SECURITY: Server-side evaluation — uses execution result from sandbox
+    // ═══════════════════════════════════════════════════════════════════════════
+    const { evaluate } = require("../utils/serverEvaluator");
+    const evalResult = evaluate(code, challenge, studentName, executionResult);
+
+    // Sanitize code before storage
+    const sanitize = (str) => {
+      if (!str) return "";
+      return str
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TRANSACTION: Atomic write — Submission + Profile + DailyXP + ActivityLog
+    // Prevents race conditions and partial writes
+    // ═══════════════════════════════════════════════════════════════════════════
+    const today = new Date().toISOString().split('T')[0];
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Create submission
+      const submission = await tx.submission.create({
+        data: {
+          challengeId,
+          studentId,
+          code: sanitize(code) || "",
+          language: "daad",
+          passed: evalResult.passed,
+          output: executionResult.stdout ? executionResult.stdout.substring(0, 10000) : "",
+          syntaxScore: evalResult.syntaxScore,
+          performanceScore: evalResult.performanceScore,
+          executionTime: evalResult.executionTime || 0,
+        }
+      });
+
+      // 2. Log activity
+      await tx.activityLog.create({
+        data: {
+          userId: studentId,
+          action: evalResult.passed ? 'CHALLENGE_PASS' : 'CHALLENGE_SUBMIT',
+          details: JSON.stringify({
+            challengeId,
+            challengeTitle: challenge.title,
+            passed: evalResult.passed,
+            tier: challenge.tier,
+            score: evalResult.score,
+            executionTime: evalResult.executionTime,
+            evaluatorVersion: 'server-v2-sandbox',
+            suspiciousFlags: evalResult.suspiciousFlags || [],
+          })
+        }
+      });
+
+      // 3. Award XP if passed (atomic update with idempotency check)
+      let xpResult = null;
+      if (evalResult.passed) {
+        const { awardXP } = require("../controllers/studentProfileController");
+        xpResult = await awardXP({
+          challengeId,
+          status: "PASS",
+          score: evalResult.score,
+          executionTime: 0,
+          syntaxAccuracy: evalResult.syntaxScore,
+        }, studentId, tx);
+      }
+
+      return { submission, xpResult };
+    });
+
+    res.json({
+      success: true,
+      passed: evalResult.passed,
+      submissionId: result.submission.id,
+      xpAwarded: result.xpResult?.xpAwarded || 0,
+      score: evalResult.score,
+      message: evalResult.passed ? "أحسنت! تم إكمال التحدي" :
+               evalResult.codeErrors.length > 0 ? evalResult.codeErrors[0] :
+               "المخرجات غير مطابقة - حاول مرة أخرى",
+      codeErrors: evalResult.codeErrors,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/student/achievements", requireStudent, async (req, res, next) => {
+  try {
+    const { id: studentId } = req.user;
+
+    const userAchievements = await prisma.userAchievement.findMany({
+      take: 200,
+      where: { userId: studentId },
+      include: {
+        achievement: {
+          select: { id: true, name: true, description: true, icon: true, points: true, criteria: true }
+        }
+      },
+      orderBy: { awardedAt: "desc" }
+    });
+
+    // Get all available achievements
+    const allAchievements = await prisma.achievement.findMany({
+      take: 200,
+      where: { isSystem: true },
+      select: { id: true, name: true, description: true, icon: true, points: true, criteria: true }
+    });
+
+    // Get profile for qualification check
+    const profile = await prisma.studentProfile.findUnique({
+      where: { studentId },
+      select: { totalXP: true, currentLevel: true, currentStreak: true, longestStreak: true }
+    });
+
+    const awardedIds = userAchievements.map(ua => ua.achievementId);
+
+    // Check which unawarded achievements are close to qualifying
+    const upcoming = allAchievements
+      .filter(a => !awardedIds.includes(a.id))
+      .map(a => {
+        const criteria = a.criteria;
+        let current = 0;
+        let target = criteria.value || 0;
+        if (criteria.type === "xp_threshold") current = profile?.totalXP || 0;
+        else if (criteria.type === "streak") current = profile?.currentStreak || 0;
+        else if (criteria.type === "level_up") current = profile?.currentLevel || 0;
+        else if (criteria.type === "longest_streak") current = profile?.longestStreak || 0;
+        const progress = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : 0;
+        return { ...a, progress, current, target };
+      })
+      .sort((a, b) => b.progress - a.progress);
+
+    res.json({
+      success: true,
+      awarded: userAchievements.map(ua => ({
+        ...ua.achievement,
+        awardedAt: ua.awardedAt,
+        metadata: ua.metadata
+      })),
+      upcoming: upcoming.slice(0, 5),
+      totalAwarded: userAchievements.length,
+      totalAvailable: allAchievements.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Classroom-Gated Student Routes ────────────────────────────────────────────
+// These routes check if student belongs to a classroom before allowing access
+router.get("/student/classroom/check", requireStudent, async (req, res, next) => {
+  try {
+    const { id: studentId } = req.user;
+    
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: {
+        classroomId: true,
+        classroom: {
+          select: {
+            id: true,
+            name: true,
+            gradeLevel: true,
+            teacher: {
+              select: { id: true, name: true }
+            },
+            school: {
+              select: { id: true, name: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!student.classroomId) {
+      return res.json({
+        success: true,
+        assigned: false,
+        message: "لم يتم تعيينك لأي فصل. تواصل مع معلمك لإضافتك."
+      });
+    }
+
+    res.json({
+      success: true,
+      assigned: true,
+      classroom: student.classroom
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Assessment Routes (High-Stakes Exams) ─────────────────────────────────────
+
+// GET /api/v1/student/assessment/active - Get active assessment for student
+router.get("/student/assessment/active", requireStudent, getActiveAssessment);
+
+// GET /api/v1/student/assessments - Get all assessments for student's classroom
+router.get("/student/assessments", requireStudent, getStudentAssessments);
+
+// POST /api/v1/student/assessment/submit - Submit assessment answer
+router.post("/student/assessment/submit", requireStudent, examSubmissionRateLimit, submitAssessmentAnswer);
+
+// POST /api/v1/student/assessment/start - Start assessment attempt (creates result record)
+router.post("/student/assessment/start", requireStudent, examSubmissionRateLimit, startAssessmentAttempt);
+
+// POST /api/v1/student/assessment/complete - Complete assessment
+router.post("/student/assessment/complete", requireStudent, examSubmissionRateLimit, completeAssessment);
+
+// ── Bulk Telemetry Sync (Offline-First) ────────────────────────────────────────
+// Rate limit: 20 bulk uploads per minute per student
+const telemetrySyncRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "RATE_LIMIT_EXCEEDED", message: "تم تجاوز حد الطلبات للقياس (20/دقيقة)." },
+  keyGenerator: (req) => req.user?.id || req.ip,
+});
+
+router.post("/submissions/bulk-report", requireStudent, telemetrySyncRateLimit, async (req, res, next) => {
+  try {
+    let telemetryArray;
+    
+    // Check if body is MessagePack buffer
+    if (Buffer.isBuffer(req.body)) {
+      telemetryArray = msgpack.decode(req.body);
+    } else {
+      telemetryArray = req.body;
+    }
+
+    // Validate input is an array
+    if (!Array.isArray(telemetryArray)) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "Expected an array of telemetry payloads"
+      });
+    }
+
+    // Validate array size (prevent DoS)
+    if (telemetryArray.length > 100) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "Maximum 100 submissions per bulk report"
+      });
+    }
+
+    const studentId = req.user.id;
+    const results = await processBulkTelemetry(telemetryArray, studentId);
+
+    res.json({
+      success: true,
+      message: `Bulk sync completed: ${results.successful}/${results.total} submissions processed`,
+      results: results,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ── Cloud Workspace (Save/Load Code State) ──────────────────────────────────────
+
+// POST /api/v1/workspace/save - Save current code editor state
+router.post("/workspace/save", requireStudent, writeRateLimit, async (req, res, next) => {
+  try {
+    const { challengeId, code, language } = req.body;
+    const studentId = req.user.id;
+
+    if (!challengeId || code === undefined) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "معرف التحدي والكود مطلوبان"
+      });
+    }
+
+    // Check challenge exists (avoid FK 500; same contract as submit route)
+    const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
+    if (!challenge) {
+      return res.status(404).json({ error: "التحدي غير موجود" });
+    }
+
+    // Upsert workspace (create or update)
+    const workspace = await prisma.cloudWorkspace.upsert({
+      where: {
+        studentId_challengeId: {
+          studentId,
+          challengeId
+        }
+      },
+      update: {
+        savedCode: code,
+        language: language || 'daad',
+        lastSavedAt: new Date()
+      },
+      create: {
+        studentId,
+        challengeId,
+        savedCode: code,
+        language: language || 'daad',
+        lastSavedAt: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      message: "تم حفظ الكود بنجاح",
+      workspace: {
+        id: workspace.id,
+        challengeId: workspace.challengeId,
+        lastSavedAt: workspace.lastSavedAt
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/workspace/load/:challengeId - Load saved code state
+router.get("/workspace/load/:challengeId", requireStudent, async (req, res, next) => {
+  try {
+    const { challengeId } = req.params;
+    const studentId = req.user.id;
+
+    const workspace = await prisma.cloudWorkspace.findUnique({
+      where: {
+        studentId_challengeId: {
+          studentId,
+          challengeId
+        }
+      }
+    });
+
+    if (!workspace) {
+      return res.json({
+        success: true,
+        workspace: null,
+        message: "لم يتم العثور على كود محفوظ"
+      });
+    }
+
+    res.json({
+      success: true,
+      workspace: {
+        id: workspace.id,
+        challengeId: workspace.challengeId,
+        savedCode: workspace.savedCode,
+        language: workspace.language,
+        lastSavedAt: workspace.lastSavedAt
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/workspace/list - List all saved workspaces for student
+router.get("/workspace/list", requireStudent, async (req, res, next) => {
+  try {
+    const studentId = req.user.id;
+
+    const workspaces = await prisma.cloudWorkspace.findMany({
+      take: 100,
+      where: { studentId },
+      select: {
+        id: true,
+        challengeId: true,
+        language: true,
+        lastSavedAt: true,
+        createdAt: true
+      },
+      orderBy: { lastSavedAt: 'desc' }
+    });
+
+    res.json({
+      success: true,
+      workspaces,
+      total: workspaces.length
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/v1/workspace/:challengeId - Delete saved workspace
+router.delete("/workspace/:challengeId", requireStudent, destructiveRateLimit, async (req, res, next) => {
+  try {
+    const { challengeId } = req.params;
+    const studentId = req.user.id;
+
+    const deleted = await prisma.cloudWorkspace.deleteMany({
+      where: {
+        studentId,
+        challengeId
+      }
+    });
+
+    res.json({
+      success: true,
+      message: "تم حذف مساحة العمل",
+      deleted: deleted.count > 0
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;

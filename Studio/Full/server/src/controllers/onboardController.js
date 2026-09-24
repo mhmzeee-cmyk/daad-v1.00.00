@@ -1,0 +1,273 @@
+const bcrypt = require("bcryptjs");
+const XLSX = require("xlsx");
+const { isValidEmail } = require("../middlewares/security");
+const { validatePasswordStrength } = require("../middlewares/strictSecurity");
+const { logger } = require("../utils/logger");
+
+// ── File Parsers ────────────────────────────────────────────────────────────
+
+function parseFileBuffer(buffer, originalName) {
+  const isExcel = /\.(xlsx?)$/i.test(originalName);
+  if (isExcel) {
+    const wb = XLSX.read(buffer, { type: "buffer" });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(sheet, { defval: "" });
+  }
+  const content = buffer.toString("utf8").replace(/^\uFEFF/, "");
+  const wb = XLSX.read(content, { type: "string" });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  return XLSX.utils.sheet_to_json(sheet, { defval: "" });
+}
+
+function mapTeacherRow(row) {
+  const keys = Object.keys(row);
+  const find = (candidates) => {
+    for (const c of candidates) {
+      const match = keys.find((k) => k.toLowerCase().trim() === c.toLowerCase());
+      if (match) return row[match];
+    }
+    return "";
+  };
+  return {
+    name: (find(["name", "Name", "المعلم", "اسم المعلم"]) || "").toString().trim(),
+    email: (find(["email", "Email", "البريد الإلكتروني", "البريد"]) || "").toString().trim(),
+    subject: (find(["subject", "Subject", "المادة"]) || "").toString().trim(),
+  };
+}
+
+function mapStudentRow(row) {
+  const keys = Object.keys(row);
+  const find = (candidates) => {
+    for (const c of candidates) {
+      const match = keys.find((k) => k.toLowerCase().trim() === c.toLowerCase());
+      if (match) return row[match];
+    }
+    return "";
+  };
+  return {
+    name: (find(["name", "Name", "اسم الطالب", "الاسم"]) || "").toString().trim(),
+    nationalId: (find(["nationalId", "national_id", "National_ID", "الرقم الوطني"]) || "").toString().trim(),
+    email: (find(["email", "Email", "البريد الإلكتروني", "البريد"]) || "").toString().trim(),
+    gradeLevel: (find(["gradeLevel", "grade_level", "Grade_Level", "المستوى", "الفصل"]) || "").toString().trim(),
+  };
+}
+
+function isTeacherFile(rows) {
+  if (rows.length === 0) return false;
+  const keys = Object.keys(rows[0]).map((k) => k.toLowerCase());
+  return keys.some((k) => ["email", "البريد الإلكتروني", "المادة", "subject"].includes(k))
+    && !keys.some((k) => ["nationalid", "national_id", "الرقم الوطني"].includes(k));
+}
+
+function isStudentFile(rows) {
+  if (rows.length === 0) return false;
+  const keys = Object.keys(rows[0]).map((k) => k.toLowerCase());
+  return keys.some((k) => ["nationalid", "national_id", "الرقم الوطني"].includes(k));
+}
+
+// ── Shared Provisioning Logic ───────────────────────────────────────────────
+
+async function provisionSchool(prisma, schoolId, schoolName, teachers, students, defaultPassword, expectedStudents) {
+  // Password is optional — users activate via OTP
+  const hasPassword = !!(defaultPassword && defaultPassword.trim().length > 0);
+  let passwordHash = null;
+  if (hasPassword) {
+    const passwordErrors = validatePasswordStrength(defaultPassword);
+    if (passwordErrors.length > 0) {
+      return { error: "كلمة المرور الافتراضية ضعيفة جداً: " + passwordErrors.join(". ") };
+    }
+    passwordHash = await bcrypt.hash(defaultPassword, 12);
+  }
+
+  if (teachers.length > 100 || students.length > 1000) {
+    return { error: "الحد الأقصى 100 معلم أو 1000 طالب لكل تأسيس" };
+  }
+
+  if (expectedStudents && expectedStudents > 0 && expectedStudents !== students.length) {
+    return { error: `المتوقع ${expectedStudents} طالب لكن الملف يحتوي ${students.length}` };
+  }
+
+  // Generate a shared activation code for all users in this batch
+  const crypto = require("crypto");
+  const batchOtp = crypto.randomInt(100000, 999999).toString();
+  const batchOtpHash = await bcrypt.hash(batchOtp, 12);
+  const otpExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  const warnings = [];
+
+  const result = await prisma.$transaction(async (tx) => {
+    // Remove only recent inactive users from THIS onboard batch (last 2 hours)
+    // Avoids deleting legitimate pending invitations
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    await tx.user.deleteMany({
+      where: { schoolId, isActive: false, passwordHash: null, createdAt: { gte: twoHoursAgo } },
+    });
+
+    // Duplicate detection — AFTER cleanup, so only active users count
+    const existingNatIdSet = new Set();
+    const existingEmailSet = new Set();
+
+    const incomingNatIds = students.map((s) => s.nationalId).filter((id) => id && id.trim().length > 0);
+    if (incomingNatIds.length > 0) {
+      const existing = await tx.user.findMany({
+        where: { role: "STUDENT", schoolId, nationalId: { in: incomingNatIds } },
+        select: { nationalId: true, name: true },
+      });
+      for (const dup of existing) {
+        warnings.push(`الطالب "${dup.name}" (رقم ${dup.nationalId}) موجود مسبقاً — تم تخطيه`);
+        existingNatIdSet.add(dup.nationalId);
+      }
+    }
+
+    const incomingEmails = teachers.map((t) => t.email).filter((e) => e && e.trim().length > 0);
+    if (incomingEmails.length > 0) {
+      const existing = await tx.user.findMany({
+        where: { role: "TEACHER", schoolId, email: { in: incomingEmails } },
+        select: { email: true, name: true },
+      });
+      for (const dup of existing) {
+        warnings.push(`المعلم "${dup.name}" (${dup.email}) موجود مسبقاً — تم تخطيه`);
+        existingEmailSet.add(dup.email);
+      }
+    }
+
+    const filteredStudents = students.filter((s) => !existingNatIdSet.has(s.nationalId));
+    const filteredTeachers = teachers.filter((t) => !existingEmailSet.has(t.email));
+
+    if (filteredTeachers.length > 0) {
+      await tx.user.createMany({
+        data: filteredTeachers.map((t) => ({
+          schoolId, role: "TEACHER", name: t.name, email: t.email,
+          nationalId: null, passwordHash,
+          isActive: hasPassword, isVerified: hasPassword, isApproved: hasPassword,
+          resetToken: hasPassword ? null : batchOtpHash,
+          resetTokenExpiry: hasPassword ? null : otpExpiry,
+        })),
+      });
+    }
+    if (filteredStudents.length > 0) {
+      await tx.user.createMany({
+        data: filteredStudents.map((s) => ({
+          schoolId, role: "STUDENT", name: s.name, email: s.email || null,
+          nationalId: s.nationalId, passwordHash,
+          isActive: hasPassword, isVerified: hasPassword, isApproved: hasPassword,
+          resetToken: hasPassword ? null : batchOtpHash,
+          resetTokenExpiry: hasPassword ? null : otpExpiry,
+        })),
+      });
+    }
+    const totalTeachers = await tx.user.count({ where: { schoolId, role: "TEACHER" } });
+    const totalStudents = await tx.user.count({ where: { schoolId, role: "STUDENT" } });
+    return { totalTeachers, totalStudents };
+  });
+
+  logger.info(`School "${schoolName}" (${schoolId}): ${result.totalTeachers} teachers, ${result.totalStudents} students`);
+
+  const response = {
+    message: `تم تأسيس المدرسة "${schoolName}" بنجاح`,
+    school: { id: schoolId, name: schoolName },
+    stats: {
+      teachers: result.totalTeachers, students: result.totalStudents,
+      total: result.totalTeachers + result.totalStudents,
+      submitted: { teachers: teachers.length, students: students.length },
+    },
+    warnings: warnings.length > 0 ? warnings : undefined,
+  };
+
+  // Return OTP for non-password mode so Bridge can show it to admin
+  if (!hasPassword) {
+    response.activationCode = batchOtp;
+    response.activationExpiry = otpExpiry.toISOString();
+  }
+
+  return response;
+}
+
+// ── POST /onboard-school (JSON body — Bridge v1) ────────────────────────────
+
+async function onboardSchool(req, res, next) {
+  try {
+    const { schoolName, teachers, students, expectedStudents, defaultPassword } = req.body;
+    const { schoolId } = req.user;
+
+    if (!schoolName || typeof schoolName !== "string" || schoolName.trim().length === 0) {
+      return res.status(400).json({ error: "خطأ في الطلب", message: "اسم المدرسة مطلوب" });
+    }
+    if (!Array.isArray(teachers) || !Array.isArray(students)) {
+      return res.status(400).json({ error: "خطأ في الطلب", message: "مصفوفات المعلمين والطلاب مطلوبة" });
+    }
+    if (teachers.length === 0 && students.length === 0) {
+      return res.status(400).json({ error: "خطأ في الطلب", message: "مطلوب معلم واحد على الأقل أو طالب واحد" });
+    }
+
+    for (let i = 0; i < teachers.length; i++) {
+      const t = teachers[i];
+      if (!t.name || !t.email) {
+        return res.status(400).json({ error: "خطأ في الطلب", message: `المعلم في الموقع ${i} ينقصه حقول مطلوبة` });
+      }
+      if (!isValidEmail(t.email)) {
+        return res.status(400).json({ error: "خطأ في الطلب", message: `المعلم في الموقع ${i} بريد غير صالح` });
+      }
+    }
+    for (let i = 0; i < students.length; i++) {
+      const s = students[i];
+      if (!s.name || !s.nationalId) {
+        return res.status(400).json({ error: "خطأ في الطلب", message: `الطالب في الموقع ${i} ينقصه حقول مطلوبة` });
+      }
+    }
+
+    const exp = expectedStudents ? parseInt(expectedStudents) || 0 : 0;
+    const result = await provisionSchool(req.app.get("prisma"), schoolId, schoolName, teachers, students, defaultPassword || "", exp);
+    if (result.error) return res.status(400).json({ error: "خطأ في الطلب", message: result.error });
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// ── POST /onboard-school/files (multipart — Bridge v2 with Excel) ───────────
+
+async function onboardSchoolFiles(req, res, next) {
+  try {
+    const { schoolName, schoolStage, expectedStudents, defaultPassword } = req.body;
+    const { schoolId } = req.user;
+    const files = req.files || [];
+
+    if (!schoolName || typeof schoolName !== "string" || schoolName.trim().length === 0) {
+      return res.status(400).json({ error: "خطأ في الطلب", message: "اسم المدرسة مطلوب (schoolName)" });
+    }
+    if (files.length === 0) {
+      return res.status(400).json({ error: "خطأ في الطلب", message: "يرجى رفع ملفين على الأقل (teachers + students)" });
+    }
+
+    let teachers = [];
+    let students = [];
+
+    for (const file of files) {
+      const rows = parseFileBuffer(file.buffer, file.originalname);
+      if (rows.length === 0) continue;
+
+      if (isTeacherFile(rows)) {
+        teachers = rows.map(mapTeacherRow).filter((t) => t.name && t.email);
+      } else if (isStudentFile(rows)) {
+        students = rows.map(mapStudentRow).filter((s) => s.name && s.nationalId);
+      }
+    }
+
+    if (teachers.length === 0 && students.length === 0) {
+      return res.status(400).json({
+        error: "خطأ في الطلب",
+        message: "لم يتم التعرف على بيانات صالحة",
+      });
+    }
+
+    const exp = expectedStudents ? parseInt(expectedStudents) || 0 : 0;
+    const result = await provisionSchool(req.app.get("prisma"), schoolId, schoolName, teachers, students, defaultPassword || "", exp);
+    if (result.error) return res.status(400).json({ error: "خطأ في الطلب", message: result.error });
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { onboardSchool, onboardSchoolFiles };

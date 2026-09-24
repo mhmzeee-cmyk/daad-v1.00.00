@@ -1,0 +1,18 @@
+# Code Owners for ض (Daad) Programming Language
+
+# Global owner
+*                           @mhmzeee
+
+# Legal & License files
+LICENSE                     @mhmzeee
+NOTICE                      @mhmzeee
+TRADEMARKS.md               @mhmzeee
+THIRD_PARTY_NOTICES.md      @mhmzeee
+
+# Security
+SECURITY.md                 @mhmzeee
+
+# Documentation
+Docs/                       @mhmzeee
+CONTRIBUTING.md             @mhmzeee
+CODE_OF_CONDUCT.md          @mhmzeee

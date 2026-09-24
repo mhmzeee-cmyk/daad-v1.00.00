@@ -1,0 +1,21 @@
+# Phase 12.5-F.3.6: Recursive Return Test
+# Tests that return values are correctly propagated through
+# multiple levels of recursion (depth 3 and 6).
+# Expected: add1(5, 3) = 5 + 3 = 8, add1(5, 6) = 11
+
+دالة: add1(x: رقم, n: رقم) -> رقم :-
+    إذا (n <= 0) :-
+        ارجع(x)
+    نهاية
+    متغير: r = add1(x, n - 1)
+    r = r + 1
+    ارجع(r)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: a = add1(5, 3)
+    متغير: b = add1(5, 6)
+    اطبع(a)
+    اطبع(b)
+    ارجع(a)
+نهاية

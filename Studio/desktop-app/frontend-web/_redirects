@@ -1,0 +1,6 @@
+# Dhad Studio Frontend - Netlify Redirects
+# SPA-style routing
+
+/login.html    /login.html    200
+/register.html /register.html 200
+/pages/*       /pages/:splat  200

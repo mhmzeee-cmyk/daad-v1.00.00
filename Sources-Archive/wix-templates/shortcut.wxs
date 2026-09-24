@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+ <Product Id="11111111-1111-1111-1111-111111111111" Name="T" Language="1033" Version="1.0.0" Manufacturer="T" UpgradeCode="22222222-2222-2222-2222-222222222222">
+  <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+  <Media Id="1" Cabinet="t.cab" EmbedCab="yes" />
+  <Directory Id="TARGETDIR" Name="SourceDir">
+   <Directory Id="ProgramFilesFolder"><Directory Id="INSTALLDIR" Name="T" /></Directory>
+   <Directory Id="ProgramMenuFolder"><Directory Id="MenuT" Name="T" /></Directory>
+   <Directory Id="DesktopFolder" />
+  </Directory>
+  <Feature Id="F" Title="T" Level="1"><ComponentRef Id="C1" /></Feature>
+ </Product>
+ <Fragment>
+  <ComponentGroup Id="G" Directory="INSTALLDIR">
+   <Component Id="C1" Guid="33333333-3333-3333-3333-333333333333"><File Id="F1" Source="/tmp/wixb/arabic_content.txt"><Shortcut Id="S1" Directory="MenuT" Name="T Demo" Target="[INSTALLDIR]arabic_content.txt" /></File></Component>
+  </ComponentGroup>
+ </Fragment>
+</Wix>

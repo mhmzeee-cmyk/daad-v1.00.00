@@ -1,0 +1,116 @@
+{
+  "activationEvents": [
+    "onLanguage:dhad"
+  ],
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "dhad.compileAndRun",
+        "title": "ض: ترجمة وتشغيل الملف الحالي (F9)"
+      },
+      {
+        "command": "dhad.compile",
+        "title": "ض: ترجمة الملف الحالي إلى C++"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "dhad",
+        "path": "./syntaxes/dhad.tmLanguage.json",
+        "scopeName": "source.dhad"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dhad.compileAndRun",
+        "key": "F9",
+        "when": "editorTextFocus && editorLangId == dhad"
+      }
+    ],
+    "languages": [
+      {
+        "aliases": [
+          "ض",
+          "Dhad"
+        ],
+        "configuration": "./language-configuration.json",
+        "extensions": [
+          ".ض"
+        ],
+        "id": "dhad"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "dhad",
+        "path": "./snippets/dhad.code-snippets.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "dhad",
+        "label": "ض Dhad (gdb)",
+        "program": "./debug/dhadDebug.js",
+        "runtime": "node",
+        "languages": [
+          "dhad"
+        ],
+        "configurationAttributes": {
+          "launch": {
+            "required": [
+              "program"
+            ],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "ملف ض المراد تصحيحه",
+                "default": "${file}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "توقف عند بداية main",
+                "default": false
+              },
+              "cwd": {
+                "type": "string",
+                "description": "مجلد عمل البرنامج (اختياري)"
+              }
+            }
+          }
+        },
+        "configurationSnippets": [
+          {
+            "label": "ض: تصحيح الملف الحالي (gdb)",
+            "description": "ترجمة .ض ثم تصحيح تفاعلي بأسطر ض الأصلية",
+            "body": {
+              "type": "dhad",
+              "request": "launch",
+              "name": "تصحيح ض",
+              "program": "^\"\\${file}\"",
+              "stopOnEntry": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "description": "دعم لغة البرمجة العربية ض — تظليل نحوي موحد ومقتطفات وترجمة وتشغيل (F9) وتصحيح تفاعلي (F5) بالمترجم الحقيقي — مبني على مراجع docs/ للمرحلة 1.1",
+  "displayName": "ض (Dhad) Language Support",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "license": "MIT",
+  "main": "./extension.js",
+  "name": "dhad-lang",
+  "publisher": "dhad-studio",
+  "version": "1.2.3",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": ""
+}

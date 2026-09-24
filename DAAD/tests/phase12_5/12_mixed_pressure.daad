@@ -1,0 +1,37 @@
+# Phase 12.5-F.12: Mixed Operations Under Register Pressure
+# Combines arithmetic, comparisons, conditionals, and function calls
+# with high register pressure (>6 live values) to stress-test the allocator.
+
+دالة: clamp(val: رقم, lo: رقم, hi: رقم) -> رقم :-
+    متغير: result = val
+    إذا (result < lo) :-
+        result = lo
+    نهاية
+    إذا (result > hi) :-
+        result = hi
+    نهاية
+    ارجع(result)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: a = 10
+    متغير: b = 20
+    متغير: c = 30
+    متغير: d = 40
+    متغير: e = 50
+    متغير: f = 60
+    # 6 live values + computation
+    متغير: sum = a + b + c + d + e + f  # 210
+    sum = clamp(sum, 0, 100)             # clamped to 100
+    # Now all 7 values live simultaneously
+    a = sum - 90    # 10
+    b = sum - 80    # 20
+    c = sum - 70    # 30
+    d = sum - 60    # 40
+    e = sum - 50    # 50
+    f = sum - 40    # 60
+    sum = a + b + c + d + e + f  # 10+20+30+40+50+60 = 210
+    sum = clamp(sum, 0, 255)    # 210 (within range)
+    اطبع(sum)  # Expected: 210
+    ارجع(sum)
+نهاية

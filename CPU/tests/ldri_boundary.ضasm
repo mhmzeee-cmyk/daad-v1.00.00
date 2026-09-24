@@ -1,0 +1,13 @@
+# ══════════════════════════════════════════════════════════════
+#  T26c: LDRI boundary — address 0x00FF (last in 8-bit range)
+#  Store 77 to 0x00FF, load it back
+#  Expected: ACC = 77
+# ══════════════════════════════════════════════════════════════
+
+    حمّل s0, 0x00     # addr_hi = 0x00
+    حمّل s1, 0xFF     # addr_lo = 0xFF (address = 0x00FF)
+    حمّل s7, 77       # value to store
+    خزن_غيرمباشر s7, s0, s1   # mem[0x00FF] = 77
+    اقرأ_غيرمباشر s6, s0, s1  # s6 = mem[0x00FF]
+    نقل مح, s6        # ACC = s6
+    توقف

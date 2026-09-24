@@ -1,0 +1,36 @@
+# Phase 12.5-F.15: Nested Frame Proof — A→B→C
+# Three functions calling each other in a chain.
+# Each function has locals and spills.
+# Verifies FP isolation across all three levels.
+
+# C (deepest): has 1 local, does computation
+دالة: func_c(x: رقم) -> رقم :-
+    متغير: v = x * 2
+    v = v + 10
+    ارجع(v)
+نهاية
+
+# B (middle): calls C, has locals
+دالة: func_b(a: رقم, b: رقم) -> رقم :-
+    متغير: r1 = func_c(a)
+    متغير: r2 = func_c(b)
+    متغير: sum = r1 + r2
+    ارجع(sum)
+نهاية
+
+# A (top): calls B, has locals
+دالة: func_a() -> رقم :-
+    متغير: x = 5
+    متغير: y = 10
+    متغير: result = func_b(x, y)
+    # func_c(5) = 5*2+10 = 20
+    # func_c(10) = 10*2+10 = 30
+    # func_b(5,10) = 20+30 = 50
+    اطبع(result)
+    ارجع(result)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: r = func_a()
+    ارجع(r)
+نهاية

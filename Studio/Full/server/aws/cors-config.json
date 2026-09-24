@@ -1,0 +1,80 @@
+{
+  "cors": {
+    "origin": [
+      "https://d1234567890.cloudfront.net",
+      "https://daad.studio",
+      "https://www.daad.studio"
+    ],
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "PATCH",
+      "OPTIONS"
+    ],
+    "allowedHeaders": [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "X-Telemetry-Signature",
+      "X-Telemetry-Timestamp",
+      "X-Session-Secret",
+      "Accept",
+      "Origin"
+    ],
+    "exposedHeaders": [
+      "X-RateLimit-Limit",
+      "X-RateLimit-Remaining",
+      "X-RateLimit-Reset"
+    ],
+    "credentials": true,
+    "maxAge": 7200,
+    "preflightContinue": false,
+    "optionsSuccessStatus": 204
+  },
+  "cloudfront": {
+    "distributionId": "E1234567890",
+    "originDomain": "daad-studio-api-alb-123456.me-south-1.elb.amazonaws.com",
+    "alternateDomainNames": [
+      "api.daad.studio"
+    ],
+    "sslCertificateArn": "arn:aws:acm:me-south-1:ACCOUNT_ID:certificate/12345678-1234-1234-1234-123456789012",
+    "cacheBehaviors": {
+      "/api/*": {
+        "TTL": 0,
+        "allowedMethods": ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"],
+        "cachedMethods": ["GET", "HEAD"],
+        "forwardHeaders": ["Authorization", "Content-Type"],
+        "viewerProtocolPolicy": "redirect-to-https"
+      },
+      "/health": {
+        "TTL": 0,
+        "allowedMethods": ["GET", "HEAD"],
+        "viewerProtocolPolicy": "redirect-to-https"
+      },
+      "/api-docs*": {
+        "TTL": 3600,
+        "allowedMethods": ["GET", "HEAD"],
+        "viewerProtocolPolicy": "redirect-to-https"
+      }
+    },
+    "origins": {
+      "s3-frontend": {
+        "domainName": "daad-studio-frontend.s3.me-south-1.amazonaws.com",
+        "s3OriginConfig": {
+          "originAccessIdentity": "origin-access-identity/cloudfront/E1234567890"
+        }
+      },
+      "alb-backend": {
+        "domainName": "daad-studio-api-alb-123456.me-south-1.elb.amazonaws.com",
+        "customOriginConfig": {
+          "httpPort": 80,
+          "httpsPort": 443,
+          "originProtocolPolicy": "https-only",
+          "originSslProtocols": ["TLSv1.2"]
+        }
+      }
+    }
+  }
+}

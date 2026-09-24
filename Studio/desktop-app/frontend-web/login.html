@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل الدخول - ض استوديو</title>
+  <link rel="stylesheet" href="css/style.css?v=3.0">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: var(--bg); }
+    .login-card {
+      display: flex;
+      width: 900px;
+      min-height: 520px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      position: relative;
+    }
+    .panel-left {
+      width: 340px;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg-card) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 30px;
+      border-left: 1px solid var(--border);
+    }
+    .arabic-letter {
+      font-size: 120px;
+      font-weight: 800;
+      color: #10b981;
+      line-height: 1;
+      text-shadow: 0 0 30px rgba(16,185,129,0.4);
+      margin-bottom: 24px;
+    }
+    .tagline-primary { font-size: 18px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .tagline-secondary { font-size: 13px; color: var(--text-muted); }
+    .panel-right {
+      flex: 1;
+      padding: 40px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .brand-title { text-align: center; margin-bottom: 8px; }
+    .brand-arabic { font-size: 36px; font-weight: 900; color: #10b981; }
+    .brand-subtitle { font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .welcome-text { text-align: center; font-size: 15px; color: var(--text-muted); margin-bottom: 24px; }
+    .modern-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-input);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #000;
+      font-weight: 700;
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(0,0,0,0.06);
+      color: var(--text);
+    }
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .input-wrapper { position: relative; width: 100%; }
+    .input-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon svg { width: 18px; height: 18px; }
+    .input-field {
+      width: 100%;
+      padding: 12px 14px 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg-input);
+      transition: all 0.2s;
+    }
+    .has-icon .input-field {
+      padding-right: 42px;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.15);
+    }
+    .input-field::placeholder { color: var(--text-muted); }
+    .password-wrapper { position: relative; }
+    .password-toggle {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+    .password-toggle:hover { color: var(--primary); }
+    .password-toggle svg { width: 18px; height: 18px; }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit:hover { background: var(--primary-light); box-shadow: 0 0 20px rgba(16,185,129,0.3); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .links-row { display: flex; justify-content: space-between; margin-top: 12px; margin-bottom: 16px; font-size: 13px; }
+    .links-row a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .links-row a:hover { color: var(--primary); }
+    .error-box {
+      display: none;
+      padding: 10px 14px;
+      background: rgba(239,68,68,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239,68,68,0.2);
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .footer-links { margin-top: auto; padding-top: 16px; text-align: center; border-top: 1px solid var(--border); }
+    .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 12px; margin: 0 12px; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--primary); }
+    .loading-spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 768px) {
+      .login-card { flex-direction: column; width: 95%; }
+      .panel-left { width: 100%; min-height: 120px; padding: 30px; border-left: none; border-bottom: 1px solid var(--border); }
+      .arabic-letter { font-size: 80px; margin-bottom: 12px; }
+      .panel-right { padding: 30px 24px; }
+    }
+  </style>
+</head>
+<body>
+<noscript>
+  <div style="padding:40px;text-align:center;font-family:sans-serif;background:var(--bg,#fff);color:var(--text,#333);min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column">
+    <h1 style="margin-bottom:16px">يتطلب JavaScript</h1>
+    <p style="color:var(--text-muted,#666);max-width:400px">يرجى تفعيل JavaScript في المتصفح للتمكن من استخدام هذا التطبيق.</p>
+  </div>
+</noscript>
+  <div class="login-card aurora">
+    <div class="panel-left">
+      <div class="arabic-letter morph">ض</div>
+      <div class="tagline-primary">تطوير البرمجيات</div>
+      <div class="tagline-secondary">التميز في البرمجة</div>
+    </div>
+
+    <div class="panel-right">
+      <div class="brand-title">
+        <div class="brand-arabic">استوديو ض</div>
+        <div class="brand-subtitle">فن التطوير الرقمي</div>
+      </div>
+      <div class="welcome-text">أهلاً بك في ض استوديو - منصة التطوير الاحترافية</div>
+
+      <div id="errorBox" class="error-box"></div>
+
+      <div class="modern-tabs">
+        <button class="tab-btn active" id="tabStudent" onclick="switchTab('student')">طالب</button>
+        <button class="tab-btn" id="tabTeacher" onclick="switchTab('teacher')">مدير / معلم</button>
+      </div>
+
+      <div id="studentSection">
+        <form id="studentLoginForm" onsubmit="handleStudentLogin(event)">
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <div class="input-wrapper has-icon">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </span>
+              <input type="email" id="studentEmail" class="input-field" placeholder="example@student.com" autocomplete="email" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <div class="input-wrapper password-wrapper has-icon">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input type="password" id="studentPassword" class="input-field" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
+              <button type="button" class="password-toggle" onclick="togglePassword('studentPassword', this)" aria-label="إظهار كلمة المرور">
+                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="links-row">
+            <a href="forgot-password.html">نسيت كلمة المرور؟</a>
+          </div>
+          <button type="submit" id="studentBtn" class="btn-submit">تسجيل الدخول</button>
+        </form>
+      </div>
+
+      <div id="teacherSection" style="display:none">
+        <form id="teacherLoginForm" onsubmit="handleTeacherLogin(event)">
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <div class="input-wrapper has-icon">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                </svg>
+              </span>
+              <input type="email" id="teacherEmail" class="input-field" placeholder="example@dhadstudio.com" autocomplete="email" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">كلمة المرور</label>
+            <div class="input-wrapper password-wrapper has-icon">
+              <span class="input-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              <input type="password" id="teacherPassword" class="input-field" placeholder="أدخل كلمة المرور" autocomplete="current-password" required>
+              <button type="button" class="password-toggle" onclick="togglePassword('teacherPassword', this)" aria-label="إظهار كلمة المرور">
+                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="links-row">
+            <a href="forgot-password.html">نسيت كلمة المرور؟</a>
+          </div>
+          <button type="submit" id="teacherBtn" class="btn-submit">تسجيل الدخول</button>
+        </form>
+      </div>
+
+      <div class="footer-links">
+        <a href="pages/terms.html">شروط الخدمة</a>
+        <a href="pages/privacy.html">سياسة الخصوصية</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=4.0"></script>
+  <script src="js/login-page.js"></script>
+  <script src="js/watermark.js"></script>
+</body>
+</html>

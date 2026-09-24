@@ -1,0 +1,326 @@
+if (!api.isLoggedIn()) {
+  window.location.href = '../login.html';
+} else if (api._enforceRoleGuard()) {
+  /* role guard redirected */
+}
+
+Sidebar.init('additional-courses');
+
+var DIFF_LABELS = { BEGINNER: 'مبتدئ', INTERMEDIATE: 'متوسط', ADVANCED: 'متقدم', EXPERT: 'خبير' };
+var TIER_DIFF = { 1:'مبتدئ', 2:'متوسط', 3:'متقدم', 4:'متمرس', 5:'محترف', 6:'مخضرم', 7:'خبير' };
+
+var params = new URLSearchParams(window.location.search);
+var courseId = params.get('course');
+var courseData = null;
+var allChallenges = [];
+var currentChallenge = null;
+var activeLesson = 0;
+
+if (!courseId) {
+  document.getElementById('courseContent').innerHTML = '<div class="empty-state"><p>لم يتم تحديد الدورة</p><a href="additional-courses.html" class="btn btn-primary">العودة للدورات</a></div>';
+} else {
+  loadCourseData();
+}
+
+function loadCourseData() {
+  api.getCourseRoadmap(courseId).then(function(res) {
+    courseData = res.roadmap || res;
+    buildPage(courseData);
+  }).catch(function(err) {
+    document.getElementById('courseContent').innerHTML = '<div class="empty-state"><p>' + escapeHtml(err.message || 'فشل تحميل الدورة') + '</p><a href="additional-courses.html" class="btn btn-primary">العودة للدورات</a></div>';
+  });
+}
+
+function buildPage(data) {
+  var course = data.course || {};
+  var lessons = data.lessons || [];
+  var progress = data.overallProgress || {};
+
+  // Build all challenges from all lessons
+  allChallenges = [];
+  lessons.forEach(function(lesson) {
+    if (lesson.challenges) {
+      lesson.challenges.forEach(function(c) {
+        allChallenges.push(Object.assign({}, c, {
+          passed: c.passed || false,
+          order: c.order || lesson.order || 999,
+          status: c.status || (lesson.status === 'UNLOCKED' ? 'UNLOCKED' : lesson.status),
+          xpReward: c.xpReward || c.points || 0,
+          isPractice: c.isPractice || false,
+          tier: lesson.order,
+        }));
+      });
+    }
+  });
+
+  var html = '<div class="course-header">' +
+    '<a href="additional-courses.html" style="color:var(--primary);font-size:13px;text-decoration:none">← العودة للدورات</a>' +
+    '<h1>' + (course.icon || '📚') + ' ' + escapeHtml(course.title || 'الدورة') + '</h1>' +
+    '<p>' + escapeHtml(course.description || '') + '</p>' +
+  '</div>';
+
+  html += '<div class="progress-section">' +
+    '<div class="progress-card"><div class="progress-value">' + progress.completedLessons + '/' + progress.totalLessons + '</div><div class="progress-label">الدروس المكتملة</div></div>' +
+    '<div class="progress-card"><div class="progress-value">' + progress.completedChallenges + '/' + progress.totalChallenges + '</div><div class="progress-label">التحديات المكتملة</div></div>' +
+    '<div class="progress-card"><div class="progress-value">' + (progress.earnedPoints || 0) + '</div><div class="progress-label">النقاط المكتسبة</div></div>' +
+    '<div class="progress-card"><div class="progress-value">' + (progress.avgCompletionRate || 0) + '%</div><div class="progress-label">نسبة الإكمال</div></div>' +
+  '</div>';
+
+  // Lesson tabs
+  html += '<div class="tabs" id="lessonTabs">';
+  lessons.forEach(function(lesson) {
+    var status = lesson.status === 'COMPLETED' ? 'مكتمل' : lesson.status === 'UNLOCKED' ? 'متاح' : 'مقفل';
+    var active = activeLesson === lesson.order ? ' active' : '';
+    var locked = lesson.status === 'LOCKED' ? ' locked' : '';
+    var disabled = lesson.status === 'LOCKED' ? ' disabled' : '';
+    var check = lesson.status === 'COMPLETED' ? '<span class="tab-check">&#10003;</span>' : '';
+    html += '<button class="tab' + active + locked + '" data-order="' + lesson.order + '" onclick="selectLesson(' + lesson.order + ')"' + disabled + '>' +
+      check + status + ' - ' + lesson.title + '</button>';
+  });
+  html += '</div>';
+
+  // Challenge grid
+  html += '<div class="grid-3" id="challengesGrid"><div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div></div>';
+
+  // Solution panel
+  html += '<div class="solution-panel" id="solutionPanel" style="display:none"><div id="solutionContent"></div></div>';
+
+  document.getElementById('courseContent').innerHTML = html;
+
+  // Select first unlocked lesson
+  var firstUnlocked = lessons.find(function(l) { return l.status !== 'LOCKED'; });
+  if (firstUnlocked) selectLesson(firstUnlocked.order);
+}
+
+function selectLesson(order) {
+  activeLesson = order;
+  var lesson = (courseData.lessons || []).find(function(l) { return l.order === order; });
+  if (!lesson || lesson.status === 'LOCKED') {
+    toast.error('هذا الدرس مقفل');
+    return;
+  }
+  var tabContainer = document.getElementById('lessonTabs');
+  if (tabContainer) {
+    Array.from(tabContainer.children).forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.getAttribute('data-order')) === order);
+    });
+  }
+  renderChallenges();
+  document.getElementById('solutionPanel').style.display = 'none';
+}
+
+function renderChallenges() {
+  var lesson = (courseData.lessons || []).find(function(l) { return l.order === activeLesson; });
+  if (!lesson) { document.getElementById('challengesGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>لا توجد تحديات</p></div>'; return; }
+  var grid = document.getElementById('challengesGrid');
+  if (!grid) return;
+  var lessonChallenges = (lesson.challenges || []).sort(function(a, b) { return (a.order || 999) - (b.order || 999); });
+  if (lessonChallenges.length === 0) { grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>لا توجد تحديات في هذا الدرس</p></div>'; return; }
+
+  grid.innerHTML = lessonChallenges.map(function(c) {
+    var activeClass = (currentChallenge && currentChallenge.id === c.id) ? ' active' : '';
+    var passedClass = c.passed ? ' passed' : '';
+    var locked = c.status === 'LOCKED';
+    var cursorStyle = locked ? 'cursor:not-allowed;opacity:0.5;' : '';
+    var onclick = locked ? '' : 'onclick="selectChallenge(\'' + c.id + '\')"';
+    var lockIcon = locked ? '<span style="margin-left:4px">&#128274;</span>' : '';
+    var checkIcon = c.passed ? '<span style="color:var(--primary);margin-left:4px">&#10003;</span>' : '';
+    var practiceBadge = '<span style="background:rgba(16,185,129,0.15);color:var(--primary);padding:2px 8px;border-radius:8px;font-size:11px;display:inline-block;margin-right:6px;border:1px solid var(--primary);font-weight:600">درس</span>';
+    var orderNum = '<span style="font-size:11px;color:var(--text-muted);margin-left:6px">#' + c.order + '</span>';
+    var diffLabel = TIER_DIFF[c.tier] || DIFF_LABELS[c.difficulty] || c.difficulty;
+
+    return '<div class="challenge-card' + activeClass + passedClass + '" ' + onclick + ' style="' + cursorStyle + '">' +
+      '<div>' + practiceBadge + orderNum +
+        '<span class="challenge-tier-badge diff-' + c.difficulty + '">' + diffLabel + '</span>' +
+      '</div>' +
+      '<div style="font-size:15px;font-weight:700;margin:8px 0">' + escapeHtml(c.title || '') + lockIcon + checkIcon + '</div>' +
+      '<div style="color:var(--text-muted);font-size:13px;line-height:1.6">' + escapeHtml((c.description || 'تحدي في البرمجة').substring(0, 100)) + '...</div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">' +
+        '<span style="font-size:13px;font-weight:700;color:var(--primary)">' + (c.xpReward || c.points || 0) + ' XP</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function selectChallenge(id) {
+  currentChallenge = allChallenges.find(function(c) { return c.id === id; });
+  if (!currentChallenge) return;
+  if (currentChallenge.status === 'LOCKED') {
+    toast.error('يجب إكمال التحديات السابقة أولاً');
+    return;
+  }
+  renderChallenges();
+  renderSolution();
+}
+
+function renderSolution() {
+  var c = currentChallenge;
+  var panel = document.getElementById('solutionPanel');
+  if (!panel) return;
+  var lessonForChallenge = (courseData.lessons || []).find(function(l) { return l.order === c.tier; });
+  var html = '<div class="solution-title">' +
+    '<span style="background:rgba(16,185,129,0.15);color:var(--primary);padding:4px 12px;border-radius:8px;font-size:13px;display:inline-block;margin-left:8px;border:1px solid var(--primary);font-weight:600">درس</span>' +
+    escapeHtml(c.title || '') +
+    '</div>' +
+    '<div class="solution-meta">' +
+      (lessonForChallenge ? '<span class="solution-item" style="font-weight:700">' + lessonForChallenge.title + ' - #' + c.order + '</span>' : '') +
+      '<span class="challenge-tier-badge diff-' + c.difficulty + '">' + (TIER_DIFF[c.tier] || DIFF_LABELS[c.difficulty] || c.difficulty) + '</span>' +
+      '<span class="solution-item" style="font-size:15px;font-weight:700;color:var(--primary)">' + (c.xpReward || c.points || 0) + ' XP</span>' +
+    '</div>' +
+    '<div class="solution-desc">' + escapeHtml(c.description || '').replace(/\n/g, '<br>') + '</div>' +
+    '<div style="margin-top:16px">' +
+      '<label class="form-label">الكود <span style="font-size:12px;color:var(--text-muted)">(اضغط للتعديل)</span></label>' +
+      '<div class="code-highlight" id="codeHighlight" onclick="toggleEditMode()" style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:12px;font-family:monospace;font-size:14px;direction:rtl;text-align:right;overflow-x:auto;margin-bottom:8px;line-height:1.8;white-space:pre-wrap;border-left:4px solid #10b981;min-height:60px;cursor:pointer" title="اضغط للتعديل">' + (DhadInterpreter.highlight ? DhadInterpreter.highlight(c.starterCode || '// اكتب كودك هنا') : escapeHtml(c.starterCode || '// اكتب كودك هنا')) + '</div>' +
+      '<textarea class="editor-area" id="codeEditor" rows="10" spellcheck="false" style="display:none" onblur="exitEditMode()">' + escapeHtml(c.starterCode || '// اكتب كودك هنا') + '</textarea>' +
+    '</div>' +
+    '<div class="actions">' +
+      '<button class="btn btn-success btn-sm" onclick="runCode()">تنفيذ</button>' +
+      '<button class="btn btn-primary btn-sm" onclick="submitChallenge()">تسليم الحل</button>' +
+    '</div>' +
+    '<div style="margin-top:12px">' +
+      '<label class="form-label">المخرجات</label>' +
+      '<div class="output-box" id="codeOutput">جاهز للتنفيذ...</div>' +
+    '</div>' +
+    '<div style="margin-top:8px">' +
+      '<label class="form-label">المخرجات المتوقعة</label>' +
+      '<div class="expected-box" id="expectedOutput" style="background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;font-family:monospace;font-size:13px;direction:rtl;border-left:3px solid #fbbf24;white-space:pre-wrap">' + (DhadInterpreter.highlight ? DhadInterpreter.highlight(c.expectedOutput || 'لا توجد مخرجات متوقعة') : escapeHtml(c.expectedOutput || 'لا توجد مخرجات متوقعة')) + '</div>' +
+    '</div>' +
+    '<div class="result-bar" id="resultBar"></div>';
+
+  if (c.passed) {
+    html += '<div class="result-bar already-passed" style="display:block">&#10003; تم اجتياز هذا التحدي مسبقاً - حصلت على ' + (c.xpReward || c.points) + ' XP</div>';
+  }
+
+  document.getElementById('solutionContent').innerHTML = html;
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleEditMode() {
+  var highlight = document.getElementById('codeHighlight');
+  var editor = document.getElementById('codeEditor');
+  if (highlight && editor) {
+    highlight.style.display = 'none';
+    editor.style.display = 'block';
+    editor.focus();
+  }
+}
+
+function exitEditMode() {
+  setTimeout(function() {
+    var highlight = document.getElementById('codeHighlight');
+    var editor = document.getElementById('codeEditor');
+    if (highlight && editor) {
+      highlight.innerHTML = DhadInterpreter.highlight ? DhadInterpreter.highlight(editor.value) : escapeHtml(editor.value);
+      highlight.style.display = 'block';
+      editor.style.display = 'none';
+    }
+  }, 100);
+}
+
+function normalize(str) {
+  return SmartEvaluator.normalize(str);
+}
+
+function runCode() {
+  var code = document.getElementById('codeEditor').value;
+  var outputEl = document.getElementById('codeOutput');
+  var resultBar = document.getElementById('resultBar');
+  outputEl.textContent = 'جاري التنفيذ...';
+  resultBar.className = 'result-bar';
+  resultBar.style.display = 'none';
+  var highlightEl = document.getElementById('codeHighlight');
+  if (highlightEl && DhadInterpreter.highlight) {
+    highlightEl.innerHTML = DhadInterpreter.highlight(code);
+  }
+  setTimeout(function() {
+    var result = DhadInterpreter.execute(code);
+    if (result.errors.length > 0) {
+      outputEl.innerHTML = '<span style="color:#ef4444">خطأ:\n' + escapeHtml(result.errors.join('\n')) + '</span>';
+      resultBar.className = 'result-bar error';
+      resultBar.textContent = 'يوجد أخطاء في الكود';
+    } else {
+      outputEl.textContent = result.output || '(لا توجد مخرجات)';
+      var expected = normalize(currentChallenge.expectedOutput || '');
+      var actual = normalize(result.output);
+      if (expected && actual === expected) {
+        resultBar.className = 'result-bar pass';
+        resultBar.textContent = 'أحسنت! مخرجاتك صحيحة';
+      } else if (expected) {
+        resultBar.className = 'result-bar fail';
+        resultBar.textContent = 'المخرجات غير مطابقة للمتوقع. حاول مرة أخرى.';
+      } else {
+        resultBar.className = 'result-bar pass';
+        resultBar.textContent = 'تم التنفيذ بنجاح';
+      }
+    }
+  }, 100);
+}
+
+function submitChallenge() {
+  if (!currentChallenge) return;
+  var code = document.getElementById('codeEditor').value;
+  if (!code.trim()) { toast.error('اكتب الكود أولاً'); return; }
+  var output = DhadInterpreter.execute(code);
+  if (output.errors.length > 0) { toast.error('يوجد أخطاء في الكود'); return; }
+  var expected = normalize(currentChallenge.expectedOutput || '');
+  var actual = normalize(output.output);
+  if (expected && actual !== expected) { toast.error('المخرجات غير مطابقة للمتوقع'); return; }
+
+  api.submitSolution({
+    challengeId: currentChallenge.id,
+    code: code
+  }).then(function(res) {
+    if (res && res.alreadyPassed) {
+      toast.info('تم اجتياز هذا التحدي مسبقاً');
+      goToNextChallenge();
+    } else if (res && res.codeErrors && res.codeErrors.length > 0) {
+      document.getElementById('resultBar').className = 'result-bar error';
+      document.getElementById('resultBar').textContent = res.codeErrors[0];
+      document.getElementById('resultBar').style.display = 'block';
+      toast.error(res.codeErrors[0]);
+    } else if (res && (res.xpAwarded > 0 || res.passed)) {
+      toast.success(res.xpAwarded > 0 ? 'أحسنت! حصلت على ' + res.xpAwarded + ' XP' : 'تم تسليم الحل بنجاح!');
+      currentChallenge.passed = true;
+      currentChallenge.status = 'COMPLETED';
+      // Update local data so renderChallenges shows the checkmark
+      var lesson = (courseData.lessons || []).find(function(l) { return l.order === currentChallenge.tier; });
+      if (lesson && lesson.challenges) {
+        var ch = lesson.challenges.find(function(x) { return x.id === currentChallenge.id; });
+        if (ch) ch.passed = true;
+      }
+      renderChallenges();
+      goToNextChallenge();
+    } else {
+      document.getElementById('resultBar').className = 'result-bar fail';
+      document.getElementById('resultBar').textContent = res.message || 'المخرجات غير مطابقة';
+      document.getElementById('resultBar').style.display = 'block';
+      toast.error(res.message || 'حاول مرة أخرى');
+    }
+    renderSolution();
+  }).catch(function() {
+    toast.error('فشل تسليم الحل');
+  });
+}
+
+function goToNextChallenge() {
+  var lesson = (courseData.lessons || []).find(function(l) { return l.order === activeLesson; });
+  var lessonChallenges = (lesson ? lesson.challenges || [] : []).sort(function(a, b) { return (a.order || 999) - (b.order || 999); });
+  var idx = lessonChallenges.findIndex(function(c) { return c.id === currentChallenge.id; });
+  if (idx >= 0 && idx < lessonChallenges.length - 1) {
+    var next = lessonChallenges[idx + 1];
+    setTimeout(function() { selectChallenge(next.id); }, 800);
+  } else {
+    var lessons = courseData.lessons || [];
+    var nextLesson = lessons.find(function(l) { return l.order > activeLesson && l.status !== 'LOCKED'; });
+    if (nextLesson) {
+      setTimeout(function() {
+        selectLesson(nextLesson.order);
+        var nc = (nextLesson.challenges || [])[0];
+        if (nc) setTimeout(function() { selectChallenge(nc.id); }, 200);
+      }, 800);
+    } else {
+      setTimeout(function() { toast.success('أحسنت! أنهيت كل التحديات في هذه الدورة'); }, 800);
+    }
+  }
+}

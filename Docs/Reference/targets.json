@@ -1,0 +1,141 @@
+{
+  "_comment": "Machine-readable target registry. Mirrors Docs/Reference/TARGETS.md. A target is AVAILABLE only with real execution proof in this repo.",
+  "targets": [
+    {
+      "id": "linux-x64",
+      "status": "AVAILABLE",
+      "os": "Linux",
+      "arch": "x86_64",
+      "abi": "System V",
+      "object": "ELF",
+      "binary": "executable",
+      "frontends": [
+        "track-b"
+      ],
+      "backend": "BACKEND_X86",
+      "toolchain": "gcc",
+      "note": "Track B emits Linux-SysV assembly (custom _start); link with gcc -nostartfiles",
+      "proof": "runtime",
+      "proof_detail": "Built+executed here: 40-case suite, recursion, floats, exit codes"
+    },
+    {
+      "id": "linux-x64-cpp",
+      "status": "AVAILABLE",
+      "os": "Linux",
+      "arch": "x86_64",
+      "abi": "System V",
+      "object": "ELF",
+      "binary": "executable",
+      "frontends": [
+        "track-a"
+      ],
+      "backend": "C++20 via gcc",
+      "toolchain": "g++",
+      "proof": "runtime",
+      "proof_detail": "Built+executed here: 6 Compiler examples incl. factorial/loops",
+      "note": "Explicit Track-A Linux path (same pipeline as .ض+linux-x64)"
+    },
+    {
+      "id": "windows-x64",
+      "status": "AVAILABLE",
+      "os": "Windows",
+      "arch": "x86_64",
+      "abi": "Windows x64",
+      "object": "PE",
+      "binary": ".exe",
+      "frontends": [
+        "track-a"
+      ],
+      "backend": "C++20 via MinGW-w64 or MSVC",
+      "toolchain": "x86_64-w64-mingw32-g++",
+      "note": "Static link: only KERNEL32+msvcrt. See Demo/build-windows.sh",
+      "proof": "generated",
+      "proof_detail": "PE32+ structure+imports machine-verified; real MSI built+wixl-verified (tables+extract, 7/7 files byte-identical); boot+install on real Windows 7 pending"
+    },
+    {
+      "id": "dhad-cpu",
+      "status": "AVAILABLE",
+      "os": "DHAD CPU",
+      "arch": "8-bit/16-bit-addr",
+      "abi": "DHAD",
+      "object": "bin",
+      "binary": ".bin",
+      "frontends": [
+        "track-b"
+      ],
+      "backend": "BACKEND_DHAD",
+      "toolchain": "dhad_asm + dhad_cpu",
+      "note": "Educational target. Frame: S7=FP, high byte 0xE0",
+      "proof": "runtime",
+      "proof_detail": "Executed here: loop15/fact120, CPU suite 96+6"
+    },
+    {
+      "id": "macos-x64",
+      "status": "NOT_IMPLEMENTED",
+      "os": "macOS",
+      "arch": "x86_64",
+      "abi": "System V (Apple)",
+      "object": "Mach-O",
+      "binary": "executable",
+      "frontends": [
+        "track-a"
+      ],
+      "backend": "Apple clang",
+      "toolchain": "missing",
+      "note": "Needs Apple toolchain + packaging test",
+      "proof": "none",
+      "proof_detail": "Needs Apple toolchain + packaging test"
+    },
+    {
+      "id": "macos-arm64",
+      "status": "NOT_IMPLEMENTED",
+      "os": "macOS",
+      "arch": "arm64",
+      "abi": "Apple",
+      "object": "Mach-O",
+      "binary": ".app",
+      "frontends": [
+        "track-a"
+      ],
+      "backend": "Apple clang",
+      "toolchain": "missing",
+      "note": "Needs Apple toolchain + packaging test",
+      "proof": "none",
+      "proof_detail": "Needs Apple toolchain + packaging test"
+    },
+    {
+      "id": "android-arm64",
+      "status": "NOT_IMPLEMENTED",
+      "os": "Android",
+      "arch": "arm64",
+      "abi": "AAPCS64",
+      "object": "ELF",
+      "binary": "APK/AAB",
+      "frontends": [
+        "track-a"
+      ],
+      "backend": "NDK (BACKEND_ARM scaffold has NULL emit)",
+      "toolchain": "missing",
+      "note": "Needs NDK wrapper + APK packaging proof",
+      "proof": "none",
+      "proof_detail": "Needs NDK wrapper + APK packaging proof"
+    },
+    {
+      "id": "ios-arm64",
+      "status": "NOT_IMPLEMENTED",
+      "os": "iOS",
+      "arch": "arm64",
+      "abi": "Apple",
+      "object": "Mach-O",
+      "binary": ".app",
+      "frontends": [
+        "track-a"
+      ],
+      "backend": "Xcode",
+      "toolchain": "missing",
+      "note": "Needs Xcode + signing + device test",
+      "proof": "none",
+      "proof_detail": "Needs Xcode + signing + device test"
+    }
+  ]
+}

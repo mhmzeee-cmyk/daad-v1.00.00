@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dhad Studio v1.0.1 — Windows 7 native programs (built with wixl; pattern matches the proven repo template). -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="1c7afe83-5cdd-4c19-8913-40c145d068e7" Name="Dhad Studio" Language="1033" Version="1.0.1" Manufacturer="Dhad Studio" UpgradeCode="21bec704-9ba8-4d78-87a0-172d3fd60c28">
+    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Description="Dhad Studio v1.0.1 - Arabic Programming Language (Windows 7 native programs)" />
+    <Media Id="1" Cabinet="dhad.cab" EmbedCab="yes" />
+    <Icon Id="DhadIcon" SourceFile="$(var.PayloadDir)/dhad-icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="DhadIcon" />
+    <Property Id="ARPCOMMENTS" Value="Native Windows x64 programs built from Arabic sources: hello, arithmetic, factorial, loops, functions + acceptance script." />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="DhadStudio">
+          <Directory Id="DIR_BIN" Name="bin" />
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="MenuDhad" Name="Dhad Studio" />
+      </Directory>
+    </Directory>
+    <Feature Id="MainFeature" Title="Dhad Studio" Level="1">
+      <ComponentGroupRef Id="G_DIR_BIN" />
+      <ComponentGroupRef Id="G_INSTALLDIR" />
+    </Feature>
+  </Product>
+  <Fragment>
+    <ComponentGroup Id="G_DIR_BIN" Directory="DIR_BIN">
+      <Component Id="C_bin_hello" Guid="e6e894a6-8176-43b2-bf15-b5bf835bc035"><File Id="F_bin_hello" Source="$(var.PayloadDir)/bin/hello.exe" /></Component>
+      <Component Id="C_bin_arithmetic" Guid="af096690-9ef3-4f59-9605-0e851c1c68a8"><File Id="F_bin_arithmetic" Source="$(var.PayloadDir)/bin/arithmetic.exe" /></Component>
+      <Component Id="C_bin_factorial" Guid="93c849b8-c617-4636-a31b-6a0148395de6"><File Id="F_bin_factorial" Source="$(var.PayloadDir)/bin/factorial.exe" /></Component>
+      <Component Id="C_bin_loops" Guid="e0545b8d-1a10-46df-96de-68b2956a851d"><File Id="F_bin_loops" Source="$(var.PayloadDir)/bin/loops.exe" /></Component>
+      <Component Id="C_bin_functions" Guid="1c73b8c9-0013-447c-bf6e-b4ae8b010012"><File Id="F_bin_functions" Source="$(var.PayloadDir)/bin/functions.exe" /></Component>
+    </ComponentGroup>
+    <ComponentGroup Id="G_INSTALLDIR" Directory="INSTALLDIR">
+      <Component Id="C_validate" Guid="0084ce43-4e9e-46c1-803c-9d11f12a6d10">
+        <File Id="F_validate" Source="$(var.PayloadDir)/validate-windows7.bat" />
+      </Component>
+      <Component Id="C_readme" Guid="423377b7-311e-4374-a22e-819029a12809">
+        <File Id="F_readme" Source="$(var.PayloadDir)/README-WINDOWS7.txt" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>

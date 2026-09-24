@@ -1,0 +1,293 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include "token/token.h"
+#include "lexer/lexer.h"
+#include "parser/parser.h"
+#include "ast/ast_node.h"
+#include "ast/ast.h"
+#include "ast/ast_printer.h"
+#include "semantic/semantic_visitor.h"
+#include "ir/ir_module.h"
+#include "ir/ir_function.h"
+#include "ir/ir_basic_block.h"
+#include "ir/ir_instruction.h"
+#include "ir/ir_types.h"
+#include "ir/ir_printer.h"
+#include "ir/ir_builder.h"
+#include "optimizer/optimizer_pass.h"
+#include "backend/backend_interface.h"
+
+static char* read_file(const char* path) {
+    FILE* f = fopen(path, "rb");
+    if (!f) { fprintf(stderr, "Error: cannot open '%s'\n", path); return NULL; }
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    if (sz < 0) { fclose(f); return NULL; }
+    fseek(f, 0, SEEK_SET);
+    if ((size_t)sz > (SIZE_MAX / 2)) {  /* prevent overflow in sz+1 */
+        fprintf(stderr, "Error: file too large '%s'\n", path);
+        fclose(f);
+        return NULL;
+    }
+    char* buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) {
+        fprintf(stderr, "Error: out of memory reading '%s'\n", path);
+        fclose(f);
+        return NULL;
+    }
+    size_t nread = fread(buf, 1, (size_t)sz, f);
+    buf[nread] = '\0';
+    fclose(f);
+    return buf;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: daad <source.daad> [-o output.s] [--ast] [--ir] [--target=x86|dhad]\n");
+        return 1;
+    }
+
+    const char* input_path = argv[1];
+    const char* output_path = "output.s";
+    int print_ast = 0, print_ir = 0;
+    BackendTarget target = BACKEND_X86;
+
+    for (int i = 2; i < argc; i++) {
+        if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) output_path = argv[++i];
+        else if (strcmp(argv[i], "--ast") == 0) print_ast = 1;
+        else if (strcmp(argv[i], "--ir") == 0) print_ir = 1;
+        else if (strcmp(argv[i], "--target=dhad") == 0) target = BACKEND_DHAD;
+        else if (strcmp(argv[i], "--target=x86") == 0) target = BACKEND_X86;
+    }
+
+    char* source = read_file(input_path);
+    if (!source) return 1;
+
+    Lexer* lexer = lexer_create(source, input_path);
+    size_t token_count = 0;
+    Token* tokens = lexer_tokenize(lexer, &token_count);
+
+    if (lexer_has_errors(lexer)) {
+        fprintf(stderr, "Lexical errors:\n");
+        lexer_print_errors(lexer, stderr);
+        lexer_destroy(lexer); free(source);
+        return 1;
+    }
+
+    Parser* parser = parser_create(tokens, (int)token_count, input_path);
+    ASTNode* ast = parser_parse(parser);
+
+    if (parser_has_errors(parser)) {
+        fprintf(stderr, "Parse errors:\n");
+        parser_parse_errors(parser, stderr);
+        parser_destroy(parser); lexer_destroy(lexer); free(source);
+        return 1;
+    }
+
+    if (print_ast) { printf("=== AST ===\n"); ast_print(ast); }
+
+    SemanticContext* sem_ctx = semantic_context_create();
+    int sem_errors = semantic_analyze(ast, sem_ctx);
+
+    if (sem_errors > 0) {
+        fprintf(stderr, "Semantic errors (%d):\n", sem_errors);
+        for (size_t i = 0; i < sem_ctx->errors->size; i++) {
+            SemanticError* e = &sem_ctx->errors->errors[i];
+            fprintf(stderr, "  %s:%zu:%zu: [%s] %s\n",
+                e->filename ? e->filename : "<unknown>",
+                e->line, e->column,
+                semantic_error_code_name(e->code),
+                e->message);
+        }
+        semantic_context_destroy(sem_ctx);
+        ast_node_destroy(ast);
+        parser_destroy(parser);
+        lexer_destroy(lexer);
+        free(source);
+        return 1;
+    }
+
+    IRBuilder* builder = ir_builder_create("daad_module", sem_ctx);
+    IRModule* module = ir_builder_build(builder, ast);
+
+    if (print_ir) { printf("\n=== IR ===\n"); ir_print_module(module, stdout); }
+
+    Optimizer* opt = optimizer_create();
+    optimizer_add_default_passes(opt);
+    for (int i = 0; i < module->function_count; i++) {
+        optimizer_run_all(opt, module->functions[i]);
+    }
+    optimizer_destroy(opt);
+
+    if (print_ir) { printf("\n=== IR (optimized) ===\n"); ir_print_module(module, stdout); }
+
+    for (int i = 0; i < module->function_count; i++) {
+        if (strcmp(module->functions[i]->name, "الرئيسية") == 0) {
+            if (target != BACKEND_DHAD) {
+                /* Don't free the old name — it may belong to the lexer's string pool.
+                   Overwrite with a static string; the module is destroyed shortly after. */
+                module->functions[i]->name = "main";
+            }
+        }
+    }
+
+    FILE* out = fopen(output_path, "w");
+    if (!out) { fprintf(stderr, "Cannot write '%s'\n", output_path); return 1; }
+
+    if (target == BACKEND_DHAD) {
+        /* DHAD Target: emit DHAD assembly — _start FIRST for CPU entry at 0x0000
+         * Then string data from IR module (must come before functions for 8-bit addr compat)
+         * Then functions. */
+        extern void dhad_emit_module_strings(IRModule* module, FILE* out);
+        fprintf(out, "# ═══ DHAD Assembly — Generated by DAAD Compiler ═══\n");
+        fprintf(out, "\n_start:\n");
+        fprintf(out, "  load s7, 0\n");  /* Initialize frame pointer (S7=0, high byte always 0xE0) */
+        fprintf(out, "  call الرئيسية\n");
+        fprintf(out, "  halt\n\n");
+        dhad_emit_module_strings(module, out);
+        fprintf(out, "\n");
+        backend_emit_module(module, BACKEND_DHAD, out);
+    } else {
+        /* x86 Target: emit x86-64 assembly (original) */
+        backend_emit_module(module, BACKEND_X86, out);
+
+        /* دالة تحويل عدد صحيح إلى نص وكتابته على الشاشة (sys_write) */
+        fprintf(out, "\n# ── مساعد الطباعة: rdi = العدد ──\n");
+        fprintf(out, "__daad_print_int:\n");
+        fprintf(out, "  pushq %%rbp\n  movq %%rsp, %%rbp\n  subq $48, %%rsp\n");
+        fprintf(out, "  movq %%rdi, %%rax\n");
+        fprintf(out, "  leaq 31(%%rsp), %%r8\n");
+        fprintf(out, "  movq %%r8, %%rsi\n");
+        fprintf(out, "  movb $10, (%%rsi)\n");
+        fprintf(out, "  xorq %%r9, %%r9\n");
+        fprintf(out, "  testq %%rax, %%rax\n  jns .Ldpi_pos\n");
+        fprintf(out, "  negq %%rax\n  movq $1, %%r9\n");
+        fprintf(out, ".Ldpi_pos:\n");
+        fprintf(out, "  testq %%rax, %%rax\n  jnz .Ldpi_loop\n");
+        fprintf(out, "  decq %%rsi\n  movb $48, (%%rsi)\n");
+        fprintf(out, "  jmp .Ldpi_sign\n");
+        fprintf(out, ".Ldpi_loop:\n");
+        fprintf(out, "  testq %%rax, %%rax\n  jz .Ldpi_sign\n");
+        fprintf(out, "  xorq %%rdx, %%rdx\n  movq $10, %%rcx\n  divq %%rcx\n");
+        fprintf(out, "  addq $48, %%rdx\n  decq %%rsi\n  movb %%dl, (%%rsi)\n");
+        fprintf(out, "  jmp .Ldpi_loop\n");
+        fprintf(out, ".Ldpi_sign:\n");
+        fprintf(out, "  testq %%r9, %%r9\n  jz .Ldpi_write\n");
+        fprintf(out, "  decq %%rsi\n  movb $45, (%%rsi)\n");
+        fprintf(out, ".Ldpi_write:\n");
+        fprintf(out, "  movq %%r8, %%rdx\n  subq %%rsi, %%rdx\n  incq %%rdx\n");
+        fprintf(out, "  movq $1, %%rax\n  movq $1, %%rdi\n  syscall\n");
+        fprintf(out, "  leave\n  ret\n");
+
+        /* ثوابت المساعد العشري (تُكتب مرة واحدة لكل وحدة) */
+        fprintf(out, "\n.section .rodata\n");
+        fprintf(out, ".Lfp_1e6:\n");
+        fprintf(out, "    .double 1000000.0\n");
+        fprintf(out, ".Lfp_half:\n");
+        fprintf(out, "    .double 0.5\n");
+        fprintf(out, ".section .text\n");
+
+        /* دالة طباعة عدد عشري: rdi = بتات f64 — تطبع بصيغة %.6f ثم سطرًا جديدًا.
+         * العقد: finite مع جزء صحيح يتسع في int64؛ NaN→nan؛ ±Inf→inf/-inf.
+         * تجاوز 2^63 يعطي أرقامًا حتمية غير معرفة (تشبع cvttsd2si) — موثق لا صامت. */
+        fprintf(out, "\n# ── مساعد طباعة العشري: rdi = بتات f64 ──\n");
+        fprintf(out, "__daad_print_float:\n");
+        fprintf(out, "  pushq %%rbp\n  movq %%rsp, %%rbp\n  subq $64, %%rsp\n");
+        fprintf(out, "  movq %%rdi, %%rax\n  movq %%rax, %%xmm0\n");
+        fprintf(out, "  shrq $63, %%rax\n  movq %%rax, %%r10\n");
+        fprintf(out, "  movq %%rdi, %%rcx\n  shrq $52, %%rcx\n  andq $0x7FF, %%rcx\n");
+        fprintf(out, "  cmpq $0x7FF, %%rcx\n  je .Ldpf_special\n");
+        fprintf(out, "  movabs $0x7FFFFFFFFFFFFFFF, %%rcx\n  movq %%rcx, %%xmm1\n  andpd %%xmm1, %%xmm0\n");
+        fprintf(out, "  xorpd %%xmm1, %%xmm1\n  ucomisd %%xmm1, %%xmm0\n  je .Ldpf_zero\n");
+        fprintf(out, "  cvttsd2si %%xmm0, %%rax\n  movq %%rax, %%r11\n");
+        fprintf(out, "  cvtsi2sd %%rax, %%xmm1\n  subsd %%xmm1, %%xmm0\n");
+        fprintf(out, "  movsd .Lfp_1e6(%%rip), %%xmm1\n  mulsd %%xmm1, %%xmm0\n");
+        fprintf(out, "  movsd .Lfp_half(%%rip), %%xmm1\n  addsd %%xmm1, %%xmm0\n");
+        fprintf(out, "  cvttsd2si %%xmm0, %%rcx\n");
+        fprintf(out, "  cmpq $1000000, %%rcx\n  jne .Ldpf_build\n");
+        fprintf(out, "  movq $0, %%rcx\n  incq %%r11\n");
+        fprintf(out, ".Ldpf_zero:\n");
+        fprintf(out, "  movq $0, %%r11\n  movq $0, %%rcx\n");
+        fprintf(out, ".Ldpf_build:\n");
+        fprintf(out, "  leaq 63(%%rsp), %%r8\n  movq %%r8, %%rsi\n  movb $10, (%%rsi)\n");
+        fprintf(out, "  movq $6, %%r9\n  movq $10, %%rdi\n");
+        fprintf(out, ".Ldpf_floop:\n");
+        fprintf(out, "  movq %%rcx, %%rax\n  xorq %%rdx, %%rdx\n  divq %%rdi\n");
+        fprintf(out, "  addq $48, %%rdx\n  decq %%rsi\n  movb %%dl, (%%rsi)\n");
+        fprintf(out, "  movq %%rax, %%rcx\n  decq %%r9\n  jnz .Ldpf_floop\n");
+        fprintf(out, "  decq %%rsi\n  movb $46, (%%rsi)\n");
+        fprintf(out, "  movq %%r11, %%rax\n  testq %%rax, %%rax\n  jnz .Ldpf_iloop\n");
+        fprintf(out, "  decq %%rsi\n  movb $48, (%%rsi)\n  jmp .Ldpf_sign\n");
+        fprintf(out, ".Ldpf_iloop:\n");
+        fprintf(out, "  testq %%rax, %%rax\n  jz .Ldpf_sign\n");
+        fprintf(out, "  xorq %%rdx, %%rdx\n  divq %%rdi\n");
+        fprintf(out, "  addq $48, %%rdx\n  decq %%rsi\n  movb %%dl, (%%rsi)\n");
+        fprintf(out, "  jmp .Ldpf_iloop\n");
+        fprintf(out, ".Ldpf_sign:\n");
+        fprintf(out, "  testq %%r10, %%r10\n  jz .Ldpf_write\n");
+        fprintf(out, "  decq %%rsi\n  movb $45, (%%rsi)\n");
+        fprintf(out, ".Ldpf_write:\n");
+        fprintf(out, "  movq %%r8, %%rdx\n  subq %%rsi, %%rdx\n  incq %%rdx\n");
+        fprintf(out, "  movq $1, %%rax\n  movq $1, %%rdi\n  syscall\n");
+        fprintf(out, "  leave\n  ret\n");
+        fprintf(out, ".Ldpf_special:\n");
+        fprintf(out, "  movabs $0xFFFFFFFFFFFFF, %%rcx\n  testq %%rcx, %%rdi\n  jnz .Ldpf_nan\n");
+        fprintf(out, "  leaq 63(%%rsp), %%r8\n  movq %%r8, %%rsi\n  movb $10, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $102, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $110, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $105, (%%rsi)\n");
+        fprintf(out, "  testq %%r10, %%r10\n  jz .Ldpf_write\n");
+        fprintf(out, "  decq %%rsi\n  movb $45, (%%rsi)\n  jmp .Ldpf_write\n");
+        fprintf(out, ".Ldpf_nan:\n");
+        fprintf(out, "  leaq 63(%%rsp), %%r8\n  movq %%r8, %%rsi\n  movb $10, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $110, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $97, (%%rsi)\n");
+        fprintf(out, "  decq %%rsi\n  movb $110, (%%rsi)\n  jmp .Ldpf_write\n");
+
+        fprintf(out, "\n# ── مساعد الإدخال: يقرأ عددًا من stdin → rax ──\n");
+        fprintf(out, "__daad_read_int:\n");
+        fprintf(out, "  pushq %%rbp\n  movq %%rsp, %%rbp\n  subq $256, %%rsp\n");
+        fprintf(out, "  leaq -256(%%rbp), %%rsi\n");
+        fprintf(out, "  movq $0, %%rax\n  movq $0, %%rdi\n  movq $255, %%rdx\n  syscall\n");
+        fprintf(out, "  leaq -256(%%rbp), %%rsi\n");
+        fprintf(out, "  xorq %%rax, %%rax\n");
+        fprintf(out, "  xorq %%r9, %%r9\n");
+        fprintf(out, "  movb (%%rsi), %%cl\n");
+        fprintf(out, "  cmpb $45, %%cl\n  jne .Ldri_digits\n");
+        fprintf(out, "  movq $1, %%r9\n  incq %%rsi\n  movb (%%rsi), %%cl\n");
+        fprintf(out, ".Ldri_digits:\n");
+        fprintf(out, "  testb %%cl, %%cl\n  jz .Ldri_sign\n");
+        fprintf(out, "  cmpb $10, %%cl\n  je .Ldri_sign\n");
+        fprintf(out, "  cmpb $32, %%cl\n  je .Ldri_sign\n");
+        fprintf(out, "  subb $48, %%cl\n");
+        fprintf(out, "  movzbl %%cl, %%ecx\n");
+        fprintf(out, "  imulq $10, %%rax\n  addq %%rcx, %%rax\n");
+        fprintf(out, "  incq %%rsi\n  movb (%%rsi), %%cl\n");
+        fprintf(out, "  jmp .Ldri_digits\n");
+        fprintf(out, ".Ldri_sign:\n");
+        fprintf(out, "  testq %%r9, %%r9\n  jz .Ldri_done\n");
+        fprintf(out, "  negq %%rax\n");
+        fprintf(out, ".Ldri_done:\n");
+        fprintf(out, "  leave\n  ret\n");
+
+        fprintf(out, "\n.global _start\n");
+        fprintf(out, "_start:\n");
+        fprintf(out, "  callq main\n");
+        fprintf(out, "  movq %%rax, %%rdi\n");
+        fprintf(out, "  movq $60, %%rax\n");
+        fprintf(out, "  syscall\n");
+    }
+    fclose(out);
+    printf("Generated: %s (%d functions, target=%s)\n", output_path, module->function_count,
+           target == BACKEND_DHAD ? "DHAD" : "x86-64");
+
+    ir_builder_destroy(builder);
+    semantic_context_destroy(sem_ctx);
+    ast_node_destroy(ast);
+    parser_destroy(parser);
+    lexer_destroy(lexer);
+    free(source);
+    return 0;
+}

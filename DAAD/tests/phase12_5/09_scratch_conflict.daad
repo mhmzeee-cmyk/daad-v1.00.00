@@ -1,0 +1,42 @@
+# Phase 12.5-F.9: Scratch Conflict Test
+# Forces all S0-S5 into use (7+ live values), then performs operations
+# that would corrupt results if S6 ever held a user value.
+# Verifies S6 is never allocated to a user variable.
+
+دالة: الرئيسية() -> رقم :-
+    متغير: a = 1
+    متغير: b = 2
+    متغير: c = 3
+    متغير: d = 4
+    متغير: e = 5
+    متغير: f = 6
+    متغير: g = 7
+
+    # Round 1: 7 live values exceed S0-S5 pool (6 regs). Spills required.
+    a = b * c       # a = 2*3 = 6
+    d = e * f       # d = 5*6 = 30
+    g = a + d       # g = 6+30 = 36
+
+    # Round 2: Reassign all to new values, verify no corruption
+    a = 10
+    b = 20
+    c = 30
+    d = 40
+    e = 50
+    f = 60
+    g = a + b + c + d + e + f  # g = 10+20+30+40+50+60 = 210
+
+    # Round 3: Multiplication chain
+    a = 2
+    b = 3
+    c = 4
+    d = 5
+    e = 6
+    f = a * b       # f = 6
+    g = c * d       # g = 20
+    f = f + g + e   # f = 6+20+6 = 32
+
+    # Expected output: 36, 210, 32 (printed from each round's g, g, f)
+    اطبع(g)       # 32
+    ارجع(g)
+نهاية

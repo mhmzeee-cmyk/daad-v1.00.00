@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>الطلاب - ض ستوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    .student-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .student-card:last-child { border-bottom: none; }
+    .student-card .avatar-sm {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .student-card .student-info {
+      flex: 1;
+    }
+    .student-card .student-name {
+      font-weight: 600;
+    }
+    .student-card .student-username {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: monospace;
+      direction: ltr;
+    }
+    .student-card .student-xp {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .bulk-input {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      resize: vertical;
+      direction: rtl;
+    }
+    .credentials-box {
+      background: rgba(16,185,129,0.1);
+      border: 1px solid var(--secondary);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .credentials-box h4 {
+      color: var(--secondary);
+      margin-bottom: 8px;
+    }
+    .credentials-box code {
+      background: var(--bg-input);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .btn-info { background: var(--info, #3b82f6); color: #fff; }
+    .btn-info:hover { background: var(--info-hover, #2563eb); }
+    .student-clickable { cursor: pointer; transition: background 0.15s; }
+    .student-clickable:hover { background: var(--bg-hover, rgba(128,128,128,0.05)); }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1> إدارة الطلاب</h1>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="showAddStudent()" id="btnAddStudent">+ طالب واحد</button>
+          <button class="btn btn-success btn-sm" onclick="showBulkAdd()" id="btnBulkAdd">+ إضافة جماعية</button>
+          <button class="btn btn-info btn-sm" onclick="showExcelUpload()" id="btnExcelUpload"> رفع Excel</button>
+          <button class="btn btn-secondary btn-sm" onclick="showExportModal()">تحميل كشف</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-body" style="padding:12px 16px">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <select class="student-select" id="filterClassroom" onchange="loadStudents()" style="width:auto;min-width:200px">
+              <option value="">جميع الفصول</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="بحث بالاسم..." style="padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;color:var(--text);flex:1;min-width:200px" oninput="filterStudents()">
+            <span id="studentCount" style="color:var(--text-muted);font-size:14px"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Students List -->
+      <div class="card">
+        <div class="card-body" id="studentsList">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Single Student Modal -->
+  <div class="modal-overlay" id="addStudentModal">
+    <div class="modal">
+      <h2>إضافة طالب جديد</h2>
+      <form id="addStudentForm">
+        <div class="form-group">
+          <label>اسم الطالب *</label>
+          <input type="text" id="studentName" placeholder="الاسم الكامل" required>
+        </div>
+        <div class="form-group">
+          <label>الفصل</label>
+          <select id="studentClassroom" class="student-select">
+            <option value="">بدون فصل</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button type="submit" class="btn btn-primary">إضافة</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addStudentModal')">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Bulk Add Modal -->
+  <div class="modal-overlay" id="bulkAddModal">
+    <div class="modal" style="max-width:600px">
+      <h2>إضافة طلاب جماعياً</h2>
+      <form id="bulkAddForm">
+        <div class="form-group">
+          <label>الفصل</label>
+          <select id="bulkClassroom" class="student-select">
+            <option value="">اختر الفصل</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>أسماء الطلاب (اسم في كل سطر)</label>
+          <textarea class="bulk-input" id="bulkNames" placeholder="محمد أحمد&#10;فاطمة علي&#10;خالد حسن&#10;نورة سعيد" required></textarea>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button type="submit" class="btn btn-success">إضافة الكل</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('bulkAddModal')">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Excel Upload Modal -->
+  <div class="modal-overlay" id="excelUploadModal">
+    <div class="modal" style="max-width:550px">
+      <h2> رفع ملف Excel للطلاب</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px;font-size:14px">
+        ارفع ملف Excel يحتوي على أعمدة: <strong>اسم الطالب</strong> (مطلوب) + <strong>البريد الإلكتروني</strong> (اختياري) + <strong>الرقم الوطني</strong> (اختياري) + <strong>الفصل</strong> (اختياري)
+      </p>
+
+      <div style="margin-bottom:12px">
+        <a href="/api/v1/teacher/upload-template" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">
+          تحميل نموذج Excel
+        </a>
+      </div>
+
+      <form id="excelUploadForm">
+        <div class="form-group">
+          <label>الفصل الدراسي (اختياري)</label>
+          <select id="excelClassroom" class="student-select">
+            <option value="">بدون فصل</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label style="display:block;margin-bottom:8px">ملف Excel (.xlsx)</label>
+          <div id="dropZone" style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-input)">
+            <div style="font-size:32px;margin-bottom:8px">📁</div>
+            <div style="font-size:14px;color:var(--text-muted)">اسحب الملف هنا أو <span style="color:var(--primary);font-weight:600">اختر ملف</span></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">الحد الأقصى: 2 ميجابايت | الأشكال: .xlsx, .xls, .csv</div>
+            <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display:none">
+          </div>
+          <div id="fileInfo" style="margin-top:8px;font-size:13px;color:var(--text-muted)"></div>
+        </div>
+
+        <div id="uploadProgress" style="display:none;margin-top:12px">
+          <div style="height:4px;background:var(--bg-input);border-radius:4px;overflow:hidden">
+            <div id="progressBar" style="height:100%;background:var(--primary);width:0%;transition:width 0.3s"></div>
+          </div>
+          <div id="progressText" style="font-size:12px;color:var(--text-muted);margin-top:4px;text-align:center"></div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:20px">
+          <button type="submit" class="btn btn-success" id="uploadBtn">رفع الملف</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('excelUploadModal')">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Upload Results Modal -->
+  <div class="modal-overlay" id="uploadResultsModal">
+    <div class="modal" style="max-width:650px">
+      <h2>نتائج رفع الملف</h2>
+      <div id="uploadResultsContent"></div>
+      <div style="margin-top:20px">
+        <button class="btn btn-primary" onclick="closeModal('uploadResultsModal')">حسناً</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Credentials Modal -->
+  <div class="modal-overlay" id="credentialsModal">
+    <div class="modal" style="max-width:600px">
+      <h2> تم إنشاء الحسابات بنجاح</h2>
+      <div id="credentialsContent"></div>
+      <div style="margin-top:20px">
+        <button class="btn btn-primary" onclick="closeModal('credentialsModal')">حسناً</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Report Modal -->
+  <style>
+    .export-field{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-input);border:2px solid transparent;border-radius:10px;cursor:pointer;transition:all .25s ease;user-select:none}
+    .export-field:hover{border-color:var(--primary);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    .export-field:active{transform:scale(.97)}
+    .export-field input[type="checkbox"]{display:none}
+    .export-field .check-box{width:22px;height:22px;min-width:22px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .25s cubic-bezier(.4,0,.2,1);background:var(--bg-input)}
+    .export-field .check-box svg{width:14px;height:14px;opacity:0;transform:scale(0);transition:all .25s cubic-bezier(.4,0,.2,1)}
+    .export-field input:checked + .check-box{background:var(--primary);border-color:var(--primary);box-shadow:0 0 12px var(--primary)}
+    .export-field input:checked + .check-box svg{opacity:1;transform:scale(1)}
+    .export-field .field-label{font-size:14px;font-weight:500;color:var(--text);transition:color .2s}
+    .export-field input:checked ~ .field-label{color:var(--primary)}
+  </style>
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal" style="max-width:650px">
+      <h2>تصدير كشف الطلاب</h2>
+      <p style="color:var(--text-muted);margin-bottom:16px">اختر الحقول التي تريد تضمينها في التقرير:</p>
+      <div id="exportFields" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <label class="export-field"><input type="checkbox" value="name" checked><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">الاسم</span></label>
+        <label class="export-field"><input type="checkbox" value="username" checked><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">اسم المستخدم</span></label>
+        <label class="export-field"><input type="checkbox" value="email"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">البريد الإلكتروني</span></label>
+        <label class="export-field"><input type="checkbox" value="classroom" checked><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">الفصل</span></label>
+        <label class="export-field"><input type="checkbox" value="xp" checked><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">إجمالي النقاط</span></label>
+        <label class="export-field"><input type="checkbox" value="level" checked><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">المستوى</span></label>
+        <label class="export-field"><input type="checkbox" value="streak" checked><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">التسلسل</span></label>
+        <label class="export-field"><input type="checkbox" value="longestStreak"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">أطول سلسلة</span></label>
+        <label class="export-field"><input type="checkbox" value="lastActive"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">آخر نشاط</span></label>
+        <label class="export-field"><input type="checkbox" value="registeredAt"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">تاريخ التسجيل</span></label>
+        <label class="export-field"><input type="checkbox" value="submissions"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">إجمالي المحاولات</span></label>
+        <label class="export-field"><input type="checkbox" value="passed"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">المحاولات الناجحة</span></label>
+        <label class="export-field"><input type="checkbox" value="passedRate"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">نسبة النجاح</span></label>
+        <label class="export-field"><input type="checkbox" value="attendance"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">الحضور %</span></label>
+        <label class="export-field"><input type="checkbox" value="attendanceDays"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">أيام الحضور</span></label>
+        <label class="export-field"><input type="checkbox" value="absenceDays"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">أيام الغياب</span></label>
+        <label class="export-field"><input type="checkbox" value="achievements"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">الإنجازات</span></label>
+        <label class="export-field"><input type="checkbox" value="avgScore"><span class="check-box"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span class="field-label">متوسط الدرجات</span></label>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn btn-success" onclick="exportReport()">تحميل Excel</button>
+        <button class="btn btn-secondary" onclick="closeModal('exportModal')">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Activity Modal -->
+  <div class="modal-overlay" id="activityModal">
+    <div class="modal" style="max-width:650px">
+      <h2 id="activityStudentName">نشاط الطالب</h2>
+      <div id="activityContent">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div style="margin-top:20px">
+        <button class="btn btn-secondary" onclick="closeModal('activityModal')">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=3.0"></script>
+  <script src="../js/sidebar.js?v=3.0"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script src="../js/students-page.js"></script>
+  <script src="../js/watermark.js"></script>
+  <script src="../js/mobile-nav.js?v=3.0"></script>
+  <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(function(){})}</script>
+</body>
+</html>

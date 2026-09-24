@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تفعيل الحساب - ض ستوديو</title>
+  <link rel="stylesheet" href="css/style.css?v=3.0">
+  <style>
+    .otp-steps { margin-bottom: 24px; }
+    .otp-step {
+      display: none;
+    }
+    .otp-step.active {
+      display: block;
+    }
+    .otp-input-group {
+      display: flex;
+      gap: 8px;
+      direction: ltr;
+      justify-content: center;
+    }
+    .otp-input-group input {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .otp-input-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .otp-input-group input.filled {
+      border-color: var(--secondary);
+    }
+    .otp-timer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      margin: 16px 0;
+    }
+    .otp-timer strong {
+      color: var(--primary-light);
+    }
+    .otp-resend {
+      text-align: center;
+    }
+    .otp-resend button {
+      background: none;
+      border: none;
+      color: var(--primary-light);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .otp-resend button:hover {
+      text-decoration: underline;
+    }
+    .otp-resend button:disabled {
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+    .email-display {
+      background: var(--bg-input);
+      padding: 10px 16px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    .email-display strong {
+      color: var(--text);
+      direction: ltr;
+      display: inline-block;
+    }
+  </style>
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1>تفعيل الحساب</h1>
+      <p class="subtitle">أدخل البريد الإلكتروني المرسل للمعلم لتفعيل حسابك</p>
+
+      <!-- Error / Success Messages -->
+      <div class="error-msg" id="error"></div>
+      <div class="success-msg" id="success"></div>
+
+      <!-- Step 1: Email -->
+      <div class="otp-step active" id="step1">
+        <form id="requestOtpForm">
+          <div class="form-group">
+            <label for="email">البريد الإلكتروني</label>
+            <input type="email" id="email" placeholder="student@school.com" required>
+          </div>
+          <button type="submit" class="btn btn-primary" id="requestBtn">
+            إرسال رمز التفعيل
+          </button>
+        </form>
+      </div>
+
+      <!-- Step 2: OTP + Password -->
+      <div class="otp-step" id="step2">
+        <div class="email-display" id="emailDisplay"></div>
+
+        <form id="verifyOtpForm">
+          <div class="form-group">
+            <label>أدخل رمز التفعيل المكون من 6 أرقام</label>
+            <div class="otp-input-group">
+              <input type="text" maxlength="1" class="otp-digit" data-idx="0" inputmode="numeric" autocomplete="off">
+              <input type="text" maxlength="1" class="otp-digit" data-idx="1" inputmode="numeric" autocomplete="off">
+              <input type="text" maxlength="1" class="otp-digit" data-idx="2" inputmode="numeric" autocomplete="off">
+              <input type="text" maxlength="1" class="otp-digit" data-idx="3" inputmode="numeric" autocomplete="off">
+              <input type="text" maxlength="1" class="otp-digit" data-idx="4" inputmode="numeric" autocomplete="off">
+              <input type="text" maxlength="1" class="otp-digit" data-idx="5" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="newPassword">كلمة المرور الجديدة</label>
+            <input type="password" id="newPassword" placeholder="8 أحرف على الأقل" required minlength="8">
+            <small style="color:var(--text-muted);font-size:12px">يجب أن تحتوي على أحرف كبيرة وصغيرة ورقم</small>
+          </div>
+
+          <div class="otp-timer" id="otpTimer">
+            ينتهي الرمز خلال <strong id="timerCount">10:00</strong>
+          </div>
+
+          <div class="otp-resend">
+            <button type="button" id="resendBtn" onclick="resendOTP()" disabled>إعادة إرسال الرمز</button>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="verifyBtn" style="margin-top:16px">
+            تفعيل الحساب
+          </button>
+        </form>
+      </div>
+
+      <div class="auth-footer">
+        <a href="login.html">العودة لتسجيل الدخول</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js?v=4.0"></script>
+  <script src="js/toast.js?v=2.3"></script>
+  <script>
+    let otpCountdown = null;
+    let otpTimeLeft = 600;
+
+    // OTP digit auto-focus
+    document.querySelectorAll('.otp-digit').forEach((input, idx, digits) => {
+      input.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = val;
+        if (val) {
+          e.target.classList.add('filled');
+          if (idx < 5) digits[idx + 1].focus();
+        } else {
+          e.target.classList.remove('filled');
+        }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) {
+          digits[idx - 1].focus();
+          digits[idx - 1].value = '';
+          digits[idx - 1].classList.remove('filled');
+        }
+      });
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+        for (let i = 0; i < Math.min(paste.length, 6); i++) {
+          digits[i].value = paste[i];
+          digits[i].classList.add('filled');
+        }
+        if (paste.length >= 6) document.getElementById('verifyBtn').focus();
+      });
+    });
+
+    // Step 1: Request OTP
+    document.getElementById('requestOtpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const errorEl = document.getElementById('error');
+      const successEl = document.getElementById('success');
+      const btn = document.getElementById('requestBtn');
+
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'جاري الإرسال...';
+
+      try {
+        await api.requestOTP(email);
+        document.getElementById('emailDisplay').innerHTML = 'تم إرسال الرمز إلى: <strong>' + escapeHtml(email) + '</strong>';
+        document.getElementById('step1').classList.remove('active');
+        document.getElementById('step2').classList.add('active');
+        startTimer();
+        document.querySelector('.otp-digit').focus();
+        if (typeof toast !== 'undefined') {
+          toast.show('تم إرسال رمز التفعيل', 'success');
+        }
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'إرسال رمز التفعيل';
+      }
+    });
+
+    // Step 2: Verify OTP
+    document.getElementById('verifyOtpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const digits = document.querySelectorAll('.otp-digit');
+      const otp = Array.from(digits).map(d => d.value).join('');
+      const password = document.getElementById('newPassword').value;
+      const errorEl = document.getElementById('error');
+      const btn = document.getElementById('verifyBtn');
+
+      if (otp.length !== 6) {
+        errorEl.textContent = 'أدخل الرمز المكون من 6 أرقام';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      if (!password || password.length < 8) {
+        errorEl.textContent = 'كلمة المرور يجب أن تكون 8 أحرف على الأقل';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      errorEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'جاري التحقق...';
+
+      try {
+        await api.verifyOTP(email, otp, password);
+        if (typeof toast !== 'undefined') {
+          toast.show('تم تفعيل الحساب بنجاح!', 'success');
+        }
+        const user = api.getUser();
+        if (user && (user.role === 'TEACHER' || user.role === 'ADMIN')) {
+          window.location.href = 'pages/teacher-dashboard.html';
+        } else {
+          window.location.href = 'pages/student-dashboard.html';
+        }
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'تفعيل الحساب';
+      }
+    });
+
+    // Timer
+    function startTimer() {
+      otpTimeLeft = 600;
+      clearInterval(otpCountdown);
+      otpCountdown = setInterval(() => {
+        otpTimeLeft--;
+        const m = Math.floor(otpTimeLeft / 60);
+        const s = otpTimeLeft % 60;
+        document.getElementById('timerCount').textContent = `${m}:${String(s).padStart(2, '0')}`;
+
+        if (otpTimeLeft <= 0) {
+          clearInterval(otpCountdown);
+          document.getElementById('resendBtn').disabled = false;
+          document.getElementById('otpTimer').innerHTML = '<span style="color:var(--danger)">انتهى وقت الرمز</span>';
+        }
+      }, 1000);
+    }
+
+    // Resend OTP
+    async function resendOTP() {
+      const email = document.getElementById('email').value.trim();
+      const errorEl = document.getElementById('error');
+      const resendBtn = document.getElementById('resendBtn');
+
+      resendBtn.disabled = true;
+      errorEl.style.display = 'none';
+
+      try {
+        await api.requestOTP(email);
+        startTimer();
+        if (typeof toast !== 'undefined') {
+          toast.show('تم إعادة إرسال الرمز', 'success');
+        }
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+        resendBtn.disabled = false;
+      }
+    }
+  </script>
+  <script src="js/watermark.js"></script>
+</body>
+</html>

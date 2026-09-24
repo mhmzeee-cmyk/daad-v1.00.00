@@ -1,0 +1,18 @@
+<RCC>
+  <qresource prefix="/themes">
+    <file>themes/light.qss</file>
+    <file>themes/dark.qss</file>
+  </qresource>
+  <qresource prefix="/icons">
+    <file>icons/new.png</file>
+    <file>icons/open.png</file>
+    <file>icons/save.png</file>
+    <file>icons/build.png</file>
+    <file>icons/run.png</file>
+    <file>icons/convert.png</file>
+    <file>icons/theme.png</file>
+    <file>icons/keyword.png</file>
+    <file>icons/stdlib.png</file>
+    <file>icons/variable.png</file>
+  </qresource>
+</RCC>

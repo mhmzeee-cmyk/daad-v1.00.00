@@ -1,0 +1,21 @@
+/* ثيم فاتح — لغة ض — بدون إيموجي — نصوص + صور PNG فقط */
+QMainWindow, QDockWidget, QMenuBar, QToolBar, QStatusBar {
+    background: #fdf6e3;
+    color: #586e75;
+    font-family: "Noto Naskh Arabic", "Tahoma", sans-serif;
+}
+QPlainTextEdit, QTextEdit {
+    background: #fffdf5;
+    color: #002b36;
+    selection-background-color: #268bd2;
+    selection-color: #ffffff;
+    border: 1px solid #93a1a1;
+}
+QTabWidget::pane { border: 1px solid #93a1a1; background: #fdf6e3; }
+QTabBar::tab { background: #eee8d5; color: #586e75; padding: 6px 12px; }
+QTabBar::tab:selected { background: #268bd2; color: #ffffff; }
+QTreeView { background: #fdf6e3; color: #586e75; }
+QHeaderView::section { background: #eee8d5; }
+QMenuBar::item:selected, QMenu::item:selected { background: #268bd2; color: #ffffff; }
+QToolBar { background: #eee8d5; spacing: 4px; }
+QStatusBar { background: #eee8d5; color: #657b83; }

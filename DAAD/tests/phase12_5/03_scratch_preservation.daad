@@ -1,0 +1,26 @@
+# Phase 12.5-F.3: S6 Scratch Preservation
+# Verifies S6 is never corrupted by user values.
+# Tests SHL/SHR loops, pointer operations, and arithmetic chains.
+
+دالة:shift_test(x: رقم) -> رقم :-
+    متغير: a = x
+    متغير: b = 2
+    # SHL uses S6 as loop counter
+    a = a << b
+    # Now do arithmetic that needs S6 as scratch
+    متغير: c = 3
+    متغير: d = 4
+    متغير: e = 5
+    a = a + b + c + d + e
+    # Verify b,c,d,e are still correct
+    b = b + c + d + e  # 2+3+4+5 = 14
+    ارجع(b)
+نهاية
+
+دالة: الرئيسية() -> رقم :-
+    متغير: result = shift_test(10)
+    # a = 10 << 2 = 40, then 40+2+3+4+5 = 54
+    # b = 2+3+4+5 = 14
+    اطبع(result)  # Expected: 14
+    ارجع(result)
+نهاية

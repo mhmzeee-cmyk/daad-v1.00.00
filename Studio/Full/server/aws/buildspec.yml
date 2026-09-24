@@ -1,0 +1,79 @@
+# ====================================================
+# AWS CodeBuild - Build Specification
+# ====================================================
+# Dhad Studio - CI/CD Pipeline
+# ====================================================
+
+version: 0.2
+
+env:
+  variables:
+    NODE_ENV: "production"
+    ECR_REPOSITORY: "daad-studio"
+    ECS_CLUSTER: "daad-studio-cluster"
+    ECS_SERVICE: "daad-studio-api-service"
+    AWS_DEFAULT_REGION: "me-south-1"
+  parameter-store:
+    /daad-studio/DATABASE_URL: "arn:aws:ssm:me-south-1:ACCOUNT_ID:parameter/daad-studio/DATABASE_URL"
+  secrets-manager:
+    JWT_SECRET: "arn:aws:secretsmanager:me-south-1:ACCOUNT_ID:secret:daad-studio/jwt-secret"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "📥 Installing dependencies..."
+      - npm ci --prefer-offline
+      - echo "✅ Dependencies installed"
+
+  pre_build:
+    commands:
+      - echo "🔍 Running pre-build checks..."
+      - npm run lint --if-present
+      - echo "📦 Generating Prisma Client..."
+      - npx prisma generate
+      - echo "🧪 Running tests..."
+      - npm test --if-present
+      - echo "✅ Pre-build completed"
+
+  build:
+    commands:
+      - echo "🏗️ Starting build at $(date)"
+      - echo "🐳 Building Docker image..."
+      - docker build -t $ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+      - docker tag $ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION $ECR_REPOSITORY:latest
+      - echo "✅ Build completed at $(date)"
+
+  post_build:
+    commands:
+      - echo "🔐 Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - echo "📤 Pushing image to ECR..."
+      - docker tag $ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker tag $ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - docker push $ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:latest
+      - echo "📝 Updating task definition..."
+      - aws ecs describe-task-definition --task-definition daad-studio-api --query 'taskDefinition.[containerDefinitions[0].image]' --output text > current-image.txt
+      - IMAGE_URI="$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$ECR_REPOSITORY:$CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - sed -i "s|ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/daad-studio:latest|$IMAGE_URI|g" aws/task-definition.json
+      - echo "🚀 Updating ECS service..."
+      - aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition daad-studio-api --force-new-deployment
+      - echo "✅ Deployment initiated"
+
+artifacts:
+  files:
+    - '**/*'
+  name: daad-studio-build
+
+cache:
+  paths:
+    - 'node_modules/**/*'
+    - '/root/.npm/**/*'
+
+reports:
+  jest-reports:
+    files:
+      - 'reports/junit-*.xml'
+    file-format: 'JUNITXML'

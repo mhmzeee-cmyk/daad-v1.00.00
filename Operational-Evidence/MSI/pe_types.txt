@@ -1,0 +1,9 @@
+/tmp/opencode/msi/Program Files/DhadStudio/bin/01_hello.exe:      PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/02_arithmetic.exe: PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/03_conditions.exe: PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/04_loops.exe:      PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/05_functions.exe:  PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/06_factorial.exe:  PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/07_fibonacci.exe:  PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/daad-compiler.exe: PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections
+/tmp/opencode/msi/Program Files/DhadStudio/bin/dhad_cpu.exe:      PE32+ executable for MS Windows 5.02 (console), x86-64, 18 sections

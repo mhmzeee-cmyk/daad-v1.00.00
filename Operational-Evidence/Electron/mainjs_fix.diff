@@ -1,0 +1,34 @@
+diff --git a/Studio/desktop-app/main.js b/Studio/desktop-app/main.js
+index 0547042..fb3076d 100644
+--- a/Studio/desktop-app/main.js
++++ b/Studio/desktop-app/main.js
+@@ -36,9 +36,9 @@ function createSplash() {
+ // ── Start Backend Server ─────────────────────────────────────────────────────
+ function startServer() {
+   return new Promise((resolve) => {
+-    const serverPath = path.join(__dirname, "..", "server", "src", "index.js");
++    const serverPath = path.join(__dirname, "server", "src", "index.js");
+     serverProcess = spawn(process.execPath, [serverPath], {
+-      cwd: path.join(__dirname, "..", "server"),
++      cwd: path.join(__dirname, "server"),
+       env: { ...process.env, PORT: SERVER_PORT },
+       stdio: "pipe",
+     });
+@@ -111,7 +111,7 @@ function createMainWindow() {
+     });
+   });
+ 
+-  mainWindow.loadFile(path.join(__dirname, "..", "frontend-web", "login.html"));
++  mainWindow.loadFile(path.join(__dirname, "frontend-web", "login.html"));
+ 
+   // Inject titlebar CSS into every page
+   mainWindow.webContents.on("did-finish-load", () => {
+@@ -199,7 +199,7 @@ function createMenu() {
+ }
+ 
+ function nav(page) {
+-  mainWindow?.loadFile(path.join(__dirname, "..", "frontend-web", page));
++  mainWindow?.loadFile(path.join(__dirname, "frontend-web", page));
+ }
+ 
+ // ── IPC ──────────────────────────────────────────────────────────────────────

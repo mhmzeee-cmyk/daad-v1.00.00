@@ -1,0 +1,97 @@
+{
+  "listeners": [
+    {
+      "listenerArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:listener/app/daad-studio-api-alb/1234567890",
+      "loadBalancerArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:loadbalancer/app/daad-studio-api-alb/1234567890",
+      "port": 443,
+      "protocol": "HTTPS",
+      "sslPolicy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
+      "certificates": [
+        {
+          "certificateArn": "arn:aws:acm:me-south-1:ACCOUNT_ID:certificate/12345678-1234-1234-1234-123456789012",
+          "isDefault": true
+        }
+      ],
+      "defaultActions": [
+        {
+          "type": "forward",
+          "targetGroupArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:targetgroup/daad-studio-tg/1234567890",
+          "forwardConfig": {
+            "targetGroups": [
+              {
+                "targetGroupArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:targetgroup/daad-studio-tg/1234567890",
+                "weight": 100
+              }
+            ],
+            "stickiness": {
+              "Enabled": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "listenerArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:listener/app/daad-studio-api-alb/1234567891",
+      "loadBalancerArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:loadbalancer/app/daad-studio-api-alb/1234567890",
+      "port": 80,
+      "protocol": "HTTP",
+      "defaultActions": [
+        {
+          "type": "redirect",
+          "redirectConfig": {
+            "protocol": "HTTPS",
+            "port": "443",
+            "statusCode": "HTTP_301"
+          }
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "priority": 1,
+      "conditions": [
+        {
+          "field": "path-pattern",
+          "values": ["/api/*"]
+        }
+      ],
+      "actions": [
+        {
+          "type": "forward",
+          "targetGroupArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:targetgroup/daad-studio-tg/1234567890"
+        }
+      ]
+    },
+    {
+      "priority": 2,
+      "conditions": [
+        {
+          "field": "path-pattern",
+          "values": ["/health", "/health/*"]
+        }
+      ],
+      "actions": [
+        {
+          "type": "forward",
+          "targetGroupArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:targetgroup/daad-studio-tg/1234567890"
+        }
+      ]
+    },
+    {
+      "priority": 3,
+      "conditions": [
+        {
+          "field": "path-pattern",
+          "values": ["/api-docs*"]
+        }
+      ],
+      "actions": [
+        {
+          "type": "forward",
+          "targetGroupArn": "arn:aws:elasticloadbalancing:me-south-1:ACCOUNT_ID:targetgroup/daad-studio-tg/1234567890"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "name": "daad-language",
+  "displayName": "لغة ض - Daad Language Support",
+  "description": "دعم تلوين القواعد، المقتطفات، وتحويل إلى C++ للغة ض",
+  "version": "1.2.8",
+  "publisher": "DaadStudio",
+  "icon": "icon.png",
+  "repository": "https://github.com/mhmzeee-cmyk/daad-v1.00.00",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "daad",
+        "aliases": [
+          "ض",
+          "Daad"
+        ],
+        "extensions": [
+          ".ض"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "daad",
+        "scopeName": "source.daad",
+        "path": "./syntaxes/daad.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "daad",
+        "path": "./snippets/daad.code-snippets"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "dhad-icons",
+        "label": "ض Icons",
+        "path": "./icons/dhad-fileicons.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "daad.compileCurrentFile",
+        "title": "ض: تحويل الملف الحالي إلى C++"
+      },
+      {
+        "command": "daad.buildAndRun",
+        "title": "ض: بناء وتشغيل الملف الحالي (F9)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "daad.buildAndRun",
+        "key": "f9",
+        "when": "editorTextFocus && resourceLangId == daad"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "dhad",
+        "label": "ض Dhad (gdb)",
+        "program": "./debug/dhadDebug.js",
+        "runtime": "node",
+        "languages": ["daad"],
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "ملف ض المراد تصحيحه",
+                "default": "${file}"
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "توقف عند بداية main",
+                "default": false
+              },
+              "cwd": {
+                "type": "string",
+                "description": "مجلد عمل البرنامج (اختياري)"
+              }
+            }
+          }
+        },
+        "configurationSnippets": [
+          {
+            "label": "ض: تصحيح الملف الحالي (gdb)",
+            "description": "ترجمة .ض ثم تصحيح تفاعلي بأسطر ض الأصلية",
+            "body": {
+              "type": "dhad",
+              "request": "launch",
+              "name": "تصحيح ض",
+              "program": "^\"\\${file}\"",
+              "stopOnEntry": false
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "activationEvents": [
+    "onLanguage:daad"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/node": "^26.5.0"
+  }
+}

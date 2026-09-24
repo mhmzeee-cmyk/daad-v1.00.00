@@ -1,0 +1,406 @@
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.0
+import DaadBridge 1.0
+
+ApplicationWindow {
+    id: root
+    visible: true
+    width: 1024
+    height: 740
+    minimumWidth: 860
+    minimumHeight: 640
+    title: qsTr("Dhad Bridge")
+    color: "#0d1117"
+    flags: Qt.Window | Qt.CustomizeWindowHint | Qt.WindowTitleHint | Qt.WindowCloseButtonHint
+
+    SchoolOnboarder { id: onboarder }
+
+    Connections {
+        target: onboarder
+        function onUploadSuccess(message) {
+            resultLabel.text = message; resultLabel.color = "#3fb950"
+            resultLabel.visible = true; errorLabel.visible = false
+        }
+        function onUploadFailed(error) {
+            resultLabel.visible = false; errorLabel.text = error; errorLabel.visible = true
+        }
+        function onActivationOtpSent(message) {
+            activateOtpInfo.text = message; activateOtpInfo.visible = true
+        }
+        function onActivationSuccess(message) {
+            activateResult.text = message; activateResult.color = "#3fb950"
+            activateResult.visible = true; activateError.visible = false
+        }
+        function onActivationCodeChanged() {
+            if (onboarder.activationCode !== "") {
+                otpCodeLabel.visible = true
+                otpCodeValue.text = onboarder.activationCode
+            } else {
+                otpCodeLabel.visible = false
+            }
+        }
+    }
+
+    ColumnLayout {
+        anchors.fill: parent; anchors.margins: 40; spacing: 0
+
+        // ── Header ──────────────────────────────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true; Layout.bottomMargin: 24
+            Rectangle {
+                width: 56; height: 56; radius: 12; color: "#161b22"
+                border.width: 1; border.color: "#30363d"
+                Label { anchors.centerIn: parent; text: "\u0636"; font.pixelSize: 30; font.bold: true; color: "#00f2ff" }
+            }
+            ColumnLayout { spacing: 2
+                Label { text: "Dhad Bridge"; font.pixelSize: 26; font.bold: true; color: "#e6edf3" }
+                Label {
+                    text: onboarder.adminName !== "" ? qsTr("Admin: ") + onboarder.adminName : ""
+                    font.pixelSize: 14; color: "#8b949e"; visible: onboarder.adminName !== ""
+                }
+            }
+            Item { Layout.fillWidth: true }
+            Rectangle {
+                width: serverRow.width + 24; height: 40; radius: 8; color: "#161b22"
+                border.width: 1; border.color: "#30363d"
+                Row { id: serverRow; anchors.centerIn: parent; spacing: 8
+                    Label { text: "\u26A1"; font.pixelSize: 14; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                    TextInput {
+                        id: serverInput; width: Math.max(260, implicitWidth + 8)
+                        text: onboarder.serverUrl; color: "#8b949e"; font.pixelSize: 13
+                        font.family: "Consolas"; clip: true; selectByMouse: true
+                        anchors.verticalCenter: parent.verticalCenter
+                        onTextChanged: onboarder.serverUrl = text
+                    }
+                }
+            }
+        }
+
+        // ── Progress Bar ────────────────────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true; Layout.preferredHeight: 6; Layout.bottomMargin: 20; radius: 3; color: "#21262d"
+            Rectangle {
+                width: Math.max(6, parent.width * onboarder.progress / 100); height: parent.height; radius: 3
+                color: onboarder.state === SchoolOnboarder.Error ? "#f85149"
+                     : onboarder.state === SchoolOnboarder.Success ? "#3fb950" : "#1f6feb"
+                Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            }
+        }
+
+        // ── Main Content ────────────────────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true; Layout.fillHeight: true; radius: 12; color: "#161b22"
+            border.width: 1
+            border.color: onboarder.state === SchoolOnboarder.Error ? "#f8514930"
+                         : onboarder.state === SchoolOnboarder.Success ? "#3fb95030" : "#30363d"
+
+            // ══════ STEP 0: Login ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 0
+                spacing: 16; width: Math.min(380, parent.width - 80)
+
+                Label { text: qsTr("Dhad Bridge"); font.pixelSize: 28; font.bold: true; color: "#e6edf3"; Layout.alignment: Qt.AlignHCenter }
+                Label { text: qsTr("Choose an action"); font.pixelSize: 14; color: "#8b949e"; Layout.alignment: Qt.AlignHCenter }
+
+                // Login Form
+                ColumnLayout { spacing: 12
+                    TextField {
+                        id: emailField; Layout.fillWidth: true; placeholderText: qsTr("Email")
+                        color: "#e6edf3"; placeholderTextColor: "#484f58"
+                        background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: emailField.activeFocus ? "#388bfd" : "#30363d" }
+                        font.pixelSize: 15; leftPadding: 14; implicitHeight: 44
+                        onAccepted: loginPassField.forceActiveFocus()
+                    }
+                    TextField {
+                        id: loginPassField; Layout.fillWidth: true; placeholderText: qsTr("Password")
+                        echoMode: TextInput.Password; color: "#e6edf3"; placeholderTextColor: "#484f58"
+                        background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: loginPassField.activeFocus ? "#388bfd" : "#30363d" }
+                        font.pixelSize: 15; leftPadding: 14; implicitHeight: 44
+                        onAccepted: loginBtn.clicked()
+                    }
+                    Rectangle {
+                        Layout.fillWidth: true; implicitHeight: 46; radius: 10
+                        color: loginBtnArea.containsMouse ? "#238636" : "#23863699"
+                        border.width: 1; border.color: loginBtnArea.containsMouse ? "#3fb950" : "#2ea043"
+                        Label { anchors.centerIn: parent; text: qsTr("Admin Login"); font.pixelSize: 16; font.bold: true; color: "#ffffff" }
+                        MouseArea { id: loginBtnArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onClicked: onboarder.login(emailField.text, loginPassField.text) }
+                    }
+                }
+
+                Label { id: loginErrorLabel; Layout.fillWidth: true; visible: onboarder.loginError !== ""
+                    text: onboarder.loginError; font.pixelSize: 13; font.bold: true; color: "#f85149"
+                    wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter }
+
+                // Divider
+                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#30363d"; Layout.topMargin: 8; Layout.bottomMargin: 8 }
+
+                // Activate Account Button
+                Rectangle {
+                    Layout.fillWidth: true; implicitHeight: 46; radius: 10
+                    color: activateBtnArea.containsMouse ? "#1f6feb" : "#1f6feb40"
+                    border.width: 1; border.color: activateBtnArea.containsMouse ? "#58a6ff" : "#1f6feb"
+                    Label { anchors.centerIn: parent; text: qsTr("\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u0633\u0627\u0628"); font.pixelSize: 16; font.bold: true; color: "#e6edf3" }
+                    MouseArea { id: activateBtnArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.startActivation() }
+                }
+            }
+
+            // ══════ STEP 1: School Info ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 1
+                spacing: 14; width: Math.min(480, parent.width - 80)
+
+                Label { text: qsTr("School Information"); font.pixelSize: 22; font.bold: true; color: "#e6edf3"; Layout.alignment: Qt.AlignHCenter }
+
+                ColumnLayout { Layout.fillWidth: true; spacing: 4
+                    Label { text: qsTr("School Name *"); font.pixelSize: 13; color: "#8b949e" }
+                    TextField { id: schoolNameField; Layout.fillWidth: true; placeholderText: qsTr("e.g. Al-Noor School")
+                        color: "#e6edf3"; placeholderTextColor: "#484f58"
+                        background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: schoolNameField.activeFocus ? "#388bfd" : "#30363d" }
+                        font.pixelSize: 15; leftPadding: 14; implicitHeight: 44; maximumLength: 200 }
+                }
+                ColumnLayout { Layout.fillWidth: true; spacing: 4
+                    Label { text: qsTr("School Stage"); font.pixelSize: 13; color: "#8b949e" }
+                    ComboBox { id: schoolStageCombo; Layout.fillWidth: true; implicitHeight: 44
+                        model: ["", qsTr("Primary (1-6)"), qsTr("Middle (7-9)"), qsTr("High (10-12)"), qsTr("Full School (1-12)")]
+                        currentIndex: 0; font.pixelSize: 15
+                        contentItem: Label { text: schoolStageCombo.displayText; font: schoolStageCombo.font; color: "#e6edf3"; verticalAlignment: Text.AlignVCenter; leftPadding: 14 }
+                        background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: "#30363d" }
+                        delegate: ItemDelegate { width: schoolStageCombo.width
+                            contentItem: Label { text: modelData; font.pixelSize: 14; color: "#e6edf3"; verticalAlignment: Text.AlignVCenter; leftPadding: 14 }
+                            background: Rectangle { color: parent.hovered ? "#1f6feb" : "#0d1117" } }
+                    }
+                }
+                ColumnLayout { Layout.fillWidth: true; spacing: 4
+                    Label { text: qsTr("Expected Students"); font.pixelSize: 13; color: "#8b949e" }
+                    TextField { id: expectedStudentsField; Layout.fillWidth: true; placeholderText: qsTr("e.g. 500")
+                        color: "#e6edf3"; placeholderTextColor: "#484f58"
+                        background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: expectedStudentsField.activeFocus ? "#388bfd" : "#30363d" }
+                        font.pixelSize: 15; leftPadding: 14; implicitHeight: 44; validator: IntValidator { bottom: 1; top: 10000 } }
+                }
+                Rectangle { Layout.fillWidth: true; implicitHeight: 46; radius: 10
+                    color: nextBtnArea1.containsMouse ? "#238636" : "#23863699"
+                    border.width: 1; border.color: nextBtnArea1.containsMouse ? "#3fb950" : "#2ea043"
+                    Label { anchors.centerIn: parent; text: qsTr("Next: Select Files"); font.pixelSize: 16; font.bold: true; color: "#ffffff" }
+                    MouseArea { id: nextBtnArea1; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.setSchoolInfo(schoolNameField.text, schoolStageCombo.currentText, parseInt(expectedStudentsField.text) || 0) }
+                }
+            }
+
+            // ══════ STEP 2: Select Files ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 2; spacing: 20
+                Label { text: qsTr("Select Data Files"); font.pixelSize: 22; font.bold: true; color: "#e6edf3"; Layout.alignment: Qt.AlignHCenter }
+                Label { text: qsTr("CSV or Excel (.csv, .xlsx, .xls)"); font.pixelSize: 13; color: "#8b949e"; Layout.alignment: Qt.AlignHCenter }
+                Rectangle { Layout.alignment: Qt.AlignHCenter; Layout.topMargin: 8
+                    width: Math.max(360, selectBtnRow.width + 48); height: 52; radius: 12
+                    color: selectBtnArea.containsMouse ? "#1f6feb" : "#1f6feb40"
+                    border.width: 1; border.color: selectBtnArea.containsMouse ? "#58a6ff" : "#1f6feb"
+                    Row { id: selectBtnRow; anchors.centerIn: parent; spacing: 12
+                        Label { text: "\uD83D\uDCC2"; font.pixelSize: 22; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Select Files"); font.pixelSize: 18; font.bold: true; color: "#e6edf3"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: selectBtnArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.selectFiles() }
+                }
+                Label { visible: onboarder.statusMessage !== ""; text: onboarder.statusMessage; font.pixelSize: 14; color: "#3fb950"; Layout.alignment: Qt.AlignHCenter }
+            }
+
+            // ══════ STEP 3: Review ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 3
+                spacing: 16; width: Math.min(520, parent.width - 80)
+
+                Label { text: qsTr("Review & Upload"); font.pixelSize: 22; font.bold: true; color: "#e6edf3"; Layout.alignment: Qt.AlignHCenter }
+                Rectangle { Layout.fillWidth: true; implicitHeight: summaryCol.height + 28; radius: 10
+                    color: "#0d1117"; border.width: 1; border.color: "#30363d"
+                    ColumnLayout { id: summaryCol; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 14; spacing: 8
+                        Label { text: qsTr("School: ") + schoolNameField.text; font.pixelSize: 15; color: "#e6edf3"; font.bold: true }
+                        Label { text: qsTr("Stage: ") + schoolStageCombo.currentText; font.pixelSize: 14; color: "#8b949e" }
+                        Label { text: qsTr("Files: ") + onboarder.statusMessage.split(" ")[0]; font.pixelSize: 14; color: "#58a6ff"; font.bold: true }
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; implicitHeight: 50; radius: 12
+                    color: uploadBtnArea.containsMouse ? "#238636" : "#23863699"
+                    border.width: 1; border.color: uploadBtnArea.containsMouse ? "#3fb950" : "#2ea043"
+                    Row { anchors.centerIn: parent; spacing: 12
+                        Label { text: "\u2B06"; font.pixelSize: 22; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Upload to Server"); font.pixelSize: 18; font.bold: true; color: "#ffffff"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: uploadBtnArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.upload() }
+                }
+                Rectangle { Layout.alignment: Qt.AlignHCenter; width: backRow.width + 28; height: 38; radius: 8
+                    color: backArea.containsMouse ? "#30363d" : "transparent"; border.width: 1; border.color: "#30363d"
+                    Row { id: backRow; anchors.centerIn: parent; spacing: 8
+                        Label { text: "\u2190"; font.pixelSize: 16; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Back"); font.pixelSize: 14; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: backArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.goBack() }
+                }
+            }
+
+            // ══════ STEP 4: Done ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 4; spacing: 20
+                Label { text: onboarder.state === SchoolOnboarder.Success ? "\u2713" : "\u2717"
+                    font.pixelSize: 56; color: onboarder.state === SchoolOnboarder.Success ? "#3fb950" : "#f85149"; Layout.alignment: Qt.AlignHCenter }
+                Label { id: resultLabel; visible: false; font.pixelSize: 16; font.bold: true; wrapMode: Text.Wrap
+                    horizontalAlignment: Text.AlignHCenter; Layout.maximumWidth: 500 }
+                Label { id: errorLabel; visible: false; font.pixelSize: 16; font.bold: true; color: "#f85149"
+                    wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter; Layout.maximumWidth: 500 }
+                Rectangle { Layout.alignment: Qt.AlignHCenter; width: restartRow.width + 36; height: 42; radius: 10
+                    color: restartArea.containsMouse ? "#30363d" : "transparent"; border.width: 1; border.color: "#30363d"
+                    Row { id: restartRow; anchors.centerIn: parent; spacing: 10
+                        Label { text: "\u21BA"; font.pixelSize: 16; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Start Over"); font.pixelSize: 15; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: restartArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: { onboarder.logout(); emailField.text = ""; loginPassField.text = ""
+                            schoolNameField.text = ""; schoolStageCombo.currentIndex = 0; expectedStudentsField.text = ""
+                            resultLabel.visible = false; errorLabel.visible = false } }
+                }
+            }
+
+            // ══════ STEP 5: Activate Request ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 5
+                spacing: 16; width: Math.min(400, parent.width - 80)
+
+                Label { text: "\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u0633\u0627\u0628"; font.pixelSize: 22; font.bold: true; color: "#e6edf3"; Layout.alignment: Qt.AlignHCenter }
+                Label { text: "\u0623\u062F\u062E\u0644 \u0628\u0631\u064A\u062F\u0643 \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A \u0623\u0648 \u0627\u0644\u0631\u0642\u0645 \u0627\u0644\u0648\u0637\u0646\u064A \u0644\u0645\u0631\u0627\u0633\u0644\u0629 \u0631\u0645\u0632 \u0627\u0644\u062A\u0641\u0639\u064A\u0644"
+                    font.pixelSize: 13; color: "#8b949e"; Layout.alignment: Qt.AlignHCenter; wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter }
+
+                TextField { id: activateEmailField; Layout.fillWidth: true; placeholderText: qsTr("Email or National ID")
+                    color: "#e6edf3"; placeholderTextColor: "#484f58"
+                    background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: activateEmailField.activeFocus ? "#388bfd" : "#30363d" }
+                    font.pixelSize: 15; leftPadding: 14; implicitHeight: 44
+                    onAccepted: activateOtpBtn.clicked() }
+
+                Rectangle { Layout.fillWidth: true; implicitHeight: 46; radius: 10
+                    color: activateOtpBtnArea.containsMouse ? "#1f6feb" : "#1f6feb40"
+                    border.width: 1; border.color: activateOtpBtnArea.containsMouse ? "#58a6ff" : "#1f6feb"
+                    Label { anchors.centerIn: parent; text: qsTr("\u0625\u0631\u0633\u0627\u0644 \u0631\u0645\u0632 \u0627\u0644\u062A\u0641\u0639\u064A\u0644"); font.pixelSize: 16; font.bold: true; color: "#e6edf3" }
+                    MouseArea { id: activateOtpBtnArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.requestActivationOtp(activateEmailField.text) }
+                }
+
+                Label { id: activateOtpInfo; visible: false; font.pixelSize: 13; color: "#58a6ff"
+                    wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true }
+
+                // Show activation code from server
+                ColumnLayout { visible: onboarder.activationCode !== ""; spacing: 4
+                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: "#30363d"; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+                    Label { id: otpCodeLabel; visible: false
+                        text: "\u0631\u0645\u0632 \u0627\u0644\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0633\u0639\u064A\u062F:"
+                        font.pixelSize: 13; color: "#f0883e"; Layout.alignment: Qt.AlignHCenter }
+                    Rectangle {
+                        Layout.fillWidth: true; implicitHeight: 52; radius: 10
+                        color: "#0d1117"; border.width: 2; border.color: "#f0883e"
+                        Label { id: otpCodeValue; anchors.centerIn: parent
+                            text: ""; font.pixelSize: 28; font.bold: true; color: "#f0883e"
+                            font.family: "Consolas" }
+                    }
+                    Label { text: "\u062D\u0641\u0638 \u0647\u0630\u0627 \u0627\u0644\u0631\u0645\u0632 \u0644\u0644\u0625\u062F\u062E\u0627\u0644 \u0641\u064A \u0627\u0644\u062E\u0637\u0648\u0629 \u0627\u0644\u062A\u0627\u0644\u064A\u0629"
+                        font.pixelSize: 12; color: "#8b949e"; Layout.alignment: Qt.AlignHCenter }
+                }
+
+                Rectangle { Layout.alignment: Qt.AlignHCenter; width: backToLoginRow.width + 28; height: 38; radius: 8
+                    color: backToLoginArea.containsMouse ? "#30363d" : "transparent"; border.width: 1; border.color: "#30363d"
+                    Row { id: backToLoginRow; anchors.centerIn: parent; spacing: 8
+                        Label { text: "\u2190"; font.pixelSize: 16; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Back to Login"); font.pixelSize: 14; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: backToLoginArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.backToLogin() }
+                }
+            }
+
+            // ══════ STEP 6: Activate Verify ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 6
+                spacing: 14; width: Math.min(400, parent.width - 80)
+
+                Label { text: "\u0625\u062F\u062E\u0644 \u0631\u0645\u0632 \u0627\u0644\u062A\u0641\u0639\u064A\u0644"; font.pixelSize: 22; font.bold: true; color: "#e6edf3"; Layout.alignment: Qt.AlignHCenter }
+                Label { text: "\u0623\u062F\u062E\u0644 \u0631\u0645\u0632 \u0627\u0644\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u0633\u0639\u062F \u0648\u062A\u0646\u0633\u064A\u062A \u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631 \u0627\u0644\u062C\u062F\u064A\u062F\u0629"
+                    font.pixelSize: 13; color: "#8b949e"; Layout.alignment: Qt.AlignHCenter; wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter }
+
+                // Show current identifier
+                Label { text: "\u0627\u0644\u0645\u0639\u0631\u0641: " + activateEmailField.text
+                    font.pixelSize: 13; color: "#58a6ff"; Layout.alignment: Qt.AlignHCenter }
+
+                // Show activation code if available
+                Rectangle { visible: onboarder.activationCode !== ""; Layout.fillWidth: true
+                    implicitHeight: activationCodeDisplay.height + 16; radius: 8
+                    color: "#0d1117"; border.width: 1; border.color: "#f0883e"
+                    ColumnLayout { id: activationCodeDisplay; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 8; spacing: 2
+                        Label { text: "\u0631\u0645\u0632 \u0627\u0644\u062A\u0641\u0639\u064A\u0644: " + onboarder.activationCode
+                            font.pixelSize: 16; font.bold: true; color: "#f0883e"; font.family: "Consolas"
+                            Layout.alignment: Qt.AlignHCenter }
+                    }
+                }
+
+                TextField { id: verifyOtpField; Layout.fillWidth: true; placeholderText: qsTr("6-digit code")
+                    color: "#e6edf3"; placeholderTextColor: "#484f58"
+                    background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: verifyOtpField.activeFocus ? "#388bfd" : "#30363d" }
+                    font.pixelSize: 20; leftPadding: 14; implicitHeight: 44; maximumLength: 6; horizontalAlignment: Text.AlignHCenter
+                    validator: IntValidator { bottom: 0; top: 999999 }
+                    onAccepted: verifyPasswordField.forceActiveFocus() }
+
+                TextField { id: verifyPasswordField; Layout.fillWidth: true; placeholderText: qsTr("New Password")
+                    echoMode: TextInput.Password; color: "#e6edf3"; placeholderTextColor: "#484f58"
+                    background: Rectangle { radius: 8; color: "#0d1117"; border.width: 1; border.color: verifyPasswordField.activeFocus ? "#388bfd" : "#30363d" }
+                    font.pixelSize: 15; leftPadding: 14; implicitHeight: 44
+                    onAccepted: verifyBtn.clicked() }
+
+                Rectangle { Layout.fillWidth: true; implicitHeight: 46; radius: 10
+                    color: verifyBtnArea.containsMouse ? "#238636" : "#23863699"
+                    border.width: 1; border.color: verifyBtnArea.containsMouse ? "#3fb950" : "#2ea043"
+                    Label { anchors.centerIn: parent; text: qsTr("\u062A\u0641\u0639\u064A\u0644 \u0627\u0644\u062D\u0633\u0627\u0628"); font.pixelSize: 16; font.bold: true; color: "#ffffff" }
+                    MouseArea { id: verifyBtnArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.verifyActivationOtp(activateEmailField.text, verifyOtpField.text, verifyPasswordField.text) }
+                }
+
+                Rectangle { Layout.alignment: Qt.AlignHCenter; width: backToReqRow.width + 28; height: 38; radius: 8
+                    color: backToReqArea.containsMouse ? "#30363d" : "transparent"; border.width: 1; border.color: "#30363d"
+                    Row { id: backToReqRow; anchors.centerIn: parent; spacing: 8
+                        Label { text: "\u2190"; font.pixelSize: 16; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Back"); font.pixelSize: 14; color: "#8b949e"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: backToReqArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.backToActivateRequest() }
+                }
+            }
+
+            // ══════ STEP 7: Activate Done ══════
+            ColumnLayout {
+                anchors.centerIn: parent; visible: onboarder.step === 7; spacing: 20
+                Label { text: onboarder.state === SchoolOnboarder.Success ? "\u2713" : "\u2717"
+                    font.pixelSize: 56; color: onboarder.state === SchoolOnboarder.Success ? "#3fb950" : "#f85149"
+                    Layout.alignment: Qt.AlignHCenter }
+                Label { text: qsTr("Account Activated!"); font.pixelSize: 22; font.bold: true; color: "#3fb950"; Layout.alignment: Qt.AlignHCenter }
+                Label { id: activateResult; visible: false; font.pixelSize: 16; font.bold: true; wrapMode: Text.Wrap
+                    horizontalAlignment: Text.AlignHCenter; Layout.maximumWidth: 500 }
+                Label { id: activateError; visible: false; font.pixelSize: 16; font.bold: true; color: "#f85149"
+                    wrapMode: Text.Wrap; horizontalAlignment: Text.AlignHCenter; Layout.maximumWidth: 500 }
+                Rectangle { Layout.alignment: Qt.AlignHCenter; width: backToLoginRow2.width + 36; height: 42; radius: 10
+                    color: backToLoginArea2.containsMouse ? "#1f6feb" : "#1f6feb40"
+                    border.width: 1; border.color: backToLoginArea2.containsMouse ? "#58a6ff" : "#1f6feb"
+                    Row { id: backToLoginRow2; anchors.centerIn: parent; spacing: 10
+                        Label { text: "\u2190"; font.pixelSize: 16; color: "#e6edf3"; anchors.verticalCenter: parent.verticalCenter }
+                        Label { text: qsTr("Login Now"); font.pixelSize: 15; color: "#e6edf3"; anchors.verticalCenter: parent.verticalCenter }
+                    }
+                    MouseArea { id: backToLoginArea2; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: onboarder.backToLogin() }
+                }
+            }
+        }
+
+        // Footer
+        Label { Layout.fillWidth: true; Layout.topMargin: 12
+            text: "Dhad Bridge v2.0"; font.pixelSize: 12; color: "#484f58"; horizontalAlignment: Text.AlignHCenter }
+    }
+}

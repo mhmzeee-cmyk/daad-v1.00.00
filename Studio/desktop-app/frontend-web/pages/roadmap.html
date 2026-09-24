@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!-- Developer: محمد محمود الحموز | Dhad Studio -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>خارطة الطريق - ض استوديو</title>
+  <link rel="stylesheet" href="../css/style.css?v=3.0">
+  <link rel="stylesheet" href="../css/themes.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <script>try{var t=localStorage.getItem('dhad_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+  <style>
+    .rm-wrap{min-height:100vh;padding:0 0 60px;overflow-x:hidden}
+
+    /* ── Hero Banner ─────────────────────────────────────── */
+    .rm-hero{position:relative;padding:32px 24px 28px;text-align:center;overflow:hidden}
+    .rm-hero-inner{position:relative;max-width:600px;margin:0 auto}
+    .rm-hero h1{font-size:clamp(26px,5vw,38px);font-weight:800;margin-bottom:8px;color:var(--primary)}
+    .rm-hero p{color:var(--text-muted);font-size:15px;margin-bottom:20px}
+    .rm-hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:24px;padding:6px 18px;font-size:13px;font-weight:600;color:var(--primary)}
+    .rm-hero-badge svg{width:16px;height:16px}
+
+    /* ── Stats Ribbon ────────────────────────────────────── */
+    .rm-ribbon{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 16px;margin:-20px auto 32px;position:relative;z-index:3;max-width:700px}
+    .rm-stat{flex:1 1 140px;max-width:180px;background:var(--bg-card,#0a0a0a);border:1px solid var(--border,#1a1a1a);border-radius:14px;padding:16px 12px;text-align:center;transition:transform .2s,box-shadow .2s}
+    .rm-stat:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+    .rm-stat-icon{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:8px}
+    .rm-stat-icon svg{width:18px;height:18px}
+    .rm-stat-val{font-size:22px;font-weight:800;color:var(--primary);line-height:1.2}
+    .rm-stat-lbl{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+    /* ── Overall Progress ────────────────────────────────── */
+    .rm-overall{max-width:700px;margin:0 auto 40px;padding:0 16px}
+    .rm-overall-card{background:var(--bg-card,#0a0a0a);border:1px solid var(--border,#1a1a1a);border-radius:14px;padding:20px;display:flex;align-items:center;gap:20px}
+    .rm-overall-ring{position:relative;width:64px;height:64px;flex-shrink:0}
+    .rm-overall-ring svg{width:64px;height:64px;transform:rotate(-90deg)}
+    .rm-overall-ring circle{fill:none;stroke-width:5}
+    .rm-overall-ring .ring-bg{stroke:var(--border,#1a1a1a)}
+    .rm-overall-ring .ring-fill{stroke:var(--primary);stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+    .rm-overall-ring .ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:var(--primary)}
+    .rm-overall-info{flex:1}
+    .rm-overall-info h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .rm-overall-info p{font-size:12px;color:var(--text-muted)}
+    .rm-overall-detail{font-size:12px;color:var(--text-muted);text-align:left;white-space:nowrap}
+
+    /* ── Path Container ──────────────────────────────────── */
+    .rm-path{position:relative;max-width:800px;margin:0 auto;padding:0 16px}
+
+    /* Vertical glowing line */
+    .rm-path::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:3px;transform:translateX(-50%);background:linear-gradient(180deg,var(--border,#1a1a1a) 0%,var(--primary) 50%,var(--border,#1a1a1a) 100%);opacity:.3;border-radius:2px}
+    .rm-path-progress{position:absolute;top:0;left:50%;width:3px;transform:translateX(-50%);background:linear-gradient(180deg,var(--primary),var(--primary-light,var(--primary)));border-radius:2px;transition:height 1s ease;z-index:1;      box-shadow:0 0 12px var(--shadow)}
+
+    /* ── Milestone Node ──────────────────────────────────── */
+    .rm-milestone{position:relative;display:flex;align-items:flex-start;margin-bottom:40px;opacity:0;transform:translateY(30px);transition:opacity .5s,transform .5s}
+    .rm-milestone.visible{opacity:1;transform:translateY(0)}
+    .rm-milestone:last-child{margin-bottom:0}
+
+    /* Alternating layout */
+    .rm-milestone:nth-child(odd){flex-direction:row;padding-right:calc(50% + 32px);padding-left:0}
+    .rm-milestone:nth-child(even){flex-direction:row-reverse;padding-left:calc(50% + 32px);padding-right:0}
+
+    /* Center dot */
+    .rm-dot{position:absolute;left:50%;top:20px;width:20px;height:20px;border-radius:50%;transform:translateX(-50%);z-index:5;border:3px solid var(--bg,#000);transition:all .3s}
+    .rm-dot::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:2px solid transparent;transition:border-color .3s}
+    .rm-dot.locked{background:var(--border,#333);box-shadow:none}
+    .rm-dot.unlocked{background:var(--primary);box-shadow:0 0 16px var(--shadow)}
+    .rm-dot.unlocked::after{border-color:rgba(99,102,241,.3)}
+    .rm-dot.completed{background:var(--accent,#f59e0b);box-shadow:0 0 20px rgba(245,158,11,.5)}
+    .rm-dot.completed::after{border-color:rgba(245,158,11,.3)}
+
+    /* Milestone card */
+    .rm-card{flex:1;background:var(--bg-card,#0a0a0a);border:1px solid var(--border,#1a1a1a);border-radius:16px;overflow:hidden;transition:all .3s;position:relative}
+    .rm-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+    .rm-card.locked{opacity:.45;pointer-events:none}
+    .rm-card.locked:hover{transform:none;box-shadow:none}
+
+    /* Card glow on sides */
+    .rm-card::before{content:'';position:absolute;top:0;bottom:0;width:3px;border-radius:2px;transition:background .3s,box-shadow .3s}
+    .rm-milestone:nth-child(odd) .rm-card::before{left:0}
+    .rm-milestone:nth-child(even) .rm-card::before{right:0}
+    .rm-card.unlocked::before{background:var(--primary);box-shadow:0 0 8px var(--shadow)}
+    .rm-card.completed::before{background:var(--accent,#f59e0b);box-shadow:0 0 8px rgba(245,158,11,.4)}
+
+    .rm-card-head{padding:20px 20px 16px;display:flex;align-items:flex-start;gap:14px}
+    .rm-card-num{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
+    .rm-card-num::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);border-radius:14px}
+    .rm-card-meta{flex:1;min-width:0}
+    .rm-card-meta h3{font-size:17px;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.3}
+    .rm-card-meta p{font-size:12px;color:var(--text-muted);line-height:1.4}
+    .rm-card-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;align-self:flex-start}
+    .rm-card-badge.completed{background:rgba(16,185,129,.15);color:#10b981}
+    .rm-card-badge.unlocked{background:rgba(99,102,241,.15);color:#818cf8}
+    .rm-card-badge.locked{background:var(--border,#1a1a1a);color:var(--text-muted)}
+
+    /* Skills */
+    .rm-card-skills{padding:0 20px 16px;display:flex;flex-wrap:wrap;gap:6px}
+    .rm-skill{padding:4px 10px;border-radius:8px;font-size:10px;font-weight:600;letter-spacing:.3px}
+
+    /* Progress inside card */
+    .rm-card-progress{padding:0 20px 16px}
+    .rm-prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+    .rm-prog-row span{font-size:11px;color:var(--text-muted)}
+    .rm-prog-bar{height:6px;background:var(--border,#1a1a1a);border-radius:3px;overflow:hidden}
+    .rm-prog-fill{height:100%;border-radius:3px;transition:width .6s ease}
+
+    /* Card footer */
+    .rm-card-foot{padding:12px 20px;background:var(--bg,#000);border-top:1px solid var(--border,#1a1a1a);display:flex;justify-content:space-between;align-items:center}
+    .rm-xp{font-size:13px;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:4px}
+    .rm-xp svg{width:14px;height:14px}
+    .rm-card-foot .btn{padding:8px 22px;font-size:12px;font-weight:700;border-radius:10px;border:none;cursor:pointer;transition:all .2s}
+    .rm-btn-start{background:var(--bg-card,#fff);color:var(--primary,#10b981);border:2px solid var(--primary,#10b981);box-shadow:0 2px 8px rgba(16,185,129,.1)}
+    .rm-btn-start:hover{background:var(--primary,#10b981);color:#fff;box-shadow:0 4px 14px rgba(16,185,129,.3);transform:translateY(-1px)}
+    .rm-btn-review{background:transparent;border:1px solid var(--border,#333)!important;color:var(--text)}
+    .rm-btn-review:hover{border-color:var(--primary)!important;color:var(--primary)}
+    .rm-btn-locked{background:var(--border,#1a1a1a);color:var(--text-muted);cursor:not-allowed}
+
+    /* ── Floating Particles ──────────────────────────────── */
+    .rm-particle{position:fixed;width:4px;height:4px;border-radius:50%;background:var(--primary);opacity:.15;pointer-events:none;z-index:0;animation:rmFloat 8s ease-in-out infinite}
+    @keyframes rmFloat{0%,100%{transform:translateY(0) scale(1);opacity:.15}50%{transform:translateY(-20px) scale(1.5);opacity:.3}}
+
+    /* ── Color Palettes ──────────────────────────────────── */
+    .c1{background:linear-gradient(135deg,#10b981,#059669)}.c2{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}.c3{background:linear-gradient(135deg,#3b82f6,#2563eb)}.c4{background:linear-gradient(135deg,#f59e0b,#d97706)}.c5{background:linear-gradient(135deg,#06b6d4,#0891b2)}.c6{background:linear-gradient(135deg,#ec4899,#db2777)}.c7{background:linear-gradient(135deg,#ef4444,#dc2626)}
+    .s1{background:rgba(16,185,129,.12);color:#34d399}.s2{background:rgba(139,92,246,.12);color:#a78bfa}.s3{background:rgba(59,130,246,.12);color:#60a5fa}.s4{background:rgba(245,158,11,.12);color:#fbbf24}.s5{background:rgba(6,182,212,.12);color:#22d3ee}.s6{background:rgba(236,72,153,.12);color:#f472b6}.s7{background:rgba(239,68,68,.12);color:#f87171}
+
+    /* ── Mobile ──────────────────────────────────────────── */
+    @media(max-width:768px){
+      .rm-path::before{left:20px}
+      .rm-path-progress{left:20px}
+      .rm-milestone:nth-child(odd),.rm-milestone:nth-child(even){flex-direction:row;padding-right:52px;padding-left:0}
+      .rm-dot{left:20px}
+      .rm-card-head{padding:16px}
+      .rm-card-skills{padding:0 16px 12px}
+      .rm-card-progress{padding:0 16px 12px}
+      .rm-card-foot{padding:12px 16px}
+      .rm-stat{flex:1 1 100px}
+      .rm-overall-card{flex-direction:column;text-align:center}
+      .rm-overall-detail{text-align:center}
+    }
+
+    /* ── Animations ──────────────────────────────────────── */
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--shadow)}50%{box-shadow:0 0 0 8px transparent}}
+    .rm-dot.unlocked{animation:pulse 2s ease-in-out infinite}
+    @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    .rm-card.completed .rm-card-head{position:relative;overflow:hidden}
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main-content">
+      <div class="rm-wrap">
+
+        <!-- Hero -->
+        <div class="rm-hero">
+          <div class="rm-hero-inner">
+            <h1>خارطة الطريق</h1>
+            <p>رحلة تعلم البرمجة خطوة بخطوة - اختر مستوىك وابدأ المغامرة</p>
+            <div class="rm-hero-badge" id="heroBadge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span id="heroLevel">المستوى الأول</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Ribbon -->
+        <div class="rm-ribbon" id="statsRibbon">
+          <div class="rm-stat">
+            <div class="rm-stat-icon" style="background:rgba(16,185,129,.15)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="rm-stat-val" id="statCompleted">0/7</div>
+            <div class="rm-stat-lbl">الوحدات المكتملة</div>
+          </div>
+          <div class="rm-stat">
+            <div class="rm-stat-icon" style="background:rgba(139,92,246,.15)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div class="rm-stat-val" id="statChallenges">0/0</div>
+            <div class="rm-stat-lbl">التحديات</div>
+          </div>
+          <div class="rm-stat">
+            <div class="rm-stat-icon" style="background:rgba(245,158,11,.15)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="rm-stat-val" id="statXP">0</div>
+            <div class="rm-stat-lbl">XP</div>
+          </div>
+        </div>
+
+        <!-- Overall Progress -->
+        <div class="rm-overall">
+          <div class="rm-overall-card">
+            <div class="rm-overall-ring">
+              <svg viewBox="0 0 64 64">
+                <circle class="ring-bg" cx="32" cy="32" r="28"/>
+                <circle class="ring-fill" id="ringFill" cx="32" cy="32" r="28" stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+              </svg>
+              <div class="ring-pct" id="ringPct">0%</div>
+            </div>
+            <div class="rm-overall-info">
+              <h3>التقدم في المسار</h3>
+              <p id="overallDesc">ابدأ رحلتك في تعلم البرمجة</p>
+            </div>
+            <div class="rm-overall-detail" id="overallDetail">0 من 7 وحدات</div>
+          </div>
+        </div>
+
+        <!-- Path -->
+        <div class="rm-path" id="rmPath">
+          <div class="rm-path-progress" id="pathProgress" style="height:0%"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Floating Particles -->
+  <div id="particles"></div>
+
+  <script src="../js/theme-switcher.js"></script>
+  <script src="../js/api.js?v=4.0"></script>
+  <script src="../js/toast.js?v=4.0"></script>
+  <script src="../js/sidebar.js?v=4.0"></script>
+  <script src="../js/roadmap-page.js"></script>
+  <script src="../js/mobile-nav.js?v=4.0"></script>
+  <script src="../js/watermark.js"></script>
+</body>
+</html>

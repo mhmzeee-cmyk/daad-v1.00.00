@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dhad Studio v1.1.0 — Windows 10/11 native programs. ASCII-only property values (wixl 0.106 crashes on non-ASCII). -->
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="de6bc368-d4aa-4307-839d-8c40e16866cc" Name="Dhad Studio" Language="1033" Version="1.1.0" Manufacturer="Dhad Studio" UpgradeCode="189d1c0c-4c8e-44fe-86ac-b8af7b464a62">
+    <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine" Description="Dhad Studio v1.1.0 - Arabic Programming Language (Windows 10/11 native programs)" />
+    <Media Id="1" Cabinet="dhad.cab" EmbedCab="yes" />
+    <Icon Id="DhadIcon" SourceFile="$(var.PayloadDir)/dhad-icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="DhadIcon" />
+    <Property Id="ARPCOMMENTS" Value="Native Windows x64 programs built from Arabic sources: hello, arithmetic, factorial, loops, functions + acceptance scripts for Windows 10 and 11." />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="DhadStudio">
+          <Directory Id="DIR_BIN" Name="bin" />
+        </Directory>
+      </Directory>
+    </Directory>
+    <Feature Id="MainFeature" Title="Dhad Studio" Level="1">
+      <ComponentGroupRef Id="G_DIR_BIN" />
+      <ComponentGroupRef Id="G_INSTALLDIR" />
+    </Feature>
+  </Product>
+  <Fragment>
+    <ComponentGroup Id="G_DIR_BIN" Directory="DIR_BIN">
+      <Component Id="C_bin_hello" Guid="6ca4570e-232b-4a4b-ae4b-ab865ed7f145"><File Id="F_bin_hello" Source="$(var.PayloadDir)/bin/hello.exe" /></Component>
+      <Component Id="C_bin_arithmetic" Guid="5f47fa1a-f486-4d7f-a4d8-bff40402a30d"><File Id="F_bin_arithmetic" Source="$(var.PayloadDir)/bin/arithmetic.exe" /></Component>
+      <Component Id="C_bin_factorial" Guid="6aba8e37-d5d0-47d6-a904-b87e195e731d"><File Id="F_bin_factorial" Source="$(var.PayloadDir)/bin/factorial.exe" /></Component>
+      <Component Id="C_bin_loops" Guid="04795620-d9d4-4e5d-92fc-b10d575fefa6"><File Id="F_bin_loops" Source="$(var.PayloadDir)/bin/loops.exe" /></Component>
+      <Component Id="C_bin_functions" Guid="824e1c76-1e0d-409f-992d-67396bf5fc8b"><File Id="F_bin_functions" Source="$(var.PayloadDir)/bin/functions.exe" /></Component>
+    </ComponentGroup>
+    <ComponentGroup Id="G_INSTALLDIR" Directory="INSTALLDIR">
+      <Component Id="C_v10" Guid="abc487df-a319-4848-87cb-6849096e5f7d"><File Id="F_v10" Source="$(var.PayloadDir)/validate-windows10.bat" /></Component>
+      <Component Id="C_v11" Guid="7a2b5d89-e049-463b-a504-f40bfb320eab"><File Id="F_v11" Source="$(var.PayloadDir)/validate-windows11.bat" /></Component>
+      <Component Id="C_readme" Guid="e49e3d14-4d46-42fd-9632-cdad4f3fa334"><File Id="F_readme" Source="$(var.PayloadDir)/README-WINDOWS10-11.txt" /></Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
