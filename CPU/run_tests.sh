@@ -28,21 +28,21 @@ run_test() {
     has_error=$(echo "$output" | grep -c "خطأ" 2>/dev/null || echo 0)
 
     if [ "$expected_acc" != "" ] && [ "$actual_acc" != "$expected_acc" ]; then
-        echo -e "  ${RED}✗ FAIL${NC} $description"
+        echo -e "  ${RED} FAIL${NC} $description"
         echo -e "    المنتظر: ACC=$expected_acc | الفعلي: ACC=$actual_acc"
         FAIL=$((FAIL + 1))
-        ERRORS="$ERRORS\n  ✗ $description (ACC: $expected_acc → $actual_acc)"
+        ERRORS="$ERRORS\n   $description (ACC: $expected_acc → $actual_acc)"
     elif [ "$expected_status" != "" ] && [ "$actual_status" != "$expected_status" ]; then
-        echo -e "  ${RED}✗ FAIL${NC} $description"
+        echo -e "  ${RED} FAIL${NC} $description"
         echo -e "    المنتظر: $expected_status | الفعلي: $actual_status"
         FAIL=$((FAIL + 1))
-        ERRORS="$ERRORS\n  ✗ $description ($expected_status → $actual_status)"
+        ERRORS="$ERRORS\n   $description ($expected_status → $actual_status)"
     elif echo "$output" | grep -q "segmentation fault\|Aborted\|core dumped" 2>/dev/null; then
-        echo -e "  ${RED}✗ CRASH${NC} $description"
+        echo -e "  ${RED} CRASH${NC} $description"
         FAIL=$((FAIL + 1))
-        ERRORS="$ERRORS\n  ✗ CRASH: $description"
+        ERRORS="$ERRORS\n   CRASH: $description"
     else
-        echo -e "  ${GREEN}✓ PASS${NC} $description (ACC=$actual_acc, $actual_status)"
+        echo -e "  ${GREEN} PASS${NC} $description (ACC=$actual_acc, $actual_status)"
         PASS=$((PASS + 1))
     fi
 }
@@ -54,13 +54,13 @@ run_cli_test() {
     TOTAL=$((TOTAL + 1))
     output=$(eval "$cmd" 2>&1)
     if echo "$output" | grep -q "$expected_pattern" 2>/dev/null; then
-        echo -e "  ${GREEN}✓ PASS${NC} $description"
+        echo -e "  ${GREEN} PASS${NC} $description"
         PASS=$((PASS + 1))
     else
-        echo -e "  ${RED}✗ FAIL${NC} $description"
+        echo -e "  ${RED} FAIL${NC} $description"
         echo -e "    المنتظر يحتوي: $expected_pattern"
         FAIL=$((FAIL + 1))
-        ERRORS="$ERRORS\n  ✗ $description"
+        ERRORS="$ERRORS\n   $description"
     fi
 }
 
@@ -193,10 +193,10 @@ TOTAL=$((TOTAL + 1))
 input_output=$(echo "42" | ./dhad_cpu tests/full_T10b_input.ضasm 2>&1)
 input_acc=$(echo "$input_output" | grep "النتيجة" | sed 's/.*: //' | tr -d '[:space:]' | head -1)
 if [ "$input_acc" = "42" ]; then
-    echo -e "  ${GREEN}✓ PASS${NC} T11a: INPUT إدخال رقم 42"
+    echo -e "  ${GREEN} PASS${NC} T11a: INPUT إدخال رقم 42"
     PASS=$((PASS + 1))
 else
-    echo -e "  ${RED}✗ FAIL${NC} T11a: INPUT إدخال | المنتظر: 42 | الفعلي: $input_acc"
+    echo -e "  ${RED} FAIL${NC} T11a: INPUT إدخال | المنتظر: 42 | الفعلي: $input_acc"
     FAIL=$((FAIL + 1))
 fi
 echo ""
@@ -225,21 +225,21 @@ echo ""
 echo -e "${CYAN}── T13: اختبارات GUI ──${NC}"
 TOTAL=$((TOTAL + 1))
 if [ -f "./dhad_gui" ]; then
-    echo -e "  ${GREEN}✓ PASS${NC} T13a: dhad_gui موجود وقابل للتنفيذ"
+    echo -e "  ${GREEN} PASS${NC} T13a: dhad_gui موجود وقابل للتنفيذ"
     PASS=$((PASS + 1))
 else
-    echo -e "  ${RED}✗ FAIL${NC} T13a: dhad_gui غير موجود"
+    echo -e "  ${RED} FAIL${NC} T13a: dhad_gui غير موجود"
     FAIL=$((FAIL + 1))
 fi
 
 TOTAL=$((TOTAL + 1))
 if timeout 3 ./dhad_gui --help 2>/dev/null || timeout 3 ./dhad_gui 2>/dev/null; then
-    echo -e "  ${GREEN}✓ PASS${NC} T13b: dhad_gui يبدأ بدون أخطاء"
+    echo -e "  ${GREEN} PASS${NC} T13b: dhad_gui يبدأ بدون أخطاء"
     PASS=$((PASS + 1))
 else
     # timeout مع kdialog = عادي لأن GUI يحتاج display
     if [ $? -eq 124 ]; then
-        echo -e "  ${GREEN}✓ PASS${NC} T13b: dhad_gui يبدأ (timeout عادي — يحتاج display)"
+        echo -e "  ${GREEN} PASS${NC} T13b: dhad_gui يبدأ (timeout عادي — يحتاج display)"
         PASS=$((PASS + 1))
     else
         echo -e "  ${YELLOW}? SKIP${NC} T13b: dhad_gui يحتاج display (غير متاح في CLI)"
@@ -293,10 +293,10 @@ echo -e "${CYAN}── T14: اختبارات الأخطاء ──${NC}"
 TOTAL=$((TOTAL + 1))
 err_output=$(./dhad_cpu tests/test_err.ضasm 2>&1)
 if echo "$err_output" | grep -q "خطأ"; then
-    echo -e "  ${GREEN}✓ PASS${NC} T14a: test_err — يكتشف أخطاء التجميع"
+    echo -e "  ${GREEN} PASS${NC} T14a: test_err — يكتشف أخطاء التجميع"
     PASS=$((PASS + 1))
 else
-    echo -e "  ${RED}✗ FAIL${NC} T14a: test_err — لم يكتشف الأخطاء"
+    echo -e "  ${RED} FAIL${NC} T14a: test_err — لم يكتشف الأخطاء"
     FAIL=$((FAIL + 1))
 fi
 echo ""

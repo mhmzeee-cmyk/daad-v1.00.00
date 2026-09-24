@@ -31,9 +31,9 @@
 
 | المرحلة | الحالة |
 |---------|--------|
-| مواصفات اللغة | ✔ مكتمل (17 ملف) |
-| Lexer | ✔ مكتمل (159 اختبار) |
-| Parser + AST | ✔ مكتمل (27+18+45 اختبار) |
+| مواصفات اللغة |  مكتمل (17 ملف) |
+| Lexer |  مكتمل (159 اختبار) |
+| Parser + AST |  مكتمل (27+18+45 اختبار) |
 | Semantic Analysis | ◐ جزئي (127 اختبار، أنواع غير محققة) |
 | IR System | ◐ جزئي (متى básico، بناء مكتمل) |
 | CFG | ◐ جزئي (مُ dominators) |
@@ -117,7 +117,7 @@
 
 ## 2.1 Source → Lexer
 
-**الحالة:** ✔ مكتمل (95%)
+**الحالة:**  مكتمل (95%)
 
 | البند | التفاصيل |
 |-------|----------|
@@ -132,7 +132,7 @@
 
 ## 2.2 Lexer → Parser
 
-**الحالة:** ✔ مكتمل (85%)
+**الحالة:**  مكتمل (85%)
 
 | البند | التفاصيل |
 |-------|----------|
@@ -147,7 +147,7 @@
 
 ## 2.3 Parser → AST
 
-**الحالة:** ✔ مكتمل (90%)
+**الحالة:**  مكتمل (90%)
 
 | البند | التفاصيل |
 |-------|----------|
@@ -683,19 +683,19 @@ backend → ir
 
 ## 7.1 Basic Blocks
 
-✔ موجود — `ir_basic_block.h/c` — fixed 256 instruction limit
+ موجود — `ir_basic_block.h/c` — fixed 256 instruction limit
 
 ## 7.2 CFG
 
-✔ موجود — `cfg.h/c` — مع dominator computation
+ موجود — `cfg.h/c` — مع dominator computation
 
 ## 7.3 Dominators
 
-✔ موجود — Cooper/Harvey/Kennedy algorithm — O(n³)
+ موجود — Cooper/Harvey/Kennedy algorithm — O(n³)
 
 ## 7.4 Post Dominators
 
-✖ غير موجود
+ غير موجود
 
 ## 7.5 Phi Nodes
 
@@ -707,15 +707,15 @@ backend → ir
 
 ## 7.7 Instruction Numbering
 
-✖ غير موجود — لا يوجد renumbering بعد SSA
+ غير موجود — لا يوجد renumbering بعد SSA
 
 ## 7.8 Temporary Variables
 
-✔ موجود — `ir_function_alloc_reg` — auto-increment ID
+ موجود — `ir_function_alloc_reg` — auto-increment ID
 
 ## 7.9 Liveness
 
-✖ غير موجود
+ غير موجود
 
 ## 7.10 Dead Instructions
 
@@ -723,15 +723,15 @@ backend → ir
 
 ## 7.11 IR Verifier
 
-✖ غير موجود
+ غير موجود
 
 ## 7.12 IR Printer
 
-✔ موجود — `ir_printer.c` — يطبع بشكل نصي
+ موجود — `ir_printer.c` — يطبع بشكل نصي
 
 ## 7.13 IR Serialization
 
-✖ غير موجود — لا يوجد save/load للـ IR
+ غير موجود — لا يوجد save/load للـ IR
 
 ---
 
@@ -739,17 +739,17 @@ backend → ir
 
 ## 8.1 Calling Convention
 
-✖ **غير موجود.** لا يوجد System V AMD64 ABI أو أي convention.
+ **غير موجود.** لا يوجد System V AMD64 ABI أو أي convention.
 
 ## 8.2 Prologue
 
 ◐ **موجود في `function_generator.c`** (سطر 44-45): `pushq %rbp` + `movq %rsp, %rbp`
-✖ **غير موجود في `backend_interface.c:emit_x86_function`**
+ **غير موجود في `backend_interface.c:emit_x86_function`**
 
 ## 8.3 Epilogue
 
 ◐ **موجود في `function_generator.c`** (سطر 77-79): `movq %rbp, %rsp` + `popq %rbp` + `ret`
-✖ **غير موجود في `backend_interface.c:emit_x86_function`**
+ **غير موجود في `backend_interface.c:emit_x86_function`**
 
 ## 8.4 Stack Alignment
 
@@ -757,19 +757,19 @@ backend → ir
 
 ## 8.5 Shadow Space
 
-✖ غير موجود
+ غير موجود
 
 ## 8.6 Callee Saved
 
-✖ غير موجود — لا يحفظ/يُعيد `%rbx`, `%r12`-`%r15`
+ غير موجود — لا يحفظ/يُعيد `%rbx`, `%r12`-`%r15`
 
 ## 8.7 Caller Saved
 
-✖ غير موجود
+ غير موجود
 
 ## 8.8 Parameter Passing
 
-✖ غير موجود — لا يوجد منطق لتمرير المعاملات عبر السجلات أو المكدّس
+ غير موجود — لا يوجد منطق لتمرير المعاملات عبر السجلات أو المكدّس
 
 ## 8.9 Return Values
 
@@ -777,31 +777,31 @@ backend → ir
 
 ## 8.10 Register Spilling
 
-✖ غير موجود
+ غير موجود
 
 ## 8.11 Stack Spilling
 
-✖ غير موجود
+ غير موجود
 
 ## 8.12 Jump Tables
 
-✖ غير موجود
+ غير موجود
 
 ## 8.13 Labels
 
-✔ موجود — `label_manager.c`
+ موجود — `label_manager.c`
 
 ## 8.14 Relocations
 
-✖ غير موجود
+ غير موجود
 
 ## 8.15 PIC
 
-✖ غير موجود
+ غير موجود
 
 ## 8.16 RIP Relative
 
-✖ غير موجود
+ غير موجود
 
 ---
 
@@ -811,32 +811,32 @@ backend → ir
 
 | Node Type | IR Builder | Backend | Test |
 |-----------|-----------|---------|------|
-| NODE_VARIABLE_DECL | ◐ | ✖ | ✔ |
-| NODE_CONSTANT_DECL | ◐ | ✖ | ✔ |
-| NODE_FUNCTION_DECL | ◐ | ✖ | ✔ |
-| NODE_PARAMETER | ◐ | ✖ | ✔ |
-| NODE_RETURN_STATEMENT | ◐ | ◐ | ✔ |
-| NODE_IF_STATEMENT | ◐ | ✖ | ✔ |
-| NODE_WHILE_STATEMENT | ◐ | ✖ | ✔ |
-| NODE_FOR_STATEMENT | ◐ | ✖ | ✔ |
-| NODE_BREAK_STATEMENT | ✖ (no-op) | ✖ | ✔ |
-| NODE_CONTINUE_STATEMENT | ✖ (no-op) | ✖ | ✔ |
-| NODE_ASSIGNMENT | ◐ | ✖ | ✔ |
-| NODE_BINARY_EXPRESSION | ◐ | ◐ | ✔ |
-| NODE_UNARY_EXPRESSION | ◐ | ◐ | ✔ |
-| NODE_LITERAL_INT | ◐ | ✖ | ✔ |
-| NODE_LITERAL_FLOAT | ◐ | ✖ | ✔ |
-| NODE_LITERAL_STRING | ◐ | ✖ | ✔ |
-| NODE_LITERAL_CHAR | ◐ | ✖ | ✔ |
-| NODE_LITERAL_BOOL | ◐ | ✖ | ✔ |
-| NODE_IDENTIFIER | ◐ (مكسور) | ✖ | ✔ |
-| NODE_CALL_EXPRESSION | ◐ | ◐ | ✔ |
-| NODE_ARRAY_EXPRESSION | ◐ | ✖ | ✔ |
-| NODE_STRUCT_EXPRESSION | ◐ | ✖ | ✔ |
-| NODE_POINTER_EXPRESSION | ◐ | ✖ | ✔ |
-| NODE_MEMBER_EXPRESSION | ◐ | ✖ | ✔ |
-| NODE_INDEX_EXPRESSION | ◐ | ✖ | ✔ |
-| NODE_CAST_EXPRESSION | ✖ (لا يوجد في builder) | ✖ | ✔ |
+| NODE_VARIABLE_DECL | ◐ |  |  |
+| NODE_CONSTANT_DECL | ◐ |  |  |
+| NODE_FUNCTION_DECL | ◐ |  |  |
+| NODE_PARAMETER | ◐ |  |  |
+| NODE_RETURN_STATEMENT | ◐ | ◐ |  |
+| NODE_IF_STATEMENT | ◐ |  |  |
+| NODE_WHILE_STATEMENT | ◐ |  |  |
+| NODE_FOR_STATEMENT | ◐ |  |  |
+| NODE_BREAK_STATEMENT |  (no-op) |  |  |
+| NODE_CONTINUE_STATEMENT |  (no-op) |  |  |
+| NODE_ASSIGNMENT | ◐ |  |  |
+| NODE_BINARY_EXPRESSION | ◐ | ◐ |  |
+| NODE_UNARY_EXPRESSION | ◐ | ◐ |  |
+| NODE_LITERAL_INT | ◐ |  |  |
+| NODE_LITERAL_FLOAT | ◐ |  |  |
+| NODE_LITERAL_STRING | ◐ |  |  |
+| NODE_LITERAL_CHAR | ◐ |  |  |
+| NODE_LITERAL_BOOL | ◐ |  |  |
+| NODE_IDENTIFIER | ◐ (مكسور) |  |  |
+| NODE_CALL_EXPRESSION | ◐ | ◐ |  |
+| NODE_ARRAY_EXPRESSION | ◐ |  |  |
+| NODE_STRUCT_EXPRESSION | ◐ |  |  |
+| NODE_POINTER_EXPRESSION | ◐ |  |  |
+| NODE_MEMBER_EXPRESSION | ◐ |  |  |
+| NODE_INDEX_EXPRESSION | ◐ |  |  |
+| NODE_CAST_EXPRESSION |  (لا يوجد في builder) |  |  |
 
 ---
 
@@ -1017,43 +1017,43 @@ backend → ir
 
 | الخاصية | الحالة |
 |---------|--------|
-| Variables | ✔ |
+| Variables |  |
 | Arrays | ◐ (في AST، لا يوجد IR/codegen) |
 | Functions | ◐ (في AST، IR ناقص) |
 | Structs | ◐ (في AST، لا يوجد IR/codegen) |
-| Enums | ✖ |
+| Enums |  |
 | Pointers | ◐ (في AST، لا يوجد IR/codegen) |
-| References | ✖ |
-| Switch | ✖ |
+| References |  |
+| Switch |  |
 | For | ◐ |
 | While | ◐ |
-| Do While | ✖ |
-| Break | ✖ (no-op في IR) |
-| Continue | ✖ (no-op في IR) |
-| Goto | ✖ |
-| Function Pointer | ✖ |
-| Lambda | ✖ |
-| Templates | ✖ |
-| Modules | ✖ |
-| Imports | ✖ |
-| Namespaces | ✖ |
-| Generics | ✖ |
-| Exceptions | ✖ |
-| Reflection | ✖ |
-| Attributes | ✖ |
+| Do While |  |
+| Break |  (no-op في IR) |
+| Continue |  (no-op في IR) |
+| Goto |  |
+| Function Pointer |  |
+| Lambda |  |
+| Templates |  |
+| Modules |  |
+| Imports |  |
+| Namespaces |  |
+| Generics |  |
+| Exceptions |  |
+| Reflection |  |
+| Attributes |  |
 | Compile-time evaluation | ◐ (constant folding فقط) |
 | Strings | ◐ |
 | Characters | ◐ |
 | Booleans | ◐ |
 | Floating point | ◐ |
-| Integer types | ✔ (i8, i16, i32, i64) |
-| Pointer arithmetic | ✖ |
+| Integer types |  (i8, i16, i32, i64) |
+| Pointer arithmetic |  |
 | Cast (explicit) | ◐ (في AST، لا يوجد semantic check) |
-| Implicit cast | ✖ |
-| Operator overloading | ✖ |
+| Implicit cast |  |
+| Operator overloading |  |
 | Recursion | ◐ |
-| Nested functions | ✖ |
-| Closures | ✖ |
+| Nested functions |  |
+| Closures |  |
 
 ---
 
@@ -1259,7 +1259,7 @@ backend → ir
 
 ---
 
-## ✅ تقرير الإصلاحات — Phase 5 Audit Fixes (2026-08-05)
+##  تقرير الإصلاحات — Phase 5 Audit Fixes (2026-08-05)
 
 ### Critical Fixes Applied (HIGH Priority)
 1. **`ast_builder.c:17`** — Removed `abort()` on OOM in `safe_strdup`. Now returns NULL gracefully.

@@ -1330,7 +1330,7 @@ static int assemble(Asm *a, const char *filename) {
     printf("  تجميع: %s\n", filename);
     printf("  تم التجميع: %d بايت\n", a->prog_size);
     if (a->error_count > 0) {
-        fprintf(stderr, "  ⚠ %d خطأ\n", a->error_count);
+        fprintf(stderr, "   %d خطأ\n", a->error_count);
     }
     return 0;
 }

@@ -180,13 +180,13 @@ The following items are explicitly deferred:
 
 All requirements for Batch 4 are met:
 
-- ✅ PHI lowering correct for supported cases
-- ✅ Basic blocks correct
-- ✅ Branches correct
-- ✅ Loops correct
-- ✅ Register allocation doesn't break control flow
-- ✅ Spills don't break PHI
-- ✅ Function calls work
-- ✅ Assembly structurally correct
-- ✅ All regression tests PASS
-- ✅ No regressions
+-  PHI lowering correct for supported cases
+-  Basic blocks correct
+-  Branches correct
+-  Loops correct
+-  Register allocation doesn't break control flow
+-  Spills don't break PHI
+-  Function calls work
+-  Assembly structurally correct
+-  All regression tests PASS
+-  No regressions

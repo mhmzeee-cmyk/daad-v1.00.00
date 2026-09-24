@@ -21,10 +21,10 @@ static int tests_failed = 0;
  */
 static void assert_test(const char* test_name, int condition) {
     if (condition) {
-        printf("  ✓ %s\n", test_name);
+        printf("   %s\n", test_name);
         tests_passed++;
     } else {
-        printf("  ✗ %s\n", test_name);
+        printf("   %s\n", test_name);
         tests_failed++;
     }
 }

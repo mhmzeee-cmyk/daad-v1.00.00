@@ -751,9 +751,9 @@ int main(int argc, char *argv[]) {
 
     goto_xy(2, 41);
     if (cpu.halted) {
-        printf("%s%s✓ البرنامج أنهى التنفيذ بعد %d دورة%s", CLR_BOLD, CLR_GREEN, cpu.cycle, CLR_RESET);
+        printf("%s%s البرنامج أنهى التنفيذ بعد %d دورة%s", CLR_BOLD, CLR_GREEN, cpu.cycle, CLR_RESET);
     } else {
-        printf("%s%s✗ تم إيقاف التنفيذ بعد %d دورة%s", CLR_BOLD, CLR_RED, cpu.cycle, CLR_RESET);
+        printf("%s%s تم إيقاف التنفيذ بعد %d دورة%s", CLR_BOLD, CLR_RED, cpu.cycle, CLR_RESET);
     }
 
     goto_xy(2, 43);

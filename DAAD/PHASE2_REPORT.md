@@ -140,17 +140,17 @@
 
 | Aspect | Status |
 |--------|--------|
-| Memory Safety | ✅ Fixed (all realloc leaks, null dereferences, buffer issues) |
-| Parser Correctness | ✅ Fixed (use-after-free in assignment) |
-| AST Correctness | ✅ Fixed (filename ownership) |
-| Semantic Correctness | ✅ Fixed (type checker connected) |
-| Type System | ✅ Fixed (struct equality) |
-| IR Variable Resolution | ✅ Fixed (name-based lookup) |
-| IR Control Flow | ✅ Fixed (condition check logic) |
-| IR Validation | ✅ Added |
-| SSA Completeness | ❌ Incomplete (phi nodes, de-SSA) |
-| Backend Correctness | ❌ Incomplete (epilogue, calling convention) |
-| End-to-End | ❌ Not connected |
+| Memory Safety |  Fixed (all realloc leaks, null dereferences, buffer issues) |
+| Parser Correctness |  Fixed (use-after-free in assignment) |
+| AST Correctness |  Fixed (filename ownership) |
+| Semantic Correctness |  Fixed (type checker connected) |
+| Type System |  Fixed (struct equality) |
+| IR Variable Resolution |  Fixed (name-based lookup) |
+| IR Control Flow |  Fixed (condition check logic) |
+| IR Validation |  Added |
+| SSA Completeness |  Incomplete (phi nodes, de-SSA) |
+| Backend Correctness |  Incomplete (epilogue, calling convention) |
+| End-to-End |  Not connected |
 
 ---
 

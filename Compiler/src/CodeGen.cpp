@@ -57,7 +57,7 @@ void CodeGenVisitor::trackDeallocation(const std::string& varName) {
 void CodeGenVisitor::checkMemoryLeaks() {
     for (const auto& var : m_allocatedVars) {
         if (m_freedVars.find(var) == m_freedVars.end()) {
-            m_warnings.push_back("⚠️ متغير '" + var + "' تم تخصيص ذاكرة له بـ new لكن لم يتم تحريره بـ delete");
+            m_warnings.push_back(" متغير '" + var + "' تم تخصيص ذاكرة له بـ new لكن لم يتم تحريره بـ delete");
         }
     }
 }

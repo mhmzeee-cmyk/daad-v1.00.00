@@ -34,17 +34,17 @@
 
 | الصيغة | المنصة | الحالة |
 |--------|--------|--------|
-| ELF | Linux/BSD | ✅ مدعوم |
-| PE/COFF | Windows | ✅ مدعوم |
-| Mach-O | macOS | ✅ مدعوم |
+| ELF | Linux/BSD |  مدعوم |
+| PE/COFF | Windows |  مدعوم |
+| Mach-O | macOS |  مدعوم |
 
 ### الملفات التنفيذية
 
 | الصيغة | المنصة | الحالة |
 |--------|--------|--------|
-| ELF | Linux/BSD | ✅ مدعوم |
-| PE | Windows | ✅ مدعوم |
-| Mach-O | macOS | ✅ مدعوم |
+| ELF | Linux/BSD |  مدعوم |
+| PE | Windows |  مدعوم |
+| Mach-O | macOS |  مدعوم |
 
 ---
 

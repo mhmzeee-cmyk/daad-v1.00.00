@@ -20,8 +20,8 @@ static int tests_passed = 0;
 static int tests_failed = 0;
 
 #define TEST(name) printf("  %-40s", name)
-#define PASS() do { printf("✓\n"); tests_passed++; } while(0)
-#define FAIL(msg) do { printf("✗ %s\n", msg); tests_failed++; } while(0)
+#define PASS() do { printf("\n"); tests_passed++; } while(0)
+#define FAIL(msg) do { printf(" %s\n", msg); tests_failed++; } while(0)
 
 /* Fix 1: token_is_value null safety */
 void test_token_is_value_null_safety(void) {

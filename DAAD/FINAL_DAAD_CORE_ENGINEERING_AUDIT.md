@@ -23,31 +23,31 @@
 
 | المكون | الملفات | الحالة | ملاحظات |
 |--------|---------|--------|---------|
-| Lexer | 7 files | ✅ مكتمل | 92% - UTF-8, Arabic, 73 keywords |
-| Parser | 7 files | ✅ مكتمل | 80% - Pratt parser, 12 precedence levels |
-| AST | 10 files | ✅ مكتمل | 90% - 24 node types |
-| Semantic | 20 files | ✅ مُحسَّن | 85% - all visitors, error pipeline |
-| IR | 26 files | ⚠️ جزئي | 70% - PHI nodes incomplete |
-| CFG | 2 files | ✅ مكتمل | 75% - dominators, frontiers |
-| SSA | 2 files | ⚠️ ناقص | 25% - not integrated |
-| Optimizer | 2 files | ✅ مكتمل | 55% - 11 passes, intra-block |
-| Backend | 2 files | ⚠️ ناقص | 35% - RA disconnected |
-| Runtime | 0 files | ❌ غير موجود | 0% |
-| Codegen | 14 files | ⚠️ ناقص | 40% |
-| Tests | 11 files | ✅ ممتاز | 998 assertions |
+| Lexer | 7 files |  مكتمل | 92% - UTF-8, Arabic, 73 keywords |
+| Parser | 7 files |  مكتمل | 80% - Pratt parser, 12 precedence levels |
+| AST | 10 files |  مكتمل | 90% - 24 node types |
+| Semantic | 20 files |  مُحسَّن | 85% - all visitors, error pipeline |
+| IR | 26 files |  جزئي | 70% - PHI nodes incomplete |
+| CFG | 2 files |  مكتمل | 75% - dominators, frontiers |
+| SSA | 2 files |  ناقص | 25% - not integrated |
+| Optimizer | 2 files |  مكتمل | 55% - 11 passes, intra-block |
+| Backend | 2 files |  ناقص | 35% - RA disconnected |
+| Runtime | 0 files |  غير موجود | 0% |
+| Codegen | 14 files |  ناقص | 40% |
+| Tests | 11 files |  ممتاز | 998 assertions |
 
 ---
 
 ## 3. Phase 1 Results
 
 ### الإصلاحات المنفذة:
-1. ✅ Semantic error pipeline - يمنع IR generation عند وجود أخطاء
-2. ✅ 8 visitor handlers مُضافين (100% coverage)
-3. ✅ break/continue context validation يعمل
-4. ✅ Constants تحافظ على أنواعها
-5. ✅ Unknown types تُصدر أخطاء بدلاً من silent fallback
-6. ✅ Constant folding مدمج في pipeline
-7. ✅ 17 اختبار جديد مُضاف (158 total in test_semantic.c)
+1.  Semantic error pipeline - يمنع IR generation عند وجود أخطاء
+2.  8 visitor handlers مُضافين (100% coverage)
+3.  break/continue context validation يعمل
+4.  Constants تحافظ على أنواعها
+5.  Unknown types تُصدر أخطاء بدلاً من silent fallback
+6.  Constant folding مدمج في pipeline
+7.  17 اختبار جديد مُضاف (158 total in test_semantic.c)
 
 ### التحسينات:
 | المقياس | قبل | بعد |
@@ -71,42 +71,42 @@
 
 | الملف | TODO/FIXME | Stubs | Dead Code | Status |
 |-------|-----------|-------|-----------|--------|
-| compiler/main.c | 0 | 0 | 0 | ✅ |
-| compiler/semantic/*.c | 0 | 0 | 0 | ✅ |
-| compiler/ast/*.c | 0 | 0 | 0 | ✅ |
-| compiler/lexer/*.c | 0 | 0 | 0 | ✅ |
-| compiler/parser/*.c | 0 | 0 | 0 | ✅ |
-| compiler/ir/*.c | 0 | 0 | 0 | ✅ |
-| compiler/optimizer/*.c | 0 | 0 | 0 | ✅ |
-| compiler/backend/*.c | 0 | 2 (ARM/RISC-V) | 0 | ⚠️ |
-| compiler/codegen/*.c | 0 | 0 | 0 | ✅ |
-| compiler/cfg/*.c | 0 | 0 | 0 | ✅ |
-| compiler/ssa/*.c | 0 | 0 | 0 | ✅ |
+| compiler/main.c | 0 | 0 | 0 |  |
+| compiler/semantic/*.c | 0 | 0 | 0 |  |
+| compiler/ast/*.c | 0 | 0 | 0 |  |
+| compiler/lexer/*.c | 0 | 0 | 0 |  |
+| compiler/parser/*.c | 0 | 0 | 0 |  |
+| compiler/ir/*.c | 0 | 0 | 0 |  |
+| compiler/optimizer/*.c | 0 | 0 | 0 |  |
+| compiler/backend/*.c | 0 | 2 (ARM/RISC-V) | 0 |  |
+| compiler/codegen/*.c | 0 | 0 | 0 |  |
+| compiler/cfg/*.c | 0 | 0 | 0 |  |
+| compiler/ssa/*.c | 0 | 0 | 0 |  |
 
 ### 5.2 Pipeline Audit
 
 ```
 DAAD source
-  → Lexer ✅ (produces tokens)
-  → Parser ✅ (produces AST)
-  → Semantic ✅ (validates types, blocks on errors)
-  → IR Builder ✅ (translates AST to IR)
-  → Optimizer ✅ (11 passes)
-  → Backend ⚠️ (x86-64 assembly, RA disconnected)
-  → Assembly ✅ (text output)
-  → Link ❌ (no runtime library)
-  → Executable ❌ (no runtime)
+  → Lexer  (produces tokens)
+  → Parser  (produces AST)
+  → Semantic  (validates types, blocks on errors)
+  → IR Builder  (translates AST to IR)
+  → Optimizer  (11 passes)
+  → Backend  (x86-64 assembly, RA disconnected)
+  → Assembly  (text output)
+  → Link  (no runtime library)
+  → Executable  (no runtime)
 ```
 
 ### 5.3 Error Propagation
 
 | Error Source | Handled? | Blocks Pipeline? |
 |-------------|----------|------------------|
-| Lexer errors | ✅ | ✅ (returns 1) |
-| Parser errors | ✅ | ✅ (returns 1) |
-| Semantic errors | ✅ (NEW) | ✅ (returns 1) |
-| IR verifier | ⚠️ | ❌ (continues) |
-| Backend | ⚠️ | ❌ (continues) |
+| Lexer errors |  |  (returns 1) |
+| Parser errors |  |  (returns 1) |
+| Semantic errors |  (NEW) |  (returns 1) |
+| IR verifier |  |  (continues) |
+| Backend |  |  (continues) |
 | Runtime | N/A | N/A |
 
 ---
@@ -115,18 +115,18 @@ DAAD source
 
 | Test Suite | Assertions | Status | Notes |
 |-----------|-----------|--------|-------|
-| test_ast | 46 | ✅ PASS | AST node creation, builder, printer |
-| test_codegen | 221 | ✅ PASS | IR, optimizer, SSA, CFG, backend |
-| test_expansion | 250 | ✅ PASS | Edge cases, extended tests |
-| test_fuzz | 110 | ✅ PASS | NULL safety, UTF-8, stress |
-| test_lexer | 100 | ✅ PASS | Tokenization, keywords, operators |
-| test_parser | 28 | ✅ PASS | Declarations, expressions |
-| test_performance | 20 | ✅ PASS | Benchmarks |
-| test_phase2_fixes | 11 | ✅ PASS | Regression tests |
-| test_precedence | 19 | ✅ PASS | Operator precedence |
-| test_semantic | 158 | ✅ PASS | Types, scopes, visitors, folding |
-| test_stress | 35 | ✅ PASS | Large inputs, deep nesting |
-| **TOTAL** | **998** | **✅ ALL PASS** | |
+| test_ast | 46 |  PASS | AST node creation, builder, printer |
+| test_codegen | 221 |  PASS | IR, optimizer, SSA, CFG, backend |
+| test_expansion | 250 |  PASS | Edge cases, extended tests |
+| test_fuzz | 110 |  PASS | NULL safety, UTF-8, stress |
+| test_lexer | 100 |  PASS | Tokenization, keywords, operators |
+| test_parser | 28 |  PASS | Declarations, expressions |
+| test_performance | 20 |  PASS | Benchmarks |
+| test_phase2_fixes | 11 |  PASS | Regression tests |
+| test_precedence | 19 |  PASS | Operator precedence |
+| test_semantic | 158 |  PASS | Types, scopes, visitors, folding |
+| test_stress | 35 |  PASS | Large inputs, deep nesting |
+| **TOTAL** | **998** | ** ALL PASS** | |
 
 ---
 
@@ -134,13 +134,13 @@ DAAD source
 
 | Program | Status | Notes |
 |---------|--------|-------|
-| hello.daad | ❌ FAIL | S009: missing return type annotation |
-| add.daad | ❌ FAIL | S009:女主角 missing return type annotation |
-| calculator.daad | ❌ FAIL | S009: missing return type annotation |
-| student.daad | ❌ FAIL | S009: missing return type annotation |
-| teacher.daad | ❌ FAIL | S009: missing return type annotation |
-| task_manager.daad | ❌ FAIL | S009: missing return type annotation |
-| factorial.daad | ❌ FAIL | P001: parse error |
+| hello.daad |  FAIL | S009: missing return type annotation |
+| add.daad |  FAIL | S009:女主角 missing return type annotation |
+| calculator.daad |  FAIL | S009: missing return type annotation |
+| student.daad |  FAIL | S009: missing return type annotation |
+| teacher.daad |  FAIL | S009: missing return type annotation |
+| task_manager.daad |  FAIL | S009: missing return type annotation |
+| factorial.daad |  FAIL | P001: parse error |
 
 **ملاحظة:** جميع ملفات .daad النموذجية تحمل `الرئيسية()` بدون نوع إرجاع لكنها تُرجع قيمة. هذا سلوك صحيح من التحليل الدلالي - الملفات تحتاج `-> رقم` بعد تعريف الدالة.
 

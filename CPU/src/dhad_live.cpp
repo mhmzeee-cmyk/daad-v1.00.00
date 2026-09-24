@@ -718,9 +718,9 @@ int main(int argc, char* argv[]) {
 
     gotoxy(2, 53);
     if (cpu.C.halted) {
-        cout << CLR::GREEN << CLR::BOLD << "✓ انتهى التنفيذ بعد " << cpu.C.cycles << " دورة" << CLR::RESET;
+        cout << CLR::GREEN << CLR::BOLD << " انتهى التنفيذ بعد " << cpu.C.cycles << " دورة" << CLR::RESET;
     } else {
-        cout << CLR::RED << CLR::BOLD << "✗ تم الإيقاف يدوياً" << CLR::RESET;
+        cout << CLR::RED << CLR::BOLD << " تم الإيقاف يدوياً" << CLR::RESET;
     }
 
     gotoxy(2, 55);

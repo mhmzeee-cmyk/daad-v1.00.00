@@ -34,7 +34,7 @@ daad::runtime::daad_print(محاولات);
 daad::runtime::daad_print(": ");
 daad::runtime::daad_print(تخمينات[i]);
 if ((نتيجة == 0)) {
-daad::runtime::daad_print("✓ فزت!");
+daad::runtime::daad_print(" فزت!");
 فاز = 1;
 }
  else {

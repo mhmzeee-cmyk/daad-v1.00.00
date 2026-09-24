@@ -622,30 +622,30 @@ compiler/
 
 | AST Node | IR Builder | Backend |
 |----------|------------|---------|
-| NODE_LITERAL | ✅ | ✅ |
-| NODE_IDENTIFIER | ✅ | ✅ |
-| NODE_BINARY_EXPRESSION | ✅ | ✅ |
-| NODE_UNARY_EXPRESSION | ✅ | ✅ |
-| NODE_CALL_EXPRESSION | ✅ | ✅ |
-| NODE_VARIABLE_DECL | ✅ | ✅ |
-| NODE_RETURN_STATEMENT | ✅ | ✅ |
-| NODE_IF_STATEMENT | ✅ | ✅ |
-| NODE_WHILE_STATEMENT | ✅ | ✅ |
-| NODE_FOR_STATEMENT | ✅ | ✅ |
-| NODE_ASSIGNMENT_EXPRESSION | ✅ | ✅ |
-| NODE_BREAK_STATEMENT | ✅ | ✅ |
-| NODE_CONTINUE_STATEMENT | ✅ | ✅ |
-| NODE_BLOCK | ✅ | ✅ |
-| NODE_CONSTANT_DECL | ❌ | ❌ |
-| NODE_FUNCTION_DECL | ✅ | ✅ |
-| NODE_PARAMETER | ✅ | ✅ |
-| NODE_ARRAY_EXPRESSION | ❌ | ❌ |
-| NODE_INDEX_EXPRESSION | ❌ | ❌ |
-| NODE_MEMBER_EXPRESSION | ❌ | ❌ |
-| NODE_STRUCT_EXPRESSION | ❌ | ❌ |
-| NODE_POINTER_EXPRESSION | ❌ | ❌ |
-| NODE_CAST_EXPRESSION | ❌ | ❌ |
-| NODE_PROGRAM | ✅ | ✅ |
+| NODE_LITERAL |  |  |
+| NODE_IDENTIFIER |  |  |
+| NODE_BINARY_EXPRESSION |  |  |
+| NODE_UNARY_EXPRESSION |  |  |
+| NODE_CALL_EXPRESSION |  |  |
+| NODE_VARIABLE_DECL |  |  |
+| NODE_RETURN_STATEMENT |  |  |
+| NODE_IF_STATEMENT |  |  |
+| NODE_WHILE_STATEMENT |  |  |
+| NODE_FOR_STATEMENT |  |  |
+| NODE_ASSIGNMENT_EXPRESSION |  |  |
+| NODE_BREAK_STATEMENT |  |  |
+| NODE_CONTINUE_STATEMENT |  |  |
+| NODE_BLOCK |  |  |
+| NODE_CONSTANT_DECL |  |  |
+| NODE_FUNCTION_DECL |  |  |
+| NODE_PARAMETER |  |  |
+| NODE_ARRAY_EXPRESSION |  |  |
+| NODE_INDEX_EXPRESSION |  |  |
+| NODE_MEMBER_EXPRESSION |  |  |
+| NODE_STRUCT_EXPRESSION |  |  |
+| NODE_POINTER_EXPRESSION |  |  |
+| NODE_CAST_EXPRESSION |  |  |
+| NODE_PROGRAM |  |  |
 
 ### 15.2 End-to-End Status
 - **No compilation driver** — Cannot chain Lexer→Parser→Semantic→IR→Backend
@@ -661,14 +661,14 @@ compiler/
 
 | Test File | Lines | Assertions | Framework | Status |
 |-----------|-------|------------|-----------|--------|
-| test_lexer.c | 996 | 159 | assert_test | ✅ All pass |
-| test_parser.c | 419 | 27 | assert_test | ✅ All pass |
-| test_precedence.c | 215 | 18 | assert_test | ✅ All pass |
-| test_ast.c | 447 | 46 | assert_test | ✅ All pass |
-| test_semantic.c | 991 | 141 | assert_test | ✅ All pass |
-| test_codegen.c | 882 | 220 | ASSERT macro | ✅ All pass |
-| test_phase2_fixes.c | 175 | 7 (2 disabled) | TEST/PASS/FAIL | ✅ All pass |
-| **TOTAL** | **4,125** | **617 (617 active)** | **3 frameworks** | **✅ 100%** |
+| test_lexer.c | 996 | 159 | assert_test |  All pass |
+| test_parser.c | 419 | 27 | assert_test |  All pass |
+| test_precedence.c | 215 | 18 | assert_test |  All pass |
+| test_ast.c | 447 | 46 | assert_test |  All pass |
+| test_semantic.c | 991 | 141 | assert_test |  All pass |
+| test_codegen.c | 882 | 220 | ASSERT macro |  All pass |
+| test_phase2_fixes.c | 175 | 7 (2 disabled) | TEST/PASS/FAIL |  All pass |
+| **TOTAL** | **4,125** | **617 (617 active)** | **3 frameworks** | ** 100%** |
 
 ### 16.2 Coverage by Component
 
@@ -909,11 +909,11 @@ compiler/
 
 | Principle | Assessment | Notes |
 |-----------|------------|-------|
-| Single Responsibility | ⚠️ Warning | `backend_interface.c` handles all x86 emission |
-| Open/Closed | ⚠️ Warning | Adding a backend requires modifying `backend_interface.c` |
-| Liskov Substitution | ✅ Pass | Backend targets are independent |
-| Interface Segregation | ⚠️ Warning | `Backend` struct has unused fields for ARM/RISC-V |
-| Dependency Inversion | ✅ Pass | Modules depend on abstractions (headers) |
+| Single Responsibility |  Warning | `backend_interface.c` handles all x86 emission |
+| Open/Closed |  Warning | Adding a backend requires modifying `backend_interface.c` |
+| Liskov Substitution |  Pass | Backend targets are independent |
+| Interface Segregation |  Warning | `Backend` struct has unused fields for ARM/RISC-V |
+| Dependency Inversion |  Pass | Modules depend on abstractions (headers) |
 
 ### Assessment: **Partial compliance — 2 warnings, 2 passes**
 
@@ -947,14 +947,14 @@ compiler/
 
 | Module | API Style | Consistency | Documentation |
 |--------|-----------|-------------|---------------|
-| Lexer | create/destroy/next | ✅ | ❌ |
-| Parser | create/destroy/parse | ✅ | ❌ |
-| AST | create/destroy/build/print | ✅ | ❌ |
-| Semantic | create/destroy/analyze | ✅ | ❌ |
-| IR | create/destroy/build | ✅ | ❌ |
-| Optimizer | create/destroy/run | ✅ | ❌ |
-| Backend | create/emit | ✅ | ❌ |
-| SSA | create/destroy/convert | ✅ | ❌ |
+| Lexer | create/destroy/next |  |  |
+| Parser | create/destroy/parse |  |  |
+| AST | create/destroy/build/print |  |  |
+| Semantic | create/destroy/analyze |  |  |
+| IR | create/destroy/build |  |  |
+| Optimizer | create/destroy/run |  |  |
+| Backend | create/emit |  |  |
+| SSA | create/destroy/convert |  |  |
 
 ### 27.2 Issues
 - No API documentation (Doxygen comments minimal)
@@ -1019,60 +1019,60 @@ compiler/
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Arabic keywords | ✅ Complete | 80 keywords |
-| Variables | ✅ Complete | With type inference |
-| Constants | ✅ Complete | Immutable |
-| Functions | ✅ Complete | With forward declarations |
-| Parameters | ✅ Complete | Max 8 in IR, max 32 in function |
-| Return values | ✅ Complete | |
-| if/else | ✅ Complete | |
-| while | ✅ Complete | |
-| for | ✅ Complete | |
-| break/continue | ✅ Complete | |
-| Binary expressions | ✅ Complete | 14 operators |
-| Unary expressions | ✅ Complete | 3 operators |
-| Assignments | ✅ Complete | Simple + compound |
-| String literals | ✅ Complete | With escapes |
-| Character literals | ✅ Complete | |
-| Integer literals | ✅ Complete | Decimal, hex, binary, octal |
-| Float literals | ✅ Complete | With scientific notation |
-| Boolean literals | ✅ Complete | true/false |
-| Comments | ✅ Complete | Single + multi-line |
-| Type annotations | ✅ Complete | |
-| Arrays | ⚠️ Partial | AST node exists, no IR/backend |
-| Structs | ⚠️ Partial | AST node exists, no IR/backend |
-| Pointers | ⚠️ Partial | AST node exists, no IR/backend |
-| Type casting | ⚠️ Partial | AST node exists, no semantic/IR |
-| Function calls | ⚠️ Limited | Max 8 args in IR |
-| Enums | ❌ Not implemented | |
-| switch/case | ❌ Not implemented | |
-| do-while | ❌ Not implemented | |
-| goto | ❌ Not implemented | |
-| try/catch | ❌ Not implemented | |
-| Modules/imports | ❌ Not implemented | |
-| Closures | ❌ Not implemented | |
-| Pattern matching | ❌ Not implemented | |
-| Generics/templates | ❌ Not implemented | |
-| Macros | ❌ Not implemented | |
-| Operator overloading | ❌ Not implemented | |
-| Multiple return values | ❌ Not implemented | |
+| Arabic keywords |  Complete | 80 keywords |
+| Variables |  Complete | With type inference |
+| Constants |  Complete | Immutable |
+| Functions |  Complete | With forward declarations |
+| Parameters |  Complete | Max 8 in IR, max 32 in function |
+| Return values |  Complete | |
+| if/else |  Complete | |
+| while |  Complete | |
+| for |  Complete | |
+| break/continue |  Complete | |
+| Binary expressions |  Complete | 14 operators |
+| Unary expressions |  Complete | 3 operators |
+| Assignments |  Complete | Simple + compound |
+| String literals |  Complete | With escapes |
+| Character literals |  Complete | |
+| Integer literals |  Complete | Decimal, hex, binary, octal |
+| Float literals |  Complete | With scientific notation |
+| Boolean literals |  Complete | true/false |
+| Comments |  Complete | Single + multi-line |
+| Type annotations |  Complete | |
+| Arrays |  Partial | AST node exists, no IR/backend |
+| Structs |  Partial | AST node exists, no IR/backend |
+| Pointers |  Partial | AST node exists, no IR/backend |
+| Type casting |  Partial | AST node exists, no semantic/IR |
+| Function calls |  Limited | Max 8 args in IR |
+| Enums |  Not implemented | |
+| switch/case |  Not implemented | |
+| do-while |  Not implemented | |
+| goto |  Not implemented | |
+| try/catch |  Not implemented | |
+| Modules/imports |  Not implemented | |
+| Closures |  Not implemented | |
+| Pattern matching |  Not implemented | |
+| Generics/templates |  Not implemented | |
+| Macros |  Not implemented | |
+| Operator overloading |  Not implemented | |
+| Multiple return values |  Not implemented | |
 
 ### 31.2 Backend Features
 
 | Feature | x86-64 | ARM64 | RISC-V |
 |---------|--------|-------|--------|
-| Integer arithmetic | ✅ | ❌ | ❌ |
-| Floating-point | ❌ | ❌ | ❌ |
-| Comparisons | ⚠️ (bugs fixed) | ❌ | ❌ |
-| Control flow | ✅ | ❌ | ❌ |
-| Memory access | ✅ | ❌ | ❌ |
-| Function calls | ⚠️ (basic) | ❌ | ❌ |
-| Prologue/epilogue | ✅ | ❌ | ❌ |
-| Register allocation | ⚠️ (not integrated) | ❌ | ❌ |
-| PIC | ❌ | ❌ | ❌ |
-| Debug info | ❌ | ❌ | ❌ |
-| Object files | ❌ | ❌ | ❌ |
-| Linking | ❌ | ❌ | ❌ |
+| Integer arithmetic |  |  |  |
+| Floating-point |  |  |  |
+| Comparisons |  (bugs fixed) |  |  |
+| Control flow |  |  |  |
+| Memory access |  |  |  |
+| Function calls |  (basic) |  |  |
+| Prologue/epilogue |  |  |  |
+| Register allocation |  (not integrated) |  |  |
+| PIC |  |  |  |
+| Debug info |  |  |  |
+| Object files |  |  |  |
+| Linking |  |  |  |
 
 ---
 
@@ -1080,13 +1080,13 @@ compiler/
 
 | Category | Implemented | Partial | Not Implemented |
 |----------|-------------|---------|-----------------|
-| Variables | ✅ | | |
-| Constants | ✅ | | |
-| Functions | ✅ | | |
-| Control Flow | ✅ (if/else, while, for, break/continue) | | switch, do-while, goto |
-| Expressions | ✅ (binary, unary, assignment, call) | | ternary, lambda |
-| Types | ✅ (int, float, char, bool, void, string) | Arrays, Structs, Pointers | Enums, Unions, Typedef |
-| Operators | ✅ (14 binary, 3 unary) | | Overloading |
+| Variables |  | | |
+| Constants |  | | |
+| Functions |  | | |
+| Control Flow |  (if/else, while, for, break/continue) | | switch, do-while, goto |
+| Expressions |  (binary, unary, assignment, call) | | ternary, lambda |
+| Types |  (int, float, char, bool, void, string) | Arrays, Structs, Pointers | Enums, Unions, Typedef |
+| Operators |  (14 binary, 3 unary) | | Overloading |
 | Memory | | Raw pointers (AST only) | Smart pointers, GC |
 | Error Handling | | | try/catch/throw |
 | Modules | | | import/export |
@@ -1321,21 +1321,21 @@ compiler/
 **Partially.**
 
 DAAD Core can:
-- ✅ Lex Arabic source code into tokens
-- ✅ Parse tokens into an AST
-- ✅ Perform semantic analysis (type checking, scope analysis)
-- ✅ Generate IR from AST
-- ✅ Optimize IR (basic constant folding, algebraic simplification)
-- ✅ Generate x86-64 assembly text
+-  Lex Arabic source code into tokens
+-  Parse tokens into an AST
+-  Perform semantic analysis (type checking, scope analysis)
+-  Generate IR from AST
+-  Optimize IR (basic constant folding, algebraic simplification)
+-  Generate x86-64 assembly text
 
 DAAD Core cannot:
-- ❌ Generate correct x86-64 assembly (comparison/division/shift bugs)
-- ❌ Compile arrays, structs, or pointers to working code
-- ❌ Use SSA properly (phi nodes are stubs)
-- ❌ Generate object files
-- ❌ Link programs
-- ❌ Produce executable output
-- ❌ Run compiled programs
+-  Generate correct x86-64 assembly (comparison/division/shift bugs)
+-  Compile arrays, structs, or pointers to working code
+-  Use SSA properly (phi nodes are stubs)
+-  Generate object files
+-  Link programs
+-  Produce executable output
+-  Run compiled programs
 
 **Verdict:** It is a functional compiler frontend with a partially working backend. It demonstrates compiler concepts but cannot compile and run real programs.
 

@@ -117,13 +117,13 @@ call_test:
 
 The following Batch 2 features are still working:
 
-- ✅ `backend_build_intervals()` is called
-- ✅ `backend_allocate_registers()` is called
-- ✅ Physical register allocation works
-- ✅ `LOAD_TO` macro uses physical registers
-- ✅ `STORE` macro uses physical registers
-- ✅ `IR_OP_RET` uses `LOAD_TO`
-- ✅ Assembly contains physical registers
+-  `backend_build_intervals()` is called
+-  `backend_allocate_registers()` is called
+-  Physical register allocation works
+-  `LOAD_TO` macro uses physical registers
+-  `STORE` macro uses physical registers
+-  `IR_OP_RET` uses `LOAD_TO`
+-  Assembly contains physical registers
 
 ## 9. Deferred Items
 
@@ -140,11 +140,11 @@ The following items are explicitly deferred:
 
 All requirements for Batch 3 are met:
 
-- ✅ ABI handling correct for the supported path
-- ✅ Callee-saved registers are saved/restored
-- ✅ Caller-saved registers are saved/restored around calls
-- ✅ Spills work correctly
-- ✅ Stack alignment maintained
-- ✅ Physical register allocation still works (Batch 2)
-- ✅ All tests pass
-- ✅ No regressions
+-  ABI handling correct for the supported path
+-  Callee-saved registers are saved/restored
+-  Caller-saved registers are saved/restored around calls
+-  Spills work correctly
+-  Stack alignment maintained
+-  Physical register allocation still works (Batch 2)
+-  All tests pass
+-  No regressions

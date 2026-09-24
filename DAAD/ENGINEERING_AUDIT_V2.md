@@ -490,56 +490,56 @@ compiler/
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Arabic keywords | ✅ Complete | 80+ keywords with aliases |
-| Variables | ✅ Complete | Typed, mutable |
-| Constants | ✅ Complete | Immutable |
-| Functions | ✅ Complete | With params and return |
-| Forward declarations | ✅ Complete | |
-| If/else | ✅ Complete | |
-| While loop | ✅ Complete | |
-| For loop | ✅ Complete | |
-| Break/continue | ✅ Complete | |
-| Return | ✅ Complete | |
-| Binary expressions | ✅ Complete | 15 operators |
-| Unary expressions | ✅ Complete | 3 operators |
-| Function calls | ⚠️ Limited | Max 8 args (builder) / 3 args (IR) |
-| Assignments | ✅ Complete | 6 compound assignment operators |
-| String literals | ✅ Complete | With escape sequences |
-| Character literals | ✅ Complete | With escape sequences |
-| Integer literals | ✅ Complete | Decimal, hex, binary, octal, Arabic-Indic |
-| Float literals | ✅ Complete | With scientific notation |
-| Boolean literals | ✅ Complete | |
-| Comments | ✅ Complete | Single-line and nested multi-line |
-| Type system | ⚠️ Partial | No generics, no unions |
-| Arrays | ❌ AST only | Not compiled to IR |
-| Structs | ❌ AST only | Not compiled to IR |
-| Pointers | ❌ AST only | Not compiled to IR |
-| Enums | ❌ Not implemented | |
-| Switch/case | ❌ Not implemented | |
-| Do-while | ❌ Not implemented | |
-| Try/catch | ❌ Not implemented | |
-| Goto | ❌ Not implemented | |
-| Module system | ❌ Not implemented | |
-| Import/include | ❌ Not implemented | |
-| Closures | ❌ Not implemented | |
-| Pattern matching | ❌ Not implemented | |
-| Iterators | ❌ Not implemented | |
-| Lambdas | ❌ Not implemented | |
-| Macros | ❌ Not implemented | |
-| Operator overloading | ❌ Not implemented | |
+| Arabic keywords |  Complete | 80+ keywords with aliases |
+| Variables |  Complete | Typed, mutable |
+| Constants |  Complete | Immutable |
+| Functions |  Complete | With params and return |
+| Forward declarations |  Complete | |
+| If/else |  Complete | |
+| While loop |  Complete | |
+| For loop |  Complete | |
+| Break/continue |  Complete | |
+| Return |  Complete | |
+| Binary expressions |  Complete | 15 operators |
+| Unary expressions |  Complete | 3 operators |
+| Function calls |  Limited | Max 8 args (builder) / 3 args (IR) |
+| Assignments |  Complete | 6 compound assignment operators |
+| String literals |  Complete | With escape sequences |
+| Character literals |  Complete | With escape sequences |
+| Integer literals |  Complete | Decimal, hex, binary, octal, Arabic-Indic |
+| Float literals |  Complete | With scientific notation |
+| Boolean literals |  Complete | |
+| Comments |  Complete | Single-line and nested multi-line |
+| Type system |  Partial | No generics, no unions |
+| Arrays |  AST only | Not compiled to IR |
+| Structs |  AST only | Not compiled to IR |
+| Pointers |  AST only | Not compiled to IR |
+| Enums |  Not implemented | |
+| Switch/case |  Not implemented | |
+| Do-while |  Not implemented | |
+| Try/catch |  Not implemented | |
+| Goto |  Not implemented | |
+| Module system |  Not implemented | |
+| Import/include |  Not implemented | |
+| Closures |  Not implemented | |
+| Pattern matching |  Not implemented | |
+| Iterators |  Not implemented | |
+| Lambdas |  Not implemented | |
+| Macros |  Not implemented | |
+| Operator overloading |  Not implemented | |
 
 ## 19.2 Backend Completeness
 
 | Feature | x86-64 | ARM64 | RISC-V |
 |---------|--------|-------|--------|
-| Prologue/Epilogue | ✅ | ❌ | ❌ |
-| Integer arithmetic | ✅ | ❌ | ❌ |
-| Float arithmetic | ❌ | ❌ | ❌ |
-| Memory access | ✅ | ❌ | ❌ |
-| Control flow | ✅ | ❌ | ❌ |
-| Function calls | ✅ | ❌ | ❌ |
-| Debug info | ❌ | ❌ | ❌ |
-| PIC | ❌ | ❌ | ❌ |
+| Prologue/Epilogue |  |  |  |
+| Integer arithmetic |  |  |  |
+| Float arithmetic |  |  |  |
+| Memory access |  |  |  |
+| Control flow |  |  |  |
+| Function calls |  |  |  |
+| Debug info |  |  |  |
+| PIC |  |  |  |
 
 ---
 
@@ -688,11 +688,11 @@ compiler/
 
 | Principle | Status | Notes |
 |-----------|--------|-------|
-| Single Responsibility | ⚠️ | `backend_interface.c` does too much (prologue, epilogue, all instructions, all backends) |
-| Open/Closed | ⚠️ | Adding a new backend requires modifying `backend_interface.c` |
-| Liskov Substitution | ✅ | Backend function pointers allow substitution |
-| Interface Segregation | ⚠️ | `Backend` struct has fields that some backends don't use |
-| Dependency Inversion | ✅ | Frontend depends on abstractions (AST, IR) not implementations |
+| Single Responsibility |  | `backend_interface.c` does too much (prologue, epilogue, all instructions, all backends) |
+| Open/Closed |  | Adding a new backend requires modifying `backend_interface.c` |
+| Liskov Substitution |  | Backend function pointers allow substitution |
+| Interface Segregation |  | `Backend` struct has fields that some backends don't use |
+| Dependency Inversion |  | Frontend depends on abstractions (AST, IR) not implementations |
 
 ---
 

@@ -9,24 +9,24 @@
 ## 1. WHAT WAS ACCOMPLISHED
 
 ### Circuit Fixes (7 issues resolved)
-1. ✅ Added SP next-value MUX (select between SP+1 and SP-1)
-2. ✅ Fixed FLAGS_REG D input (splitter combines ALU Z, N, C flags)
-3. ✅ Added FLAGS_WRITE → FLAGS_REG WE connection
-4. ✅ Added PC WE OR gate (PC_INC OR PC_LOAD)
-5. ✅ Wired WR_SRC input 10 (PC[7:0] for CALL push)
-6. ✅ Wired MEM_ADDR_SRC inputs 01 (ZP) and 10 (REG_PAIR)
-7. ✅ Wired MEM_WDATA inputs (REG.RdData1 and ACC)
+1.  Added SP next-value MUX (select between SP+1 and SP-1)
+2.  Fixed FLAGS_REG D input (splitter combines ALU Z, N, C flags)
+3.  Added FLAGS_WRITE → FLAGS_REG WE connection
+4.  Added PC WE OR gate (PC_INC OR PC_LOAD)
+5.  Wired WR_SRC input 10 (PC[7:0] for CALL push)
+6.  Wired MEM_ADDR_SRC inputs 01 (ZP) and 10 (REG_PAIR)
+7.  Wired MEM_WDATA inputs (REG.RdData1 and ACC)
 
 ### Documentation Updates
-1. ✅ PHASE_3_9_AUDIT.md — 30+ issues identified and categorized
-2. ✅ DATAPATH_VECTORS.md — 58 corrected test vectors
-3. ✅ DATAPATH_TEST_REPORT.md — Updated with fixes and status
-4. ✅ ALU_REFERENCE_TABLE.md — Exact C reference behavior
+1.  PHASE_3_9_AUDIT.md — 30+ issues identified and categorized
+2.  DATAPATH_VECTORS.md — 58 corrected test vectors
+3.  DATAPATH_TEST_REPORT.md — Updated with fixes and status
+4.  ALU_REFERENCE_TABLE.md — Exact C reference behavior
 
 ### Validation
-1. ✅ Structural validation script (24/24 circuits pass)
-2. ✅ ALU behavior verified against C source
-3. ✅ Test vectors match C reference exactly
+1.  Structural validation script (24/24 circuits pass)
+2.  ALU behavior verified against C source
+3.  Test vectors match C reference exactly
 
 ---
 
@@ -115,13 +115,13 @@ Update `DATAPATH_TEST_REPORT.md` with actual findings
 
 | Criterion | Status |
 |-----------|--------|
-| All components present | ✅ DONE |
-| All data paths wired | ✅ DONE |
-| All control signals defined | ✅ DONE |
-| Structural validation | ✅ PASS |
-| ALU behavior verified | ✅ CORRECT |
-| Test vectors ready | ✅ 58 vectors |
-| Functional testing | ❌ NOT TESTED |
+| All components present |  DONE |
+| All data paths wired |  DONE |
+| All control signals defined |  DONE |
+| Structural validation |  PASS |
+| ALU behavior verified |  CORRECT |
+| Test vectors ready |  58 vectors |
+| Functional testing |  NOT TESTED |
 | Ready for Phase 4 | ⏳ PENDING |
 
 ---

@@ -313,13 +313,13 @@ def main():
         print(f"  Status: {status}")
         if errors:
             for e in errors:
-                print(f"  ❌ {e}")
+                print(f"   {e}")
         if warnings:
             for w in warnings:
-                print(f"  ⚠️  {w}")
+                print(f"    {w}")
         if infos:
             for i in infos:
-                print(f"  ℹ️  {i}")
+                print(f"  ℹ  {i}")
         print()
 
     # Check subcircuit references
@@ -329,10 +329,10 @@ def main():
     ref_issues = check_subcircuit_references(root, circuits)
     if ref_issues:
         for issue in ref_issues:
-            print(f"  ❌ {issue}")
+            print(f"   {issue}")
             total_issues += 1
     else:
-        print("  ✅ All subcircuit references valid")
+        print("   All subcircuit references valid")
 
     # Summary
     print(f"\n{'='*60}")
@@ -347,10 +347,10 @@ def main():
     print(f"Circuits FAIL: {fail_count}/{len(circuits)}")
 
     if total_issues > 0:
-        print(f"\n⚠️  STRUCTURAL ISSUES FOUND — must fix before simulation")
+        print(f"\n  STRUCTURAL ISSUES FOUND — must fix before simulation")
         return 1
     else:
-        print(f"\n✅ No structural issues found — ready for simulation")
+        print(f"\n No structural issues found — ready for simulation")
         return 0
 
 if __name__ == '__main__':

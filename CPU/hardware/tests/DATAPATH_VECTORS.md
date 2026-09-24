@@ -22,23 +22,23 @@
 ### T1-1: Reset
 - Set RST=1, CLK=0
 - Set D=0x0000, WE=0
-- Tick → Q=0x0000 ✓
+- Tick → Q=0x0000 
 - Set RST=0
 
 ### T1-2: Load
 - Set D=0x0042, WE=1
-- Tick → Q=0x0042 ✓
+- Tick → Q=0x0042 
 - Set WE=0
 
 ### T1-3: Increment (via external adder + MUX)
 - Set PC_INC=1, PC_LOAD=0
 - MUX selects PC+1 path
-- Tick → Q=0x0043 ✓
+- Tick → Q=0x0043 
 
 ### T1-4: Wrap
 - Set D=0xFFFF, WE=1
-- Tick → Q=0xFFFF ✓
-- Set PC_INC=1, tick → Q=0x0000 ✓
+- Tick → Q=0xFFFF 
+- Set PC_INC=1, tick → Q=0x0000 
 
 ---
 
@@ -54,12 +54,12 @@
 ### T2-2: Load
 - Set D=0xA3 (OPCODE=0xA, REG=0x3)
 - Set IR_LOAD=1
-- Tick → OPCODE=0xA, REG=0x3 ✓
+- Tick → OPCODE=0xA, REG=0x3 
 - Set IR_LOAD=0
 
 ### T2-3: Hold
 - Set D=0x57, IR_LOAD=0
-- Tick → IR unchanged (still 0xA3) ✓
+- Tick → IR unchanged (still 0xA3) 
 
 ---
 
@@ -69,25 +69,25 @@
 
 ### T3-1: Write S0
 - Set WrAddr=0 (S0), WrData=0x42, REG_WRITE=1
-- Tick → S0=0x42 ✓
+- Tick → S0=0x42 
 
 ### T3-2: Write S7
 - Set WrAddr=7 (S7), WrData=0xBE, REG_WRITE=1
-- Tick → S7=0xBE ✓
+- Tick → S7=0xBE 
 
 ### T3-3: Read S0
 - Set RdAddr1=0
-- Read RdData1=0x42 ✓
+- Read RdData1=0x42 
 
 ### T3-4: Read S7
 - Set RdAddr1=7
-- Read RdData1=0xBE ✓
+- Read RdData1=0xBE 
 
 ### T3-5: Write-Read
 - Set WrAddr=3, WrData=0x11, REG_WRITE=1, tick
 - Set REG_WRITE=0
 - Set RdAddr1=3
-- Read RdData1=0x11 ✓
+- Read RdData1=0x11 
 
 ---
 
@@ -102,11 +102,11 @@
 
 ### T4-2: Load
 - Set D=0x55, WE=1
-- Tick → Q=0x55 ✓
+- Tick → Q=0x55 
 
 ### T4-3: Hold
 - Set D=0x00, WE=0
-- Tick → Q=0x55 (unchanged) ✓
+- Tick → Q=0x55 (unchanged) 
 
 ---
 
@@ -117,118 +117,118 @@
 ### T5-1: ADD (0000)
 - Set ALU_OP=0000
 - Set A=0x34, B=0x12
-- Read: RESULT=0x46, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x46, Z=0, N=0, C=0 
 
 ### T5-2: ADD overflow
 - Set ALU_OP=0000
 - Set A=0xFF, B=0x01
-- Read: RESULT=0x00, Z=1, N=0, C=1 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=1 
 
 ### T5-3: SUB (0001)
 - Set ALU_OP=0001
 - Set A=0x34, B=0x12
-- Read: RESULT=0x22, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x22, Z=0, N=0, C=0 
 
 ### T5-4: SUB borrow
 - Set ALU_OP=0001
 - Set A=0x05, B=0x0A
-- Read: RESULT=0xFB, Z=0, N=1, C=1 ✓
+- Read: RESULT=0xFB, Z=0, N=1, C=1 
 
 ### T5-5: SUB equal
 - Set ALU_OP=0001
 - Set A=0x42, B=0x42
-- Read: RESULT=0x00, Z=1, N=0, C=0 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=0 
 
 ### T5-6: AND (0010)
 - Set ALU_OP=0010
 - Set A=0xFF, B=0x0F
-- Read: RESULT=0x0F, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x0F, Z=0, N=0, C=0 
 
 ### T5-7: OR (0011)
 - Set ALU_OP=0011
 - Set A=0xF0, B=0x0F
-- Read: RESULT=0xFF, Z=0, N=1, C=0 ✓
+- Read: RESULT=0xFF, Z=0, N=1, C=0 
 
 ### T5-8: XOR (0100)
 - Set ALU_OP=0100
 - Set A=0xFF, B=0xFF
-- Read: RESULT=0x00, Z=1, N=0, C=0 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=0 
 
 ### T5-9: NOT (0101)
 - Set ALU_OP=0101
 - Set A=0x0F
-- Read: RESULT=0xF0, Z=0, N=1, C=0 ✓
+- Read: RESULT=0xF0, Z=0, N=1, C=0 
 
 ### T5-10: SHL (0110)
 - Set ALU_OP=0110
 - Set A=0x05 (0b00000101)
-- Read: RESULT=0x0A, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x0A, Z=0, N=0, C=0 
 
 ### T5-11: SHL carry
 - Set ALU_OP=0110
 - Set A=0x80 (0b10000000)
-- Read: RESULT=0x00, Z=1, N=0, C=1 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=1 
 
 ### T5-12: SHR (0111)
 - Set ALU_OP=0111
 - Set A=0x05 (0b00000101)
-- Read: RESULT=0x02, Z=0, N=0, C=1 ✓
+- Read: RESULT=0x02, Z=0, N=0, C=1 
 
 ### T5-13: SHR carry
 - Set ALU_OP=0111
 - Set A=0x01 (0b00000001)
-- Read: RESULT=0x00, Z=1, N=0, C=1 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=1 
 
 ### T5-14: MUL (1000)
 - Set ALU_OP=1000
 - Set A=0x03, B=0x07
-- Read: RESULT=0x15, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x15, Z=0, N=0, C=0 
 
 ### T5-15: DIV (1001)
 - Set ALU_OP=1001
 - Set A=0xFF, B=0x05
-- Read: RESULT=0x33, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x33, Z=0, N=0, C=0 
 
 ### T5-16: DIV by zero
 - Set ALU_OP=1001
 - Set A=0x10, B=0x00
-- Read: RESULT=0x00, Z=1, N=0, C=0, HALT=1 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=0, HALT=1 
 
 ### T5-17: MOD (1010)
 - Set ALU_OP=1010
 - Set A=0xFF, B=0x05
-- Read: RESULT=0x04, Z=0, N=0, C=0 ✓
+- Read: RESULT=0x04, Z=0, N=0, C=0 
 
 ### T5-18: MOD by zero
 - Set ALU_OP=1010
 - Set A=0x10, B=0x00
-- Read: RESULT=0x00, Z=1, N=0, C=0, HALT=1 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=0, HALT=1 
 
 ### T5-19: NEG (1011)
 - Set ALU_OP=1011
 - Set A=0x05
-- Read: RESULT=0xFB, Z=0, N=1, C=0 ✓
+- Read: RESULT=0xFB, Z=0, N=1, C=0 
 
 ### T5-20: NEG zero
 - Set ALU_OP=1011
 - Set A=0x00
-- Read: RESULT=0x00, Z=1, N=0, C=0 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=0 
 
 ### T5-21: NEG overflow
 - Set ALU_OP=1011
 - Set A=0x80
-- Read: RESULT=0x80, Z=0, N=1, C=0 ✓
+- Read: RESULT=0x80, Z=0, N=1, C=0 
 
 ### T5-22: CMP (1100)
 - Set ALU_OP=1100
 - Set A=0x10, B=0x20
-- Read: RESULT=0xF0, Z=0, N=1, C=1 ✓
+- Read: RESULT=0xF0, Z=0, N=1, C=1 
 - Note: CMP result is computed but NOT written to ACC
 
 ### T5-23: CMP equal
 - Set ALU_OP=1100
 - Set A=0x42, B=0x42
-- Read: RESULT=0x00, Z=1, N=0, C=0 ✓
+- Read: RESULT=0x00, Z=1, N=0, C=0 
 
 ---
 
@@ -238,15 +238,15 @@
 
 ### T6-1: Set flags
 - Set D=0b00000101 (Z=1, N=0, C=1), WE=1
-- Tick → Z=1, N=0, C=1 ✓
+- Tick → Z=1, N=0, C=1 
 
 ### T6-2: Clear flags
 - Set D=0b00000000, WE=1
-- Tick → Z=0, N=0, C=0 ✓
+- Tick → Z=0, N=0, C=0 
 
 ### T6-3: Hold
 - Set D=0b00000111, WE=0
-- Tick → Z=0, N=0, C=0 (unchanged) ✓
+- Tick → Z=0, N=0, C=0 (unchanged) 
 
 ---
 
@@ -262,14 +262,14 @@
 ### T7-2: Load and increment
 - Set D=0x05, WE=1, tick
 - Set WE=0
-- Set SP_INC=1, tick → Q=0x06 ✓
+- Set SP_INC=1, tick → Q=0x06 
 
 ### T7-3: Decrement
-- Set SP_INC=0, SP_DEC=1, tick → Q=0x05 ✓
+- Set SP_INC=0, SP_DEC=1, tick → Q=0x05 
 
 ### T7-4: Wrap
 - Set D=0x00, WE=1, tick
-- Set WE=0, SP_DEC=1, tick → Q=0xFF ✓
+- Set WE=0, SP_DEC=1, tick → Q=0xFF 
 
 ---
 
@@ -279,15 +279,15 @@
 
 ### T8-1: Write
 - Set ADDR=0x0100, WDATA=0xAB, WE=1, CLK=0
-- Tick → RAM[0x0100]=0xAB ✓
+- Tick → RAM[0x0100]=0xAB 
 
 ### T8-2: Read
 - Set ADDR=0x0100, WE=0
-- Read RDATA=0xAB ✓
+- Read RDATA=0xAB 
 
 ### T8-3: Overwrite
 - Set ADDR=0x0100, WDATA=0xCD, WE=1
-- Tick → RAM[0x0100]=0xCD ✓
+- Tick → RAM[0x0100]=0xCD 
 
 ---
 
@@ -307,16 +307,16 @@
 
 ### T9-3: Write-back
 - Set WR_SRC=00(ALU), ACC_WRITE=1
-- Tick → ACC=0x30 ✓
+- Tick → ACC=0x30 
 
 ### T9-4: Memory address
 - Set MEM_ADDR_SRC=01(ZP), IMM=0x42
-- Read MEM_ADDR=0x0042 ✓
+- Read MEM_ADDR=0x0042 
 
 ### T9-5: Store
 - Set MEM_WRITE=1, MUX_MEM_WDATA select=0(REG)
 - Set REG.RdData1=0xBE
-- Tick → RAM[0x0042]=0xBE ✓
+- Tick → RAM[0x0042]=0xBE 
 
 ### T9-6: Push
 - Set MEM_ADDR_SRC=10(REG_PAIR), ACC=0x42

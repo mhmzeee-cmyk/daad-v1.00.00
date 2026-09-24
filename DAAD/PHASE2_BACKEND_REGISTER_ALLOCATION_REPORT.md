@@ -256,14 +256,14 @@ These items are deferred to later batches or phases:
 **CONDITIONALLY PASS**
 
 The register allocator is now connected and functional:
-- ✅ RegisterAllocator is executed during function emission
-- ✅ Liveness intervals are built from IR
-- ✅ Linear scan allocation runs before codegen
-- ✅ Allocation results are consumed by LOAD_TO/STORE macros
-- ✅ Physical registers appear in generated assembly
-- ✅ Spill path works (falls back to stack)
-- ✅ All existing tests pass (239/239, 249/249)
-- ✅ No regressions
-- ✅ New test proves allocation integration
+-  RegisterAllocator is executed during function emission
+-  Liveness intervals are built from IR
+-  Linear scan allocation runs before codegen
+-  Allocation results are consumed by LOAD_TO/STORE macros
+-  Physical registers appear in generated assembly
+-  Spill path works (falls back to stack)
+-  All existing tests pass (239/239, 249/249)
+-  No regressions
+-  New test proves allocation integration
 
 **Condition**: Full ABI compliance and spill code emission are deferred. The current implementation is functionally correct for the tested cases but may not be safe for all programs (especially those with calls or register pressure exceeding available physical registers).
